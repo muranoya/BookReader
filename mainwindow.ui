@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>404</width>
+    <height>441</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <layout class="QGridLayout" name="gridLayout_2">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item row="0" column="0">
+     <widget class="QGraphicsView" name="graphicsView"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>404</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
+     <string>ファイル</string>
+    </property>
+    <addaction name="menu_File_Open"/>
+    <addaction name="menu_File_FolderOpen"/>
+    <addaction name="separator"/>
+    <addaction name="menu_File_Close"/>
+   </widget>
+   <widget class="QMenu" name="menu_View">
+    <property name="title">
+     <string>表示</string>
+    </property>
+    <addaction name="menu_View_FullSize"/>
+    <addaction name="menu_View_FitWidth"/>
+    <addaction name="menu_View_FitHeight"/>
+    <addaction name="menu_View_SetMag"/>
+    <addaction name="separator"/>
+    <addaction name="menu_View_FullScreen"/>
+   </widget>
+   <widget class="QMenu" name="menu_Help">
+    <property name="title">
+     <string>ヘルプ</string>
+    </property>
+    <addaction name="menu_Help_Version"/>
+   </widget>
+   <widget class="QMenu" name="menu_Filter">
+    <property name="title">
+     <string>フィルタ</string>
+    </property>
+    <addaction name="menu_Filter_Monotone"/>
+    <addaction name="menu_Filter_Sharpness"/>
+   </widget>
+   <widget class="QMenu" name="menu_Slideshow">
+    <property name="title">
+     <string>スライドショー</string>
+    </property>
+    <addaction name="menu_Slideshow_Slideshow"/>
+    <addaction name="menu_Slideshow_Settings"/>
+   </widget>
+   <addaction name="menu_File"/>
+   <addaction name="menu_View"/>
+   <addaction name="menu_Filter"/>
+   <addaction name="menu_Slideshow"/>
+   <addaction name="menu_Help"/>
+  </widget>
+  <action name="menu_File_Open">
+   <property name="text">
+    <string>開く</string>
+   </property>
+  </action>
+  <action name="menu_View_FullSize">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>原寸大表示</string>
+   </property>
+  </action>
+  <action name="menu_View_FitWidth">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ウィンドウの横幅に合わせる</string>
+   </property>
+  </action>
+  <action name="menu_View_FitHeight">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ウィンドウの縦幅に合わせる</string>
+   </property>
+  </action>
+  <action name="menu_Help_Version">
+   <property name="text">
+    <string>バージョン</string>
+   </property>
+  </action>
+  <action name="menu_File_FolderOpen">
+   <property name="text">
+    <string>フォルダを開く</string>
+   </property>
+  </action>
+  <action name="menu_File_Close">
+   <property name="text">
+    <string>ファイルを閉じる</string>
+   </property>
+  </action>
+  <action name="menu_View_SetMag">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>倍率を指定する</string>
+   </property>
+  </action>
+  <action name="menu_View_FullScreen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>フルスクリーン</string>
+   </property>
+  </action>
+  <action name="menu_Slideshow_Slideshow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>スライドショー</string>
+   </property>
+  </action>
+  <action name="menu_Slideshow_Settings">
+   <property name="text">
+    <string>スライドショーの設定</string>
+   </property>
+  </action>
+  <action name="menu_Filter_Monotone">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>モノクロ</string>
+   </property>
+  </action>
+  <action name="menu_Filter_Sharpness">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>先鋭化</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>
