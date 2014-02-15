@@ -1,9 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QFileDialog>
-#include <QFile>
-#include <QMessageBox>
-#include <QGraphicsPixmapItem>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -11,10 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // 変数の初期化
-    view_scene = nullptr;
-    view_img = nullptr;
-    view_item = nullptr;
+    this->imgManager = new ImageManager(ui->graphicsView);
 }
 
 MainWindow::~MainWindow()
@@ -25,30 +18,40 @@ MainWindow::~MainWindow()
 void MainWindow::on_menu_File_Open_triggered()
 {
     QString filename = QFileDialog::getOpenFileName(this, tr("Open File"), QString(),
-                                                    tr("Imges (*.png *.jpg *.bmp)"));
+                                                    tr("Imges (*.png *.jpg *.jpeg *.bmp *.gif)"));
 
     if (!filename.isEmpty())
     {
-        QImage *img = new QImage(filename);
-
-        if (img->isNull())
-        {
-            delete img;
-            QMessageBox::critical(this, tr("Error"), tr("画像の読み込みに失敗しました"));
-            return;
-        }
-
-        QGraphicsScene *scene = new QGraphicsScene();
-        ui->graphicsView->setScene(scene);
-        QGraphicsPixmapItem *item = new QGraphicsPixmapItem(QPixmap::fromImage(*img));
-        scene->addItem(item);
-
-        delete view_img;
-        delete view_item;
-        delete view_scene;
-
-        view_scene = scene;
-        view_img = img;
-        view_item = item;
+        this->imgManager->loadFile(filename);
+        this->setWindowTitle(this->imgManager->getShowingFileName());
     }
+}
+
+void MainWindow::on_menu_File_FolderOpen_triggered()
+{
+    QString dirname = QFileDialog::getExistingDirectory(this, tr("Open Directory"), QString());
+
+    if (!dirname.isEmpty())
+    {
+        this->imgManager->loadDir(dirname);
+        this->setWindowTitle(this->imgManager->getShowingFileName());
+    }
+}
+
+void MainWindow::mousePressEvent(QMouseEvent *event)
+{
+    if (event->buttons() & Qt::LeftButton)
+    {
+        this->imgManager->nextImage();
+    }
+    if (event->buttons() & Qt::RightButton)
+    {
+        this->imgManager->previousImage();
+    }
+    updateWindowState();
+}
+
+void MainWindow::updateWindowState()
+{
+    this->setWindowTitle(this->imgManager->getShowingFileName());
 }

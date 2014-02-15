@@ -34,7 +34,26 @@
      <number>0</number>
     </property>
     <item row="0" column="0">
-     <widget class="QGraphicsView" name="graphicsView"/>
+     <widget class="QGraphicsView" name="graphicsView">
+      <property name="backgroundBrush">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>127</red>
+         <green>127</green>
+         <blue>127</blue>
+        </color>
+       </brush>
+      </property>
+      <property name="foregroundBrush">
+       <brush brushstyle="NoBrush">
+        <color alpha="255">
+         <red>127</red>
+         <green>127</green>
+         <blue>127</blue>
+        </color>
+       </brush>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -87,10 +106,17 @@
     <addaction name="menu_Slideshow_Slideshow"/>
     <addaction name="menu_Slideshow_Settings"/>
    </widget>
+   <widget class="QMenu" name="menu_Window">
+    <property name="title">
+     <string>ウィンドウ</string>
+    </property>
+    <addaction name="menu_Window_List"/>
+   </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_View"/>
    <addaction name="menu_Filter"/>
    <addaction name="menu_Slideshow"/>
+   <addaction name="menu_Window"/>
    <addaction name="menu_Help"/>
   </widget>
   <action name="menu_File_Open">
@@ -180,6 +206,11 @@
    </property>
    <property name="text">
     <string>先鋭化</string>
+   </property>
+  </action>
+  <action name="menu_Window_List">
+   <property name="text">
+    <string>リスト</string>
    </property>
   </action>
  </widget>

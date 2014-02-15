@@ -1,23 +1,16 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "imagemanager.h"
+#include "nullptr.h"
+#include <iostream>
 #include <QMainWindow>
 #include <QGraphicsScene>
 #include <QImage>
 #include <QGraphicsPixmapItem>
-
-const class nullptr_t
-{
-public:
-    template<class T>
-    operator T*() const { return 0; }
-
-    template<class C, class T>
-    operator T C::*() const { return 0; }
-
-private:
-    void operator&() const;
-} nullptr = {};
+#include <QMouseEvent>
+#include <QDir>
+#include <QFileDialog>
 
 namespace Ui
 {
@@ -26,22 +19,21 @@ namespace Ui
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
-
+Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-protected:
-    QGraphicsScene *view_scene;
-    QImage *view_img;
-    QGraphicsPixmapItem *view_item;
-
 private slots:
     void on_menu_File_Open_triggered();
+    void on_menu_File_FolderOpen_triggered();
 
 private:
     Ui::MainWindow *ui;
+    ImageManager *imgManager;
+
+    void mousePressEvent(QMouseEvent *event);
+    void updateWindowState();
 };
 
 #endif // MAINWINDOW_H
