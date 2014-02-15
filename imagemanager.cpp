@@ -61,27 +61,42 @@ bool ImageManager::loadDir(const QString &path)
 
 void ImageManager::nextImage()
 {
-    this->showingIndex++;
-    if (this->showingIndex >= this->imgList.length())
+    if (this->showingIndex >= 0)
     {
-        this->showingIndex = 0;
+        this->showingIndex++;
+        if (this->showingIndex >= this->imgList.length())
+        {
+            this->showingIndex = 0;
+        }
+        showImage(this->showingIndex);
     }
-    showImage(this->showingIndex);
 }
 
 void ImageManager::previousImage()
 {
-    this->showingIndex--;
-    if (this->showingIndex < 0)
+    if (this->showingIndex >= 0)
     {
-        this->showingIndex = this->imgList.length()-1;
+        this->showingIndex--;
+        if (this->showingIndex < 0)
+        {
+            this->showingIndex = this->imgList.length()-1;
+        }
+        showImage(this->showingIndex);
     }
-    showImage(this->showingIndex);
 }
 
 void ImageManager::releaseImages()
 {
+    delete this->view_img;
+    delete this->view_gitem;
+    delete this->view_gscene;
 
+    this->view_img = nullptr;
+    this->view_gitem = nullptr;
+    this->view_gscene = nullptr;
+
+    this->imgList.clear();
+    this->showingIndex = -1;
 }
 
 QStringList ImageManager::getImageList()
@@ -132,6 +147,15 @@ QString ImageManager::getShowingFileName()
 
     QFileInfo info(this->imgList.at(this->showingIndex));
     return info.fileName();
+}
+
+QSize ImageManager::getShowingImageSize()
+{
+    if (this->showingIndex >= 0)
+    {
+        return this->view_img->size();
+    }
+    return QSize(0, 0);
 }
 
 bool ImageManager::showImage(int n)

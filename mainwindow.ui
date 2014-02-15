@@ -80,9 +80,9 @@
      <string>表示</string>
     </property>
     <addaction name="menu_View_FullSize"/>
-    <addaction name="menu_View_FitWidth"/>
-    <addaction name="menu_View_FitHeight"/>
-    <addaction name="menu_View_SetMag"/>
+    <addaction name="menu_View_FitWindow"/>
+    <addaction name="menu_View_AssignScale"/>
+    <addaction name="menu_View_SetScale"/>
     <addaction name="separator"/>
     <addaction name="menu_View_FullScreen"/>
    </widget>
@@ -128,24 +128,19 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>原寸大表示</string>
    </property>
   </action>
-  <action name="menu_View_FitWidth">
+  <action name="menu_View_FitWindow">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>ウィンドウの横幅に合わせる</string>
-   </property>
-  </action>
-  <action name="menu_View_FitHeight">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>ウィンドウの縦幅に合わせる</string>
+    <string>ウィンドウに合わせて表示する</string>
    </property>
   </action>
   <action name="menu_Help_Version">
@@ -163,12 +158,9 @@
     <string>ファイルを閉じる</string>
    </property>
   </action>
-  <action name="menu_View_SetMag">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
+  <action name="menu_View_SetScale">
    <property name="text">
-    <string>倍率を指定する</string>
+    <string>倍率の設定</string>
    </property>
   </action>
   <action name="menu_View_FullScreen">
@@ -210,7 +202,21 @@
   </action>
   <action name="menu_Window_List">
    <property name="text">
-    <string>リスト</string>
+    <string>プレイリスト</string>
+   </property>
+   <property name="toolTip">
+    <string>プレイリスト</string>
+   </property>
+  </action>
+  <action name="menu_View_AssignScale">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>倍率を指定して表示する</string>
+   </property>
+   <property name="toolTip">
+    <string>倍率を指定して表示する</string>
    </property>
   </action>
  </widget>

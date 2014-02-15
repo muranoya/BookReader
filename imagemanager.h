@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QString>
 #include <QFileInfo>
+#include <QSize>
 
 class ImageManager
 {
@@ -47,6 +48,7 @@ public:
     // 現在表示している画像のインデックスを返す
     int getImageListIndex();
     QString getShowingFileName();
+    QSize getShowingImageSize();
 
 private:
     QGraphicsView *view;

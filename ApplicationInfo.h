@@ -1,0 +1,8 @@
+#ifndef APPLICATIONINFO_H
+#define APPLICATIONINFO_H
+
+#define SOFTWARE_NAME "BookReader"
+#define SOFTWARE_VERSION "0.0.1"
+#define SOFTWARE_BUILD 1
+
+#endif // APPLICATIONINFO_H

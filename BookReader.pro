@@ -14,10 +14,19 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    imagemanager.cpp
+    imagemanager.cpp \
+    settingscaledialog.cpp \
+    settings.cpp \
+    versiondialog.cpp
 
 HEADERS  += mainwindow.h \
     imagemanager.h \
-    nullptr.h
+    nullptr.h \
+    ApplicationInfo.h \
+    settingscaledialog.h \
+    settings.h \
+    versiondialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    settingscaledialog.ui \
+    versiondialog.ui
