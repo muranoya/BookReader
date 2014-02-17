@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     this->imgManager = new ImageManager(ui->graphicsView);
+    updateWindowState();
 }
 
 MainWindow::~MainWindow()
@@ -27,6 +28,20 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
         this->imgManager->previousImage();
     }
     updateWindowState();
+    setupMatrix();
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    setupMatrix();
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::WindowStateChange)
+    {
+        ui->menu_View_FullScreen->setChecked(this->isFullScreen());
+    }
 }
 
 void MainWindow::updateWindowState()
@@ -37,7 +52,31 @@ void MainWindow::updateWindowState()
         this->setWindowTitle(QString(SOFTWARE_NAME));
     }
     else
-    this->setWindowTitle(this->imgManager->getShowingFileName());
+    {
+        this->setWindowTitle(this->imgManager->getShowingFileName());
+    }
+}
+
+void MainWindow::setupMatrix()
+{
+    QMatrix matrix;
+
+    if (ui->menu_View_FitWindow->isChecked())
+    {
+        qreal ws = 1.0, hs = 1.0, s;
+        if (ui->graphicsView->size().width() < imgManager->getShowingImageSize().width())
+        {
+            ws = (qreal)ui->graphicsView->size().width() / (qreal)imgManager->getShowingImageSize().width();
+        }
+        if (ui->graphicsView->size().height() < imgManager->getShowingImageSize().height())
+        {
+            hs = (qreal)ui->graphicsView->size().height() / (qreal)imgManager->getShowingImageSize().height();
+        }
+        s = ws > hs ? hs : ws;
+        matrix.scale(s, s);
+    }
+
+    ui->graphicsView->setMatrix(matrix);
 }
 
 void MainWindow::on_menu_File_Open_triggered()
@@ -48,7 +87,7 @@ void MainWindow::on_menu_File_Open_triggered()
     if (!filename.isEmpty())
     {
         this->imgManager->loadFile(filename);
-        this->setWindowTitle(this->imgManager->getShowingFileName());
+        updateWindowState();
     }
 }
 
@@ -59,7 +98,7 @@ void MainWindow::on_menu_File_FolderOpen_triggered()
     if (!dirname.isEmpty())
     {
         this->imgManager->loadDir(dirname);
-        this->setWindowTitle(this->imgManager->getShowingFileName());
+        updateWindowState();
     }
 }
 
@@ -71,12 +110,34 @@ void MainWindow::on_menu_File_Close_triggered()
 
 void MainWindow::on_menu_View_FullSize_triggered()
 {
+    if (ui->menu_View_FullSize->isChecked())
+    {
+        ui->menu_View_FullSize->setChecked(true);
 
+        ui->menu_View_FitWindow->setChecked(false);
+        ui->menu_View_AssignScale->setChecked(false);
+    }
+    else
+    {
+        ui->menu_View_FullSize->setChecked(true);
+    }
+    setupMatrix();
 }
 
 void MainWindow::on_menu_View_FitWindow_triggered()
 {
+    if (ui->menu_View_FitWindow->isChecked())
+    {
+        ui->menu_View_FitWindow->setChecked(true);
 
+        ui->menu_View_FullSize->setChecked(false);
+        ui->menu_View_AssignScale->setChecked(false);
+    }
+    else
+    {
+        ui->menu_View_FitWindow->setChecked(true);
+    }
+    setupMatrix();
 }
 
 void MainWindow::on_menu_View_SetScale_triggered()
@@ -87,7 +148,18 @@ void MainWindow::on_menu_View_SetScale_triggered()
 
 void MainWindow::on_menu_View_AssignScale_triggered()
 {
-    //ui->graphicsView->scale();
+    if (ui->menu_View_AssignScale->isChecked())
+    {
+        ui->menu_View_AssignScale->setChecked(true);
+
+        ui->menu_View_FullSize->setChecked(false);
+        ui->menu_View_FitWindow->setChecked(false);
+    }
+    else
+    {
+        ui->menu_View_AssignScale->setChecked(true);
+    }
+    setupMatrix();
 }
 
 void MainWindow::on_menu_View_FullScreen_triggered()

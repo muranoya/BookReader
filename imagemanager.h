@@ -12,6 +12,7 @@
 #include <QString>
 #include <QFileInfo>
 #include <QSize>
+#include <QPainter>
 
 class ImageManager
 {

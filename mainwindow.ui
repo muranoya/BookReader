@@ -159,6 +159,9 @@
    </property>
   </action>
   <action name="menu_View_SetScale">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>倍率の設定</string>
    </property>

@@ -188,6 +188,7 @@ bool ImageManager::showImage(int n)
     this->showingIndex = n;
 
     return true;
+
 }
 
 QString ImageManager::connectFilePath(QString parent, QString child)

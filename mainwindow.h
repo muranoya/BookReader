@@ -14,6 +14,8 @@
 #include <QMouseEvent>
 #include <QDir>
 #include <QFileDialog>
+#include <QMatrix>
+#include <QEvent>
 
 namespace Ui
 {
@@ -45,7 +47,11 @@ private:
     ImageManager *imgManager;
 
     void mousePressEvent(QMouseEvent *event);
+    void resizeEvent(QResizeEvent *event);
+    void changeEvent(QEvent *event);
+
     void updateWindowState();
+    void setupMatrix();
 };
 
 #endif // MAINWINDOW_H
