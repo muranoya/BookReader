@@ -22,5 +22,5 @@ qreal SettingScaleDialog::getScale(qreal ori)
     {
         return (qreal)ui->spinBox->value();
     }
-    return 1.0;
+    return ori;
 }

@@ -79,10 +79,19 @@
     <property name="title">
      <string>表示</string>
     </property>
+    <addaction name="menu_View_ScrollHand"/>
+    <addaction name="separator"/>
     <addaction name="menu_View_FullSize"/>
     <addaction name="menu_View_FitWindow"/>
+    <addaction name="menu_View_FitImage"/>
     <addaction name="menu_View_AssignScale"/>
     <addaction name="menu_View_SetScale"/>
+    <addaction name="separator"/>
+    <addaction name="menu_View_Rotate90"/>
+    <addaction name="menu_View_Rotate180"/>
+    <addaction name="menu_View_Rotate270"/>
+    <addaction name="menu_View_AssignRotate"/>
+    <addaction name="menu_View_SetRotate"/>
     <addaction name="separator"/>
     <addaction name="menu_View_FullScreen"/>
    </widget>
@@ -98,6 +107,8 @@
     </property>
     <addaction name="menu_Filter_Monotone"/>
     <addaction name="menu_Filter_Sharpness"/>
+    <addaction name="separator"/>
+    <addaction name="menu_Filter_Antialiasing"/>
    </widget>
    <widget class="QMenu" name="menu_Slideshow">
     <property name="title">
@@ -111,6 +122,8 @@
      <string>ウィンドウ</string>
     </property>
     <addaction name="menu_Window_List"/>
+    <addaction name="menu_Window_Histogram"/>
+    <addaction name="menu_Window_Thumbnail"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_View"/>
@@ -121,7 +134,7 @@
   </widget>
   <action name="menu_File_Open">
    <property name="text">
-    <string>開く</string>
+    <string>ファイルを開く</string>
    </property>
   </action>
   <action name="menu_View_FullSize">
@@ -132,7 +145,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>原寸大表示</string>
+    <string>原寸大で表示する</string>
    </property>
   </action>
   <action name="menu_View_FitWindow">
@@ -163,7 +176,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>倍率の設定</string>
+    <string>倍率を設定する</string>
    </property>
   </action>
   <action name="menu_View_FullScreen">
@@ -220,6 +233,85 @@
    </property>
    <property name="toolTip">
     <string>倍率を指定して表示する</string>
+   </property>
+  </action>
+  <action name="menu_Window_Histogram">
+   <property name="text">
+    <string>ヒストグラム</string>
+   </property>
+  </action>
+  <action name="menu_View_Rotate90">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>時計回りに90度回転</string>
+   </property>
+  </action>
+  <action name="menu_View_Rotate180">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>時計回りに180度回転</string>
+   </property>
+  </action>
+  <action name="menu_View_Rotate270">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>時計回りに270度回転</string>
+   </property>
+  </action>
+  <action name="menu_View_SetRotate">
+   <property name="text">
+    <string>回転角度を設定する</string>
+   </property>
+  </action>
+  <action name="menu_View_AssignRotate">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>角度を指定して回転</string>
+   </property>
+  </action>
+  <action name="menu_Filter_Antialiasing">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>アンチエイリアシング</string>
+   </property>
+  </action>
+  <action name="menu_View_ScrollHand">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>スクロールハンドドラッグ</string>
+   </property>
+  </action>
+  <action name="menu_Window_Thumbnail">
+   <property name="text">
+    <string>サムネイル</string>
+   </property>
+  </action>
+  <action name="menu_View_FitImage">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>画像に合わせて表示する</string>
+   </property>
+  </action>
+  <action name="menu_View_Rotate0">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>回転なし</string>
    </property>
   </action>
  </widget>

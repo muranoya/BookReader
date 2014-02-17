@@ -17,7 +17,8 @@ SOURCES += main.cpp\
     imagemanager.cpp \
     settingscaledialog.cpp \
     settings.cpp \
-    versiondialog.cpp
+    versiondialog.cpp \
+    settingrotatedialog.cpp
 
 HEADERS  += mainwindow.h \
     imagemanager.h \
@@ -25,8 +26,10 @@ HEADERS  += mainwindow.h \
     ApplicationInfo.h \
     settingscaledialog.h \
     settings.h \
-    versiondialog.h
+    versiondialog.h \
+    settingrotatedialog.h
 
 FORMS    += mainwindow.ui \
     settingscaledialog.ui \
-    versiondialog.ui
+    versiondialog.ui \
+    settingrotatedialog.ui

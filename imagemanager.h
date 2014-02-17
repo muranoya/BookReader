@@ -8,11 +8,8 @@
 #include <QStringList>
 #include <QGraphicsView>
 #include <QDir>
-#include <QMessageBox>
 #include <QString>
-#include <QFileInfo>
 #include <QSize>
-#include <QPainter>
 
 class ImageManager
 {

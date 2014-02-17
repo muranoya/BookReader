@@ -44,6 +44,31 @@ void MainWindow::changeEvent(QEvent *event)
     }
 }
 
+void MainWindow::changeCheckedScaleMenu(QAction *act)
+{
+    ui->menu_View_FullSize->setChecked(false);
+    ui->menu_View_FitWindow->setChecked(false);
+    ui->menu_View_FitImage->setChecked(false);
+    ui->menu_View_AssignScale->setChecked(false);
+
+    act->setChecked(true);
+
+    setupMatrix();
+}
+
+void MainWindow::changeCheckedRotateMenu(QAction *act)
+{
+    bool b = act->isChecked();
+    ui->menu_View_Rotate90->setChecked(false);
+    ui->menu_View_Rotate180->setChecked(false);
+    ui->menu_View_Rotate270->setChecked(false);
+    ui->menu_View_AssignRotate->setChecked(false);
+
+    act->setChecked(b);
+
+    setupMatrix();
+}
+
 void MainWindow::updateWindowState()
 {
     QString title = this->imgManager->getShowingFileName();
@@ -61,9 +86,9 @@ void MainWindow::setupMatrix()
 {
     QMatrix matrix;
 
-    if (ui->menu_View_FitWindow->isChecked())
+    if (!ui->menu_View_FullSize->isChecked())
     {
-        qreal ws = 1.0, hs = 1.0, s;
+        qreal ws = 1.0, hs = 1.0, s = 1.0;
         if (ui->graphicsView->size().width() < imgManager->getShowingImageSize().width())
         {
             ws = (qreal)ui->graphicsView->size().width() / (qreal)imgManager->getShowingImageSize().width();
@@ -72,8 +97,34 @@ void MainWindow::setupMatrix()
         {
             hs = (qreal)ui->graphicsView->size().height() / (qreal)imgManager->getShowingImageSize().height();
         }
-        s = ws > hs ? hs : ws;
+
+        if (ui->menu_View_FitWindow->isChecked())
+        {
+            s = ws > hs ? hs : ws;
+        }
+        else if (ui->menu_View_FitImage->isChecked())
+        {
+            s = ws;
+        }
+
         matrix.scale(s, s);
+    }
+
+    if (ui->menu_View_Rotate90->isChecked())
+    {
+        matrix.rotate(90.0);
+    }
+    else if (ui->menu_View_Rotate180->isChecked())
+    {
+        matrix.rotate(180.0);
+    }
+    else if (ui->menu_View_Rotate270->isChecked())
+    {
+        matrix.rotate(270.0);
+    }
+    else if (ui->menu_View_AssignRotate->isChecked())
+    {
+        //matrix.rotate();
     }
 
     ui->graphicsView->setMatrix(matrix);
@@ -108,36 +159,27 @@ void MainWindow::on_menu_File_Close_triggered()
     updateWindowState();
 }
 
+void MainWindow::on_menu_View_ScrollHand_triggered()
+{
+    ui->graphicsView->setDragMode(ui->menu_View_ScrollHand->isChecked()
+                                  ? QGraphicsView::ScrollHandDrag
+                                  : QGraphicsView::NoDrag);
+    ui->graphicsView->setInteractive(!ui->menu_View_ScrollHand->isChecked());
+}
+
 void MainWindow::on_menu_View_FullSize_triggered()
 {
-    if (ui->menu_View_FullSize->isChecked())
-    {
-        ui->menu_View_FullSize->setChecked(true);
-
-        ui->menu_View_FitWindow->setChecked(false);
-        ui->menu_View_AssignScale->setChecked(false);
-    }
-    else
-    {
-        ui->menu_View_FullSize->setChecked(true);
-    }
-    setupMatrix();
+    changeCheckedScaleMenu(ui->menu_View_FullSize);
 }
 
 void MainWindow::on_menu_View_FitWindow_triggered()
 {
-    if (ui->menu_View_FitWindow->isChecked())
-    {
-        ui->menu_View_FitWindow->setChecked(true);
+    changeCheckedScaleMenu(ui->menu_View_FitWindow);
+}
 
-        ui->menu_View_FullSize->setChecked(false);
-        ui->menu_View_AssignScale->setChecked(false);
-    }
-    else
-    {
-        ui->menu_View_FitWindow->setChecked(true);
-    }
-    setupMatrix();
+void MainWindow::on_menu_View_FitImage_triggered()
+{
+    changeCheckedScaleMenu(ui->menu_View_FitImage);
 }
 
 void MainWindow::on_menu_View_SetScale_triggered()
@@ -148,18 +190,33 @@ void MainWindow::on_menu_View_SetScale_triggered()
 
 void MainWindow::on_menu_View_AssignScale_triggered()
 {
-    if (ui->menu_View_AssignScale->isChecked())
-    {
-        ui->menu_View_AssignScale->setChecked(true);
+    changeCheckedScaleMenu(ui->menu_View_AssignScale);
+}
 
-        ui->menu_View_FullSize->setChecked(false);
-        ui->menu_View_FitWindow->setChecked(false);
-    }
-    else
-    {
-        ui->menu_View_AssignScale->setChecked(true);
-    }
-    setupMatrix();
+void MainWindow::on_menu_View_Rotate90_triggered()
+{
+    changeCheckedRotateMenu(ui->menu_View_Rotate90);
+}
+
+void MainWindow::on_menu_View_Rotate180_triggered()
+{
+    changeCheckedRotateMenu(ui->menu_View_Rotate180);
+}
+
+void MainWindow::on_menu_View_Rotate270_triggered()
+{
+    changeCheckedRotateMenu(ui->menu_View_Rotate270);
+}
+
+void MainWindow::on_menu_View_AssignRotate_triggered()
+{
+    changeCheckedRotateMenu(ui->menu_View_AssignRotate);
+}
+
+void MainWindow::on_menu_View_SetRotate_triggered()
+{
+    SettingRotateDialog dialog(this);
+    dialog.getRotate(0.0);
 }
 
 void MainWindow::on_menu_View_FullScreen_triggered()
@@ -172,6 +229,11 @@ void MainWindow::on_menu_View_FullScreen_triggered()
     {
         this->showNormal();
     }
+}
+
+void MainWindow::on_menu_Filter_Antialiasing_triggered()
+{
+    ui->graphicsView->setRenderHint(QPainter::Antialiasing, ui->menu_Filter_Antialiasing->isChecked());
 }
 
 void MainWindow::on_menu_Help_Version_triggered()
