@@ -4,19 +4,19 @@ ImageManager::ImageManager(QGraphicsView *view)
 {
     this->view = view;
 
-    this->showingIndex = -1;
+    showingIndex = -1;
 
     // ポインタの初期化
-    this->view_img = nullptr;
-    this->view_gscene = nullptr;
-    this->view_gitem = nullptr;
+    view_img = nullptr;
+    view_gscene = nullptr;
+    view_gitem = nullptr;
 }
 
 ImageManager::~ImageManager()
 {
-    delete this->view_img;
-    delete this->view_gitem;
-    delete this->view_gscene;
+    delete view_img;
+    delete view_gitem;
+    delete view_gscene;
 }
 
 bool ImageManager::loadFile(const QString &path)
@@ -26,8 +26,8 @@ bool ImageManager::loadFile(const QString &path)
         return false;
     }
 
-    this->imgList.clear();
-    this->imgList << path;
+    imgList.clear();
+    imgList << path;
 
     return showImage(0);
 }
@@ -45,14 +45,14 @@ bool ImageManager::loadDir(const QString &path)
         return false;
     }
 
-    this->imgList.clear();
+    imgList.clear();
     QStringList list = dir.entryList();
     QStringList::const_iterator iterator;
     for (iterator = list.constBegin(); iterator != list.constEnd(); ++iterator)
     {
         if (isReadable(*iterator))
         {
-            this->imgList << connectFilePath(path, *iterator);
+            imgList << connectFilePath(path, *iterator);
         }
     }
 
@@ -61,42 +61,42 @@ bool ImageManager::loadDir(const QString &path)
 
 void ImageManager::nextImage()
 {
-    if (this->showingIndex >= 0)
+    if (showingIndex >= 0)
     {
-        this->showingIndex++;
-        if (this->showingIndex >= this->imgList.length())
+        showingIndex++;
+        if (showingIndex >= imgList.length())
         {
-            this->showingIndex = 0;
+            showingIndex = 0;
         }
-        showImage(this->showingIndex);
+        showImage(showingIndex);
     }
 }
 
 void ImageManager::previousImage()
 {
-    if (this->showingIndex >= 0)
+    if (showingIndex >= 0)
     {
-        this->showingIndex--;
-        if (this->showingIndex < 0)
+        showingIndex--;
+        if (showingIndex < 0)
         {
-            this->showingIndex = this->imgList.length()-1;
+            showingIndex = imgList.length()-1;
         }
-        showImage(this->showingIndex);
+        showImage(showingIndex);
     }
 }
 
 void ImageManager::releaseImages()
 {
-    delete this->view_img;
-    delete this->view_gitem;
-    delete this->view_gscene;
+    delete view_img;
+    delete view_gitem;
+    delete view_gscene;
 
-    this->view_img = nullptr;
-    this->view_gitem = nullptr;
-    this->view_gscene = nullptr;
+    view_img = nullptr;
+    view_gitem = nullptr;
+    view_gscene = nullptr;
 
-    this->imgList.clear();
-    this->showingIndex = -1;
+    imgList.clear();
+    showingIndex = -1;
 }
 
 QStringList ImageManager::getImageList()
@@ -106,15 +106,15 @@ QStringList ImageManager::getImageList()
 
 int ImageManager::getImageListCount()
 {
-    return this->imgList.count();
+    return imgList.count();
 }
 
 QStringList ImageManager::getReadableExtension()
 {
     QStringList list;
-    for (int i = 0; i < this->extListLen; i++)
+    for (int i = 0; i < extListLen; i++)
     {
-        list << this->extList[i];
+        list << extList[i];
     }
     return list;
 }
@@ -123,9 +123,9 @@ bool ImageManager::isReadable(const QString &path)
 {
     QFileInfo info(path);
     QString ext = info.suffix().toLower();
-    for (int i = 0; i < this->extListLen; i++)
+    for (int i = 0; i < extListLen; i++)
     {
-        if (ext == this->extList[i])
+        if (ext == extList[i])
         {
             return true;
         }
@@ -135,25 +135,25 @@ bool ImageManager::isReadable(const QString &path)
 
 int ImageManager::getImageListIndex()
 {
-    return this->showingIndex;
+    return showingIndex;
 }
 
 QString ImageManager::getShowingFileName()
 {
-    if (this->showingIndex < 0 || this->showingIndex >= this->imgList.size())
+    if (showingIndex < 0 || showingIndex >= imgList.size())
     {
         return QString();
     }
 
-    QFileInfo info(this->imgList.at(this->showingIndex));
+    QFileInfo info(imgList.at(showingIndex));
     return info.fileName();
 }
 
 QSize ImageManager::getShowingImageSize()
 {
-    if (this->showingIndex >= 0)
+    if (showingIndex >= 0)
     {
-        return this->view_img->size();
+        return view_img->size();
     }
     return QSize(0, 0);
 }
@@ -178,17 +178,16 @@ bool ImageManager::showImage(int n)
     view->setScene(scene);
     scene->addItem(item);
 
-    delete this->view_img;
-    delete this->view_gitem;
-    delete this->view_gscene;
+    delete view_img;
+    delete view_gitem;
+    delete view_gscene;
 
-    this->view_gscene = scene;
-    this->view_img = img;
-    this->view_gitem = item;
-    this->showingIndex = n;
+    view_gscene = scene;
+    view_img = img;
+    view_gitem = item;
+    showingIndex = n;
 
     return true;
-
 }
 
 QString ImageManager::connectFilePath(QString parent, QString child)

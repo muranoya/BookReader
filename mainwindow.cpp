@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    this->imgManager = new ImageManager(ui->graphicsView);
+    imgManager = new ImageManager(ui->graphicsView);
     updateWindowState();
 }
 
@@ -21,11 +21,11 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton)
     {
-        this->imgManager->nextImage();
+        imgManager->nextImage();
     }
     if (event->buttons() & Qt::RightButton)
     {
-        this->imgManager->previousImage();
+        imgManager->previousImage();
     }
     updateWindowState();
     setupMatrix();
@@ -40,7 +40,7 @@ void MainWindow::changeEvent(QEvent *event)
 {
     if (event->type() == QEvent::WindowStateChange)
     {
-        ui->menu_View_FullScreen->setChecked(this->isFullScreen());
+        ui->menu_View_FullScreen->setChecked(isFullScreen());
     }
 }
 
@@ -49,7 +49,7 @@ void MainWindow::changeCheckedScaleMenu(QAction *act)
     ui->menu_View_FullSize->setChecked(false);
     ui->menu_View_FitWindow->setChecked(false);
     ui->menu_View_FitImage->setChecked(false);
-    ui->menu_View_AssignScale->setChecked(false);
+    ui->menu_View_SetScale->setChecked(false);
 
     act->setChecked(true);
 
@@ -62,7 +62,7 @@ void MainWindow::changeCheckedRotateMenu(QAction *act)
     ui->menu_View_Rotate90->setChecked(false);
     ui->menu_View_Rotate180->setChecked(false);
     ui->menu_View_Rotate270->setChecked(false);
-    ui->menu_View_AssignRotate->setChecked(false);
+    ui->menu_View_SetRotate->setChecked(false);
 
     act->setChecked(b);
 
@@ -71,14 +71,14 @@ void MainWindow::changeCheckedRotateMenu(QAction *act)
 
 void MainWindow::updateWindowState()
 {
-    QString title = this->imgManager->getShowingFileName();
+    QString title = imgManager->getShowingFileName();
     if (title.length() == 0)
     {
-        this->setWindowTitle(QString(SOFTWARE_NAME));
+        setWindowTitle(QString(SOFTWARE_NAME));
     }
     else
     {
-        this->setWindowTitle(this->imgManager->getShowingFileName());
+        setWindowTitle(imgManager->getShowingFileName());
     }
 }
 
@@ -122,7 +122,7 @@ void MainWindow::setupMatrix()
     {
         matrix.rotate(270.0);
     }
-    else if (ui->menu_View_AssignRotate->isChecked())
+    else if (ui->menu_View_SetRotate->isChecked())
     {
         //matrix.rotate();
     }
@@ -132,30 +132,30 @@ void MainWindow::setupMatrix()
 
 void MainWindow::on_menu_File_Open_triggered()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Open File"), QString(),
+    QString filename = QFileDialog::getOpenFileName(this, tr("ファイルを開く"), QString(),
                                                     tr("Imges (*.png *.jpg *.jpeg *.bmp *.gif)"));
 
     if (!filename.isEmpty())
     {
-        this->imgManager->loadFile(filename);
+        imgManager->loadFile(filename);
         updateWindowState();
     }
 }
 
 void MainWindow::on_menu_File_FolderOpen_triggered()
 {
-    QString dirname = QFileDialog::getExistingDirectory(this, tr("Open Directory"), QString());
+    QString dirname = QFileDialog::getExistingDirectory(this, tr("ディレクトリを開く"), QString());
 
     if (!dirname.isEmpty())
     {
-        this->imgManager->loadDir(dirname);
+        imgManager->loadDir(dirname);
         updateWindowState();
     }
 }
 
 void MainWindow::on_menu_File_Close_triggered()
 {
-    this->imgManager->releaseImages();
+    imgManager->releaseImages();
     updateWindowState();
 }
 
@@ -186,11 +186,7 @@ void MainWindow::on_menu_View_SetScale_triggered()
 {
     SettingScaleDialog dialog(this);
     dialog.getScale(100.0);
-}
-
-void MainWindow::on_menu_View_AssignScale_triggered()
-{
-    changeCheckedScaleMenu(ui->menu_View_AssignScale);
+    changeCheckedScaleMenu(ui->menu_View_SetScale);
 }
 
 void MainWindow::on_menu_View_Rotate90_triggered()
@@ -208,26 +204,25 @@ void MainWindow::on_menu_View_Rotate270_triggered()
     changeCheckedRotateMenu(ui->menu_View_Rotate270);
 }
 
-void MainWindow::on_menu_View_AssignRotate_triggered()
-{
-    changeCheckedRotateMenu(ui->menu_View_AssignRotate);
-}
-
 void MainWindow::on_menu_View_SetRotate_triggered()
 {
-    SettingRotateDialog dialog(this);
-    dialog.getRotate(0.0);
+    if (ui->menu_View_SetRotate->isChecked())
+    {
+        SettingRotateDialog dialog(this);
+        dialog.getRotate(0.0);
+    }
+    changeCheckedRotateMenu(ui->menu_View_SetRotate);
 }
 
 void MainWindow::on_menu_View_FullScreen_triggered()
 {
     if (ui->menu_View_FullScreen->isChecked())
     {
-        this->showFullScreen();
+        showFullScreen();
     }
     else
     {
-        this->showNormal();
+        showNormal();
     }
 }
 

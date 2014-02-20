@@ -3,14 +3,14 @@
 
 #include <QDialog>
 
-namespace Ui {
-class SettingScaleDialog;
+namespace Ui
+{
+    class SettingScaleDialog;
 }
 
 class SettingScaleDialog : public QDialog
 {
     Q_OBJECT
-
 public:
     explicit SettingScaleDialog(QWidget *parent = 0);
     ~SettingScaleDialog();

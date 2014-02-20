@@ -84,13 +84,11 @@
     <addaction name="menu_View_FullSize"/>
     <addaction name="menu_View_FitWindow"/>
     <addaction name="menu_View_FitImage"/>
-    <addaction name="menu_View_AssignScale"/>
     <addaction name="menu_View_SetScale"/>
     <addaction name="separator"/>
     <addaction name="menu_View_Rotate90"/>
     <addaction name="menu_View_Rotate180"/>
     <addaction name="menu_View_Rotate270"/>
-    <addaction name="menu_View_AssignRotate"/>
     <addaction name="menu_View_SetRotate"/>
     <addaction name="separator"/>
     <addaction name="menu_View_FullScreen"/>
@@ -173,10 +171,10 @@
   </action>
   <action name="menu_View_SetScale">
    <property name="checkable">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
-    <string>倍率を設定する</string>
+    <string>倍率を指定して表示する</string>
    </property>
   </action>
   <action name="menu_View_FullScreen">
@@ -224,17 +222,6 @@
     <string>プレイリスト</string>
    </property>
   </action>
-  <action name="menu_View_AssignScale">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>倍率を指定して表示する</string>
-   </property>
-   <property name="toolTip">
-    <string>倍率を指定して表示する</string>
-   </property>
-  </action>
   <action name="menu_Window_Histogram">
    <property name="text">
     <string>ヒストグラム</string>
@@ -265,16 +252,11 @@
    </property>
   </action>
   <action name="menu_View_SetRotate">
-   <property name="text">
-    <string>回転角度を設定する</string>
-   </property>
-  </action>
-  <action name="menu_View_AssignRotate">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>角度を指定して回転</string>
+    <string>回転角度を指定して表示する</string>
    </property>
   </action>
   <action name="menu_Filter_Antialiasing">
@@ -304,14 +286,6 @@
    </property>
    <property name="text">
     <string>画像に合わせて表示する</string>
-   </property>
-  </action>
-  <action name="menu_View_Rotate0">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>回転なし</string>
    </property>
   </action>
  </widget>

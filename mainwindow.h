@@ -40,11 +40,9 @@ private slots:
     void on_menu_View_FitWindow_triggered();
     void on_menu_View_FitImage_triggered();
     void on_menu_View_SetScale_triggered();
-    void on_menu_View_AssignScale_triggered();
     void on_menu_View_Rotate90_triggered();
     void on_menu_View_Rotate180_triggered();
     void on_menu_View_Rotate270_triggered();
-    void on_menu_View_AssignRotate_triggered();
     void on_menu_View_SetRotate_triggered();
     void on_menu_View_FullScreen_triggered();
 

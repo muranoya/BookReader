@@ -3,14 +3,14 @@
 
 #include <QDialog>
 
-namespace Ui {
-class SettingRotateDialog;
+namespace Ui
+{
+    class SettingRotateDialog;
 }
 
 class SettingRotateDialog : public QDialog
 {
     Q_OBJECT
-
 public:
     explicit SettingRotateDialog(QWidget *parent = 0);
     ~SettingRotateDialog();

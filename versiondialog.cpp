@@ -15,10 +15,10 @@ VersionDialog::~VersionDialog()
 
 void VersionDialog::showVersion()
 {
-    this->setWindowTitle(tr("バージョン"));
+    setWindowTitle(tr("バージョン"));
     ui->label_software->setText(tr("ソフトウェア名"));
     ui->label_software_text->setText(QString(SOFTWARE_NAME));
     ui->label_version->setText(tr("バージョン"));
     ui->label_version_text->setText(QString(SOFTWARE_VERSION));
-    this->exec();
+    exec();
 }
