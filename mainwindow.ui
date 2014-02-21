@@ -83,6 +83,8 @@
     </property>
     <addaction name="menu_Filter_Monotone"/>
     <addaction name="menu_Filter_Sharpness"/>
+    <addaction name="menu_Filter_Binarized"/>
+    <addaction name="menu_Filter_Averagin"/>
     <addaction name="separator"/>
     <addaction name="menu_Filter_Antialiasing"/>
    </widget>
@@ -97,9 +99,11 @@
     <property name="title">
      <string>ウィンドウ</string>
     </property>
-    <addaction name="menu_Window_List"/>
-    <addaction name="menu_Window_Histogram"/>
     <addaction name="menu_Window_Thumbnail"/>
+    <addaction name="menu_Window_List"/>
+    <addaction name="separator"/>
+    <addaction name="menu_Window_Histogram"/>
+    <addaction name="menu_Window_ToneCurve"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_View"/>
@@ -189,7 +193,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>先鋭化</string>
+    <string>鮮鋭化</string>
    </property>
   </action>
   <action name="menu_Window_List">
@@ -264,6 +268,24 @@
    </property>
    <property name="text">
     <string>画像に合わせて表示する</string>
+   </property>
+  </action>
+  <action name="menu_Filter_Binarized">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>二値化</string>
+   </property>
+  </action>
+  <action name="menu_Filter_Averagin">
+   <property name="text">
+    <string>平均化</string>
+   </property>
+  </action>
+  <action name="menu_Window_ToneCurve">
+   <property name="text">
+    <string>トーンカーブ</string>
    </property>
   </action>
  </widget>

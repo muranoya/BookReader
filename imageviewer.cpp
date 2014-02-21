@@ -1,5 +1,8 @@
 #include "imageviewer.h"
 
+const QString ImageViewer::extList[5] = {"jpg", "png", "jpeg", "bmp", "gif"};
+const int ImageViewer::extListLen = 5;
+
 ImageViewer::ImageViewer()
 {
     showingIndex = -1;
@@ -111,7 +114,7 @@ void ImageViewer::releaseImages()
 
 QStringList ImageViewer::getImageList()
 {
-
+    return imgList;
 }
 
 int ImageViewer::getImageListCount()

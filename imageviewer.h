@@ -53,8 +53,8 @@ private:
     QGraphicsScene *view_scene;
     QGraphicsPixmapItem *view_item;
     // 対応している拡張子
-    QString extList[5] = {"jpg", "png", "jpeg", "bmp", "gif"};
-    const int extListLen = 5;
+    static const QString extList[];
+    static const int extListLen;
     QStringList imgList;
     int showingIndex;
 
