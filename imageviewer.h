@@ -2,6 +2,7 @@
 #define IMAGEMANAGER_H
 
 #include "nullptr.h"
+#include <iostream>
 #include <QImage>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
@@ -11,11 +12,20 @@
 #include <QString>
 #include <QSize>
 
-class ImageManager
+class ImageViewer : public QGraphicsView
 {
+    Q_OBJECT
 public:
-    ImageManager(QGraphicsView *view);
-    ~ImageManager();
+    enum ViewMode
+    {
+        FULLSIZE,
+        FIT_WINDOW,
+        FIT_IMAGE,
+        CUSTOM_SCALE,
+    };
+
+    ImageViewer();
+    ~ImageViewer();
 
     bool loadFile(const QString &path);
     bool loadDir(const QString &path);
@@ -29,17 +39,27 @@ public:
     int getImageListIndex();
     QString getShowingFileName();
     QSize getShowingImageSize();
+    void setAntiAliasing(bool b);
+    void setScrollHand(bool b);
+    void setScale(ViewMode m, qreal s);
+    void setScale(ViewMode m);
+    void setRotate(qreal deg);
+    qreal getScale();
+    qreal getRotate();
+    void setupMatrix();
 
 private:
-    QGraphicsView *view;
     QImage *view_img;
-    QGraphicsScene *view_gscene;
-    QGraphicsPixmapItem *view_gitem;
+    QGraphicsScene *view_scene;
+    QGraphicsPixmapItem *view_item;
     // 対応している拡張子
     QString extList[5] = {"jpg", "png", "jpeg", "bmp", "gif"};
     const int extListLen = 5;
     QStringList imgList;
     int showingIndex;
+
+    qreal img_scale, img_rotate;
+    ViewMode mode;
 
     bool showImage(int n);
     QString connectFilePath(QString parent, QString child);

@@ -7,33 +7,33 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    imgManager = new ImageManager(ui->graphicsView);
+    imgView = new ImageViewer();
+    ui->gridLayout_2->addWidget(imgView);
     updateWindowState();
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete imgManager;
+    delete imgView;
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    imgView->setupMatrix();
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton)
     {
-        imgManager->nextImage();
+        imgView->nextImage();
     }
     if (event->buttons() & Qt::RightButton)
     {
-        imgManager->previousImage();
+        imgView->previousImage();
     }
     updateWindowState();
-    setupMatrix();
-}
-
-void MainWindow::resizeEvent(QResizeEvent *event)
-{
-    setupMatrix();
 }
 
 void MainWindow::changeEvent(QEvent *event)
@@ -44,7 +44,7 @@ void MainWindow::changeEvent(QEvent *event)
     }
 }
 
-void MainWindow::changeCheckedScaleMenu(QAction *act)
+void MainWindow::changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, qreal s)
 {
     ui->menu_View_FullSize->setChecked(false);
     ui->menu_View_FitWindow->setChecked(false);
@@ -53,10 +53,17 @@ void MainWindow::changeCheckedScaleMenu(QAction *act)
 
     act->setChecked(true);
 
-    setupMatrix();
+    if (m == ImageViewer::CUSTOM_SCALE)
+    {
+        imgView->setScale(m, s);
+    }
+    else
+    {
+        imgView->setScale(m);
+    }
 }
 
-void MainWindow::changeCheckedRotateMenu(QAction *act)
+void MainWindow::changeCheckedRotateMenu(QAction *act, qreal deg)
 {
     bool b = act->isChecked();
     ui->menu_View_Rotate90->setChecked(false);
@@ -65,143 +72,93 @@ void MainWindow::changeCheckedRotateMenu(QAction *act)
     ui->menu_View_SetRotate->setChecked(false);
 
     act->setChecked(b);
-
-    setupMatrix();
+    if (b)
+    {
+        imgView->setRotate(deg);
+    }
+    else
+    {
+        imgView->setRotate(0.0);
+    }
 }
 
 void MainWindow::updateWindowState()
 {
-    QString title = imgManager->getShowingFileName();
-    if (title.length() == 0)
-    {
-        setWindowTitle(QString(SOFTWARE_NAME));
-    }
-    else
-    {
-        setWindowTitle(imgManager->getShowingFileName());
-    }
-}
-
-void MainWindow::setupMatrix()
-{
-    QMatrix matrix;
-
-    if (!ui->menu_View_FullSize->isChecked())
-    {
-        qreal ws = 1.0, hs = 1.0, s = 1.0;
-        if (ui->graphicsView->size().width() < imgManager->getShowingImageSize().width())
-        {
-            ws = (qreal)ui->graphicsView->size().width() / (qreal)imgManager->getShowingImageSize().width();
-        }
-        if (ui->graphicsView->size().height() < imgManager->getShowingImageSize().height())
-        {
-            hs = (qreal)ui->graphicsView->size().height() / (qreal)imgManager->getShowingImageSize().height();
-        }
-
-        if (ui->menu_View_FitWindow->isChecked())
-        {
-            s = ws > hs ? hs : ws;
-        }
-        else if (ui->menu_View_FitImage->isChecked())
-        {
-            s = ws;
-        }
-
-        matrix.scale(s, s);
-    }
-
-    if (ui->menu_View_Rotate90->isChecked())
-    {
-        matrix.rotate(90.0);
-    }
-    else if (ui->menu_View_Rotate180->isChecked())
-    {
-        matrix.rotate(180.0);
-    }
-    else if (ui->menu_View_Rotate270->isChecked())
-    {
-        matrix.rotate(270.0);
-    }
-    else if (ui->menu_View_SetRotate->isChecked())
-    {
-        //matrix.rotate();
-    }
-
-    ui->graphicsView->setMatrix(matrix);
+    QString title = imgView->getShowingFileName();
+    setWindowTitle(title.isEmpty() ? QString(SOFTWARE_NAME) : title);
 }
 
 void MainWindow::on_menu_File_Open_triggered()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("ファイルを開く"), QString(),
-                                                    tr("Imges (*.png *.jpg *.jpeg *.bmp *.gif)"));
+    QString filename = QFileDialog::getOpenFileName(
+                this, tr("ファイルを開く"), QString(),
+                tr("Imges (*.png *.jpg *.jpeg *.bmp *.gif)"));
 
     if (!filename.isEmpty())
     {
-        imgManager->loadFile(filename);
+        imgView->loadFile(filename);
         updateWindowState();
     }
 }
 
 void MainWindow::on_menu_File_FolderOpen_triggered()
 {
-    QString dirname = QFileDialog::getExistingDirectory(this, tr("ディレクトリを開く"), QString());
+    QString dirname = QFileDialog::getExistingDirectory(
+                this, tr("ディレクトリを開く"), QString());
 
     if (!dirname.isEmpty())
     {
-        imgManager->loadDir(dirname);
+        imgView->loadDir(dirname);
         updateWindowState();
     }
 }
 
 void MainWindow::on_menu_File_Close_triggered()
 {
-    imgManager->releaseImages();
+    imgView->releaseImages();
     updateWindowState();
 }
 
 void MainWindow::on_menu_View_ScrollHand_triggered()
 {
-    ui->graphicsView->setDragMode(ui->menu_View_ScrollHand->isChecked()
-                                  ? QGraphicsView::ScrollHandDrag
-                                  : QGraphicsView::NoDrag);
-    ui->graphicsView->setInteractive(!ui->menu_View_ScrollHand->isChecked());
+    imgView->setScrollHand(ui->menu_View_ScrollHand->isChecked());
 }
 
 void MainWindow::on_menu_View_FullSize_triggered()
 {
-    changeCheckedScaleMenu(ui->menu_View_FullSize);
+    changeCheckedScaleMenu(ui->menu_View_FullSize, ImageViewer::FULLSIZE, 0.0);
 }
 
 void MainWindow::on_menu_View_FitWindow_triggered()
 {
-    changeCheckedScaleMenu(ui->menu_View_FitWindow);
+    changeCheckedScaleMenu(ui->menu_View_FitWindow, ImageViewer::FIT_WINDOW, 0.0);
 }
 
 void MainWindow::on_menu_View_FitImage_triggered()
 {
-    changeCheckedScaleMenu(ui->menu_View_FitImage);
+    changeCheckedScaleMenu(ui->menu_View_FitImage, ImageViewer::FIT_IMAGE, 0.0);
 }
 
 void MainWindow::on_menu_View_SetScale_triggered()
 {
     SettingScaleDialog dialog(this);
-    dialog.getScale(100.0);
-    changeCheckedScaleMenu(ui->menu_View_SetScale);
+    changeCheckedScaleMenu(ui->menu_View_SetScale, ImageViewer::CUSTOM_SCALE,
+                           dialog.getScale(imgView->getScale() * 100.0) / 100.0);
 }
 
 void MainWindow::on_menu_View_Rotate90_triggered()
 {
-    changeCheckedRotateMenu(ui->menu_View_Rotate90);
+    changeCheckedRotateMenu(ui->menu_View_Rotate90, 90.0);
 }
 
 void MainWindow::on_menu_View_Rotate180_triggered()
 {
-    changeCheckedRotateMenu(ui->menu_View_Rotate180);
+    changeCheckedRotateMenu(ui->menu_View_Rotate180, 180.0);
 }
 
 void MainWindow::on_menu_View_Rotate270_triggered()
 {
-    changeCheckedRotateMenu(ui->menu_View_Rotate270);
+    changeCheckedRotateMenu(ui->menu_View_Rotate270, 270.0);
 }
 
 void MainWindow::on_menu_View_SetRotate_triggered()
@@ -210,8 +167,9 @@ void MainWindow::on_menu_View_SetRotate_triggered()
     {
         SettingRotateDialog dialog(this);
         dialog.getRotate(0.0);
+        changeCheckedRotateMenu(ui->menu_View_SetRotate,
+                                dialog.getRotate(imgView->getRotate()));
     }
-    changeCheckedRotateMenu(ui->menu_View_SetRotate);
 }
 
 void MainWindow::on_menu_View_FullScreen_triggered()
@@ -228,7 +186,7 @@ void MainWindow::on_menu_View_FullScreen_triggered()
 
 void MainWindow::on_menu_Filter_Antialiasing_triggered()
 {
-    ui->graphicsView->setRenderHint(QPainter::Antialiasing, ui->menu_Filter_Antialiasing->isChecked());
+    imgView->setAntiAliasing(ui->menu_Filter_Antialiasing->isChecked());
 }
 
 void MainWindow::on_menu_Help_Version_triggered()

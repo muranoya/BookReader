@@ -4,7 +4,7 @@
 #include "versiondialog.h"
 #include "settingscaledialog.h"
 #include "settingrotatedialog.h"
-#include "imagemanager.h"
+#include "imageviewer.h"
 #include "nullptr.h"
 #include "ApplicationInfo.h"
 #include <iostream>
@@ -25,7 +25,7 @@ namespace Ui
 
 class MainWindow : public QMainWindow
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -52,16 +52,15 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    ImageManager *imgManager;
+    ImageViewer *imgView;
 
-    void mousePressEvent(QMouseEvent *event);
     void resizeEvent(QResizeEvent *event);
+    void mousePressEvent(QMouseEvent *event);
     void changeEvent(QEvent *event);
 
-    void changeCheckedScaleMenu(QAction *act);
-    void changeCheckedRotateMenu(QAction *act);
+    void changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, qreal s);
+    void changeCheckedRotateMenu(QAction *act, qreal deg);
     void updateWindowState();
-    void setupMatrix();
 };
 
 #endif // MAINWINDOW_H

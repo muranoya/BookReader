@@ -14,20 +14,20 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    imagemanager.cpp \
     settingscaledialog.cpp \
     settings.cpp \
     versiondialog.cpp \
-    settingrotatedialog.cpp
+    settingrotatedialog.cpp \
+    imageviewer.cpp
 
 HEADERS  += mainwindow.h \
-    imagemanager.h \
     nullptr.h \
     ApplicationInfo.h \
     settingscaledialog.h \
     settings.h \
     versiondialog.h \
-    settingrotatedialog.h
+    settingrotatedialog.h \
+    imageviewer.h
 
 FORMS    += mainwindow.ui \
     settingscaledialog.ui \
