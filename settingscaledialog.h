@@ -15,9 +15,12 @@ public:
     explicit SettingScaleDialog(QWidget *parent = 0);
     ~SettingScaleDialog();
 
-    qreal getScale(qreal ori);
+    bool getScale(qreal ori);
+    qreal getValue();
 
 private:
+    qreal scale;
+
     Ui::SettingScaleDialog *ui;
 };
 

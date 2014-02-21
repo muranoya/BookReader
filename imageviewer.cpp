@@ -13,7 +13,6 @@ ImageViewer::ImageViewer()
 
     // ポインタの初期化
     view_img = nullptr;
-    //view_scene = nullptr;
     view_item = nullptr;
 }
 
@@ -245,7 +244,15 @@ void ImageViewer::setupMatrix()
 {
     QMatrix matrix;
 
-    if (mode != ImageViewer::FULLSIZE)
+    if (mode == ImageViewer::CUSTOM_SCALE)
+    {
+        matrix.scale(img_scale, img_scale);
+    }
+    else if (mode == ImageViewer::FULLSIZE)
+    {
+        img_scale = 1.0;
+    }
+    else
     {
         qreal ws = 1.0, hs = 1.0, s = 1.0;
         if (size().width() < getShowingImageSize().width())
@@ -267,6 +274,7 @@ void ImageViewer::setupMatrix()
         }
 
         matrix.scale(s, s);
+        img_scale = s;
     }
 
     matrix.rotate(img_rotate);

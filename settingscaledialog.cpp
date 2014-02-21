@@ -13,14 +13,23 @@ SettingScaleDialog::~SettingScaleDialog()
     delete ui;
 }
 
-qreal SettingScaleDialog::getScale(qreal ori)
+bool SettingScaleDialog::getScale(qreal ori)
 {
     setWindowTitle(tr("倍率の設定"));
-    ui->spinBox->setValue((int)ori);
-    int ret = exec();
-    if (ret == QDialog::Accepted)
+    ui->doubleSpinBox->setValue(ori);
+    if (exec() == QDialog::Accepted)
     {
-        return (qreal)ui->spinBox->value();
+        scale = (qreal)ui->doubleSpinBox->value();
+        return true;
     }
-    return ori;
+    else
+    {
+        scale = ori;
+        return false;
+    }
+}
+
+qreal SettingScaleDialog::getValue()
+{
+    return scale;
 }

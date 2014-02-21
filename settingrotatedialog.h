@@ -15,9 +15,12 @@ public:
     explicit SettingRotateDialog(QWidget *parent = 0);
     ~SettingRotateDialog();
 
-    qreal getRotate(qreal def);
+    bool getRotate(qreal deg);
+    qreal getValue();
 
 private:
+    qreal rotate;
+
     Ui::SettingRotateDialog *ui;
 };
 

@@ -20,7 +20,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
+    Q_UNUSED(event);
     imgView->setupMatrix();
+    updateWindowState();
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
@@ -61,6 +63,7 @@ void MainWindow::changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, q
     {
         imgView->setScale(m);
     }
+    updateWindowState();
 }
 
 void MainWindow::changeCheckedRotateMenu(QAction *act, qreal deg)
@@ -80,12 +83,23 @@ void MainWindow::changeCheckedRotateMenu(QAction *act, qreal deg)
     {
         imgView->setRotate(0.0);
     }
+    updateWindowState();
 }
 
 void MainWindow::updateWindowState()
 {
     QString title = imgView->getShowingFileName();
-    setWindowTitle(title.isEmpty() ? QString(SOFTWARE_NAME) : title);
+    if (title.isEmpty())
+    {
+        setWindowTitle(QString(SOFTWARE_NAME));
+    }
+    else
+    {
+        title.append(tr(" [倍率:")).append(QString::number(imgView->getScale()*100.0, 'g', 4));
+        title.append(tr("% 回転:")).append(QString::number(imgView->getRotate(), 'g', 4));
+        title.append("度]");
+        setWindowTitle(title);
+    }
 }
 
 void MainWindow::on_menu_File_Open_triggered()
@@ -142,8 +156,15 @@ void MainWindow::on_menu_View_FitImage_triggered()
 void MainWindow::on_menu_View_SetScale_triggered()
 {
     SettingScaleDialog dialog(this);
-    changeCheckedScaleMenu(ui->menu_View_SetScale, ImageViewer::CUSTOM_SCALE,
-                           dialog.getScale(imgView->getScale() * 100.0) / 100.0);
+    if (dialog.getScale(imgView->getScale()))
+    {
+        changeCheckedScaleMenu(ui->menu_View_SetScale, ImageViewer::CUSTOM_SCALE,
+                               dialog.getValue());
+    }
+    else
+    {
+        ui->menu_View_SetScale->setChecked(false);
+    }
 }
 
 void MainWindow::on_menu_View_Rotate90_triggered()
@@ -166,9 +187,18 @@ void MainWindow::on_menu_View_SetRotate_triggered()
     if (ui->menu_View_SetRotate->isChecked())
     {
         SettingRotateDialog dialog(this);
-        dialog.getRotate(0.0);
-        changeCheckedRotateMenu(ui->menu_View_SetRotate,
-                                dialog.getRotate(imgView->getRotate()));
+        if (dialog.getRotate(imgView->getRotate()))
+        {
+            changeCheckedRotateMenu(ui->menu_View_SetRotate, dialog.getValue());
+        }
+        else
+        {
+            ui->menu_View_SetRotate->setChecked(false);
+        }
+    }
+    else
+    {
+        changeCheckedRotateMenu(ui->menu_View_SetRotate, 0.0);
     }
 }
 

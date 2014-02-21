@@ -13,14 +13,23 @@ SettingRotateDialog::~SettingRotateDialog()
     delete ui;
 }
 
-qreal SettingRotateDialog::getRotate(qreal def)
+bool SettingRotateDialog::getRotate(qreal deg)
 {
     setWindowTitle(tr("角度の設定"));
-    ui->spinBox->setValue((int)def);
-    int ret = exec();
-    if (ret == QDialog::Accepted)
+    ui->doubleSpinBox->setValue(deg);
+    if (exec() == QDialog::Accepted)
     {
-        return (qreal)ui->spinBox->value();
+        rotate = (qreal)ui->doubleSpinBox->value();
+        return true;
     }
-    return def;
+    else
+    {
+        rotate = deg;
+        return false;
+    }
+}
+
+qreal SettingRotateDialog::getValue()
+{
+    return rotate;
 }
