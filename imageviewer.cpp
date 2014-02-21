@@ -8,9 +8,12 @@ ImageViewer::ImageViewer()
     img_scale = 1.0;
     mode = FULLSIZE;
 
+    view_scene = new QGraphicsScene();
+    setScene(view_scene);
+
     // ポインタの初期化
     view_img = nullptr;
-    view_scene = nullptr;
+    //view_scene = nullptr;
     view_item = nullptr;
 }
 
@@ -99,11 +102,9 @@ void ImageViewer::releaseImages()
 {
     delete view_img;
     delete view_item;
-    delete view_scene;
 
     view_img = nullptr;
     view_item = nullptr;
-    view_scene = nullptr;
 
     imgList.clear();
     showingIndex = -1;
@@ -224,16 +225,13 @@ bool ImageViewer::showImage(int n)
         return false;
     }
 
-    QGraphicsScene *scene = new QGraphicsScene();
     QGraphicsPixmapItem *item = new QGraphicsPixmapItem(QPixmap::fromImage(*img));
-    setScene(scene);
-    scene->addItem(item);
+    view_scene->addItem(item);
+    view_scene->setSceneRect(0.0, 0.0, img->width(), img->height());
 
     delete view_img;
     delete view_item;
-    delete view_scene;
 
-    view_scene = scene;
     view_img = img;
     view_item = item;
     showingIndex = n;
