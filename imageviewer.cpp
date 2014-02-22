@@ -53,15 +53,7 @@ bool ImageViewer::loadDir(const QString &path)
     }
 
     imgList.clear();
-    QStringList list = dir.entryList();
-    QStringList::const_iterator iterator;
-    for (iterator = list.constBegin(); iterator != list.constEnd(); ++iterator)
-    {
-        if (isReadable(*iterator))
-        {
-            imgList << connectFilePath(path, *iterator);
-        }
-    }
+    openDir(path);
 
     return showImage(0);
 }
@@ -285,7 +277,7 @@ void ImageViewer::setupMatrix()
     setMatrix(matrix);
 }
 
-QString ImageViewer::connectFilePath(QString parent, QString child)
+QString ImageViewer::connectFilePath(const QString &parent, const QString &child)
 {
     if (parent.isEmpty())
     {
@@ -305,4 +297,66 @@ QString ImageViewer::connectFilePath(QString parent, QString child)
     {
         return parent + QDir::separator() + child;
     }
+}
+
+void ImageViewer::openDir(const QString &path)
+{
+    QDir dir(path);
+    if (dir.exists())
+    {
+        QStringList list = dir.entryList();
+        QStringList::const_iterator iterator;
+        for (iterator = list.constBegin(); iterator != list.constEnd(); ++iterator)
+        {
+            if (isReadable(*iterator))
+            {
+                imgList << connectFilePath(path, *iterator);
+            }
+        }
+    }
+}
+
+void ImageViewer::dragEnterEvent(QDragEnterEvent *event)
+{
+    event->accept();
+}
+
+void ImageViewer::dragLeaveEvent(QDragLeaveEvent *event)
+{
+    // 何もしてないオーバーライドしているメソッドですが、
+    // 消すとD&Dがうまくいきません
+    Q_UNUSED(event);
+}
+
+void ImageViewer::dragMoveEvent(QDragMoveEvent *event)
+{
+    // 何もしてないオーバーライドしているメソッドですが、
+    // 消すとD&Dがうまくいきません
+    Q_UNUSED(event);
+}
+
+void ImageViewer::dropEvent(QDropEvent *event)
+{
+    const QMimeData *mime = event->mimeData();
+    QList<QUrl> urls = mime->urls();
+
+    imgList.clear();
+    QList<QUrl>::const_iterator iterator;
+    for (iterator = urls.constBegin(); iterator != urls.constEnd(); ++iterator)
+    {
+        QString path = (*iterator).path();
+        QFileInfo info(path);
+        if (info.exists())
+        {
+            if (info.isDir())
+            {
+                openDir(path);
+            }
+            else if (isReadable(path))
+            {
+                imgList << path;
+            }
+        }
+    }
+    showImage(0);
 }

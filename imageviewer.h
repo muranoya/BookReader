@@ -11,6 +11,11 @@
 #include <QDir>
 #include <QString>
 #include <QSize>
+#include <QDragEnterEvent>
+#include <QDragLeaveEvent>
+#include <QDragMoveEvent>
+#include <QUrl>
+#include <QMimeData>
 
 class ImageViewer : public QGraphicsView
 {
@@ -61,8 +66,14 @@ private:
     qreal img_scale, img_rotate;
     ViewMode mode;
 
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dragLeaveEvent(QDragLeaveEvent *event);
+    void dragMoveEvent(QDragMoveEvent *event);
+    void dropEvent(QDropEvent *event);
+
     bool showImage(int n);
-    QString connectFilePath(QString parent, QString child);
+    void openDir(const QString &path);
+    QString connectFilePath(const QString &parent, const QString &child);
 };
 
 #endif // IMAGEMANAGER_H
