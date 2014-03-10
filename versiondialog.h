@@ -1,7 +1,8 @@
 #ifndef VERSIONDIALOG_H
 #define VERSIONDIALOG_H
 
-#include "ApplicationInfo.h"
+#include "applicationinfo.h"
+
 #include <QDialog>
 
 namespace Ui

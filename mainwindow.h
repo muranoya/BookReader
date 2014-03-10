@@ -6,17 +6,15 @@
 #include "settingrotatedialog.h"
 #include "imageviewer.h"
 #include "nullptr.h"
-#include "ApplicationInfo.h"
-#include <iostream>
+#include "applicationinfo.h"
+
 #include <QMainWindow>
 #include <QGraphicsScene>
-#include <QImage>
 #include <QGraphicsPixmapItem>
 #include <QMouseEvent>
 #include <QDir>
 #include <QFileDialog>
 #include <QMatrix>
-#include <QEvent>
 
 namespace Ui
 {
@@ -31,11 +29,12 @@ public:
     ~MainWindow();
 
 private slots:
+    /******************* file *******************/
     void on_menu_File_Open_triggered();
     void on_menu_File_FolderOpen_triggered();
     void on_menu_File_Close_triggered();
 
-    void on_menu_View_ScrollHand_triggered();
+    /******************* view *******************/
     void on_menu_View_FullSize_triggered();
     void on_menu_View_FitWindow_triggered();
     void on_menu_View_FitImage_triggered();
@@ -46,21 +45,29 @@ private slots:
     void on_menu_View_SetRotate_triggered();
     void on_menu_View_FullScreen_triggered();
 
+    /******************* filter *******************/
     void on_menu_Filter_Antialiasing_triggered();
 
+    /******************* window *******************/
+
+    /******************* help *******************/
     void on_menu_Help_Version_triggered();
+
+    /******************* util *******************/
+    void updateWindowState();
+    void playlistVisibleChanged(bool b);
 
 private:
     Ui::MainWindow *ui;
     ImageViewer *imgView;
 
-    void resizeEvent(QResizeEvent *event);
-    void mousePressEvent(QMouseEvent *event);
+    /******************* event *******************/
     void changeEvent(QEvent *event);
 
+    /******************* util *******************/
     void changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, qreal s);
     void changeCheckedRotateMenu(QAction *act, qreal deg);
-    void updateWindowState();
+
 };
 
 #endif // MAINWINDOW_H

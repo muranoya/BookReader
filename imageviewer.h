@@ -2,19 +2,15 @@
 #define IMAGEMANAGER_H
 
 #include "nullptr.h"
-#include <iostream>
-#include <QImage>
+
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <QStringList>
 #include <QGraphicsView>
 #include <QDir>
-#include <QString>
-#include <QSize>
 #include <QDragEnterEvent>
 #include <QDragLeaveEvent>
 #include <QDragMoveEvent>
-#include <QUrl>
 #include <QMimeData>
 
 class ImageViewer : public QGraphicsView
@@ -32,48 +28,62 @@ public:
     ImageViewer();
     ~ImageViewer();
 
+    /***************** 画像読み込み *******************/
     bool loadFile(const QString &path);
     bool loadDir(const QString &path);
     void nextImage();
     void previousImage();
     void releaseImages();
-    QStringList getImageList();
-    int getImageListCount();
-    QStringList getReadableExtension();
-    bool isReadable(const QString &path);
-    int getImageListIndex();
-    QString getShowingFileName();
-    QSize getShowingImageSize();
-    void setAntiAliasing(bool b);
-    void setScrollHand(bool b);
-    void setScale(ViewMode m, qreal s);
-    void setScale(ViewMode m);
-    void setRotate(qreal deg);
-    qreal getScale();
-    qreal getRotate();
-    void setupMatrix();
+
+    /***************** getter *******************/
+    QStringList getReadableExtension() const;
+    int getImageListCount() const;
+    int getImageListIndex() const;
+    QString getFileName() const;
+    QString getFilePath() const;
+    QSize getImageSize() const;
+    qreal getScale() const;
+    ViewMode getScaleMode() const;
+    qreal getRotate() const;
+
+    /***************** setter *******************/
+    ImageViewer& setAntiAliasing(bool b);
+    ImageViewer& setScale(ViewMode m, qreal s);
+    ImageViewer& setScale(ViewMode m);
+    ImageViewer& setRotate(qreal deg);
+
+    bool isReadable(const QString &path) const;
+
+signals:
+    void imageChanged();
+    void sizeChanged();
 
 private:
-    QImage *view_img;
-    QGraphicsScene *view_scene;
-    QGraphicsPixmapItem *view_item;
     // 対応している拡張子
     static const QString extList[];
     static const int extListLen;
+
+    QImage *view_img;
+    QGraphicsScene *view_scene;
+    QGraphicsPixmapItem *view_item;
     QStringList imgList;
     int showingIndex;
-
     qreal img_scale, img_rotate;
     ViewMode mode;
 
+    /***************** event *******************/
+    void resizeEvent(QResizeEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);
     void dragLeaveEvent(QDragLeaveEvent *event);
     void dragMoveEvent(QDragMoveEvent *event);
     void dropEvent(QDropEvent *event);
+    void mousePressEvent(QMouseEvent *event);
 
+    /***************** util *******************/
     bool showImage(int n);
     void openDir(const QString &path);
-    QString connectFilePath(const QString &parent, const QString &child);
+    void setupMatrix();
+    QString connectFilePath(const QString &parent, const QString &child) const;
 };
 
 #endif // IMAGEMANAGER_H

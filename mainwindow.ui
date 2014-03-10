@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>404</width>
-    <height>441</height>
+    <width>591</width>
+    <height>392</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -40,7 +40,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>404</width>
+     <width>591</width>
      <height>22</height>
     </rect>
    </property>
@@ -57,8 +57,6 @@
     <property name="title">
      <string>表示</string>
     </property>
-    <addaction name="menu_View_ScrollHand"/>
-    <addaction name="separator"/>
     <addaction name="menu_View_FullSize"/>
     <addaction name="menu_View_FitWindow"/>
     <addaction name="menu_View_FitImage"/>
@@ -99,9 +97,6 @@
     <property name="title">
      <string>ウィンドウ</string>
     </property>
-    <addaction name="menu_Window_Thumbnail"/>
-    <addaction name="menu_Window_List"/>
-    <addaction name="separator"/>
     <addaction name="menu_Window_Histogram"/>
     <addaction name="menu_Window_ToneCurve"/>
    </widget>
@@ -197,6 +192,9 @@
    </property>
   </action>
   <action name="menu_Window_List">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>プレイリスト</string>
    </property>

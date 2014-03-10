@@ -3,20 +3,11 @@
 const QString ImageViewer::extList[5] = {"jpg", "png", "jpeg", "bmp", "gif"};
 const int ImageViewer::extListLen = 5;
 
-ImageViewer::ImageViewer()
+ImageViewer::ImageViewer() : QGraphicsView(),
+    view_img(nullptr), view_scene(new QGraphicsScene()), view_item(nullptr),
+    showingIndex(-1), img_scale(1.0), img_rotate(0.0), mode(FULLSIZE)
 {
-    showingIndex = -1;
-
-    img_rotate = 0.0;
-    img_scale = 1.0;
-    mode = FULLSIZE;
-
-    view_scene = new QGraphicsScene();
     setScene(view_scene);
-
-    // ポインタの初期化
-    view_img = nullptr;
-    view_item = nullptr;
 }
 
 ImageViewer::~ImageViewer()
@@ -26,6 +17,7 @@ ImageViewer::~ImageViewer()
     delete view_scene;
 }
 
+/***************** 画像読み込み *******************/
 bool ImageViewer::loadFile(const QString &path)
 {
     if (path.isEmpty())
@@ -102,19 +94,12 @@ void ImageViewer::releaseImages()
 
     imgList.clear();
     showingIndex = -1;
+
+    imageChanged();
 }
 
-QStringList ImageViewer::getImageList()
-{
-    return imgList;
-}
-
-int ImageViewer::getImageListCount()
-{
-    return imgList.count();
-}
-
-QStringList ImageViewer::getReadableExtension()
+/***************** getter *******************/
+QStringList ImageViewer::getReadableExtension() const
 {
     QStringList list;
     for (int i = 0; i < extListLen; i++)
@@ -124,7 +109,91 @@ QStringList ImageViewer::getReadableExtension()
     return list;
 }
 
-bool ImageViewer::isReadable(const QString &path)
+int ImageViewer::getImageListCount() const
+{
+    return imgList.count();
+}
+
+int ImageViewer::getImageListIndex() const
+{
+    return showingIndex;
+}
+
+QString ImageViewer::getFileName() const
+{
+    if (showingIndex < 0 || showingIndex >= imgList.size())
+    {
+        return QString();
+    }
+
+    QFileInfo info(imgList.at(showingIndex));
+    return info.fileName();
+}
+
+QString ImageViewer::getFilePath() const
+{
+    if (showingIndex < 0 || showingIndex >= imgList.size())
+    {
+        return QString();
+    }
+
+    return imgList.at(showingIndex);
+}
+
+QSize ImageViewer::getImageSize() const
+{
+    if (showingIndex >= 0)
+    {
+        return view_img->size();
+    }
+    return QSize(0, 0);
+}
+
+qreal ImageViewer::getScale() const
+{
+    return img_scale;
+}
+
+ImageViewer::ViewMode ImageViewer::getScaleMode() const
+{
+    return mode;
+}
+
+qreal ImageViewer::getRotate() const
+{
+    return img_rotate;
+}
+
+/***************** setter *******************/
+ImageViewer& ImageViewer::setAntiAliasing(bool b)
+{
+    setRenderHint(QPainter::Antialiasing, b);
+    return *this;
+}
+
+ImageViewer& ImageViewer::setScale(ViewMode m, qreal s)
+{
+    mode = m;
+    img_scale = s;
+    setupMatrix();
+    return *this;
+}
+
+ImageViewer& ImageViewer::setScale(ViewMode m)
+{
+    mode = m;
+    setupMatrix();
+    return *this;
+}
+
+ImageViewer& ImageViewer::setRotate(qreal deg)
+{
+    img_rotate = deg;
+    setupMatrix();
+    return *this;
+}
+
+bool ImageViewer::isReadable(const QString &path) const
 {
     QFileInfo info(path);
     QString ext = info.suffix().toLower();
@@ -138,72 +207,77 @@ bool ImageViewer::isReadable(const QString &path)
     return false;
 }
 
-int ImageViewer::getImageListIndex()
+/***************** private *******************/
+/***************** event *******************/
+void ImageViewer::resizeEvent(QResizeEvent *event)
 {
-    return showingIndex;
+    Q_UNUSED(event);
+    QGraphicsView::resizeEvent(event);
+    setupMatrix();
+    sizeChanged();
 }
 
-QString ImageViewer::getShowingFileName()
+void ImageViewer::dragEnterEvent(QDragEnterEvent *event)
 {
-    if (showingIndex < 0 || showingIndex >= imgList.size())
+    event->accept();
+}
+
+void ImageViewer::dragLeaveEvent(QDragLeaveEvent *event)
+{
+    // 何もしてないオーバーライドしているメソッドですが、
+    // 消すとD&Dがうまくいきません
+    Q_UNUSED(event);
+}
+
+void ImageViewer::dragMoveEvent(QDragMoveEvent *event)
+{
+    // 何もしてないオーバーライドしているメソッドですが、
+    // 消すとD&Dがうまくいきません
+    Q_UNUSED(event);
+}
+
+void ImageViewer::dropEvent(QDropEvent *event)
+{
+    const QMimeData *mime = event->mimeData();
+    QList<QUrl> urls = mime->urls();
+
+    if ((event->keyboardModifiers() & Qt::ControlModifier) == Qt::ControlModifier)
     {
-        return QString();
+        imgList.clear();
     }
-
-    QFileInfo info(imgList.at(showingIndex));
-    return info.fileName();
-}
-
-void ImageViewer::setAntiAliasing(bool b)
-{
-    setRenderHint(QPainter::Antialiasing, b);
-}
-
-void ImageViewer::setScrollHand(bool b)
-{
-    setDragMode(b ? QGraphicsView::ScrollHandDrag
-                  : QGraphicsView::NoDrag);
-    setInteractive(!b);
-}
-
-void ImageViewer::setScale(ViewMode m)
-{
-    mode = m;
-    setupMatrix();
-}
-
-void ImageViewer::setScale(ViewMode m, qreal s)
-{
-    mode = m;
-    img_scale = s;
-    setupMatrix();
-}
-
-void ImageViewer::setRotate(qreal deg)
-{
-    img_rotate = deg;
-    setupMatrix();
-}
-
-qreal ImageViewer::getScale()
-{
-    return img_scale;
-}
-
-qreal ImageViewer::getRotate()
-{
-    return img_rotate;
-}
-
-QSize ImageViewer::getShowingImageSize()
-{
-    if (showingIndex >= 0)
+    QList<QUrl>::const_iterator iterator;
+    for (iterator = urls.constBegin(); iterator != urls.constEnd(); ++iterator)
     {
-        return view_img->size();
+        QString path = (*iterator).path();
+        QFileInfo info(path);
+        if (info.exists())
+        {
+            if (info.isDir())
+            {
+                openDir(path);
+            }
+            else if (isReadable(path))
+            {
+                imgList << path;
+            }
+        }
     }
-    return QSize(0, 0);
+    showImage(0);
 }
 
+void ImageViewer::mousePressEvent(QMouseEvent *event)
+{
+    if (event->buttons() & Qt::LeftButton)
+    {
+        nextImage();
+    }
+    if (event->buttons() & Qt::RightButton)
+    {
+        previousImage();
+    }
+}
+
+/***************** util *******************/
 bool ImageViewer::showImage(int n)
 {
     if (imgList.size() <= n || n < 0)
@@ -231,8 +305,26 @@ bool ImageViewer::showImage(int n)
     showingIndex = n;
 
     setupMatrix();
+    imageChanged();
 
     return true;
+}
+
+void ImageViewer::openDir(const QString &path)
+{
+    QDir dir(path);
+    if (dir.exists())
+    {
+        QStringList list = dir.entryList();
+        QStringList::const_iterator iterator;
+        for (iterator = list.constBegin(); iterator != list.constEnd(); ++iterator)
+        {
+            if (isReadable(*iterator))
+            {
+                imgList << connectFilePath(path, *iterator);
+            }
+        }
+    }
 }
 
 void ImageViewer::setupMatrix()
@@ -250,13 +342,13 @@ void ImageViewer::setupMatrix()
     else
     {
         qreal ws = 1.0, hs = 1.0, s = 1.0;
-        if (size().width() < getShowingImageSize().width())
+        if (size().width() < getImageSize().width())
         {
-            ws = (qreal)size().width() / (qreal)getShowingImageSize().width();
+            ws = (qreal)size().width() / (qreal)getImageSize().width();
         }
-        if (size().height() < getShowingImageSize().height())
+        if (size().height() < getImageSize().height())
         {
-            hs = (qreal)size().height() / (qreal)getShowingImageSize().height();
+            hs = (qreal)size().height() / (qreal)getImageSize().height();
         }
 
         if (mode == ImageViewer::FIT_WINDOW)
@@ -277,7 +369,7 @@ void ImageViewer::setupMatrix()
     setMatrix(matrix);
 }
 
-QString ImageViewer::connectFilePath(const QString &parent, const QString &child)
+QString ImageViewer::connectFilePath(const QString &parent, const QString &child) const
 {
     if (parent.isEmpty())
     {
@@ -297,66 +389,4 @@ QString ImageViewer::connectFilePath(const QString &parent, const QString &child
     {
         return parent + QDir::separator() + child;
     }
-}
-
-void ImageViewer::openDir(const QString &path)
-{
-    QDir dir(path);
-    if (dir.exists())
-    {
-        QStringList list = dir.entryList();
-        QStringList::const_iterator iterator;
-        for (iterator = list.constBegin(); iterator != list.constEnd(); ++iterator)
-        {
-            if (isReadable(*iterator))
-            {
-                imgList << connectFilePath(path, *iterator);
-            }
-        }
-    }
-}
-
-void ImageViewer::dragEnterEvent(QDragEnterEvent *event)
-{
-    event->accept();
-}
-
-void ImageViewer::dragLeaveEvent(QDragLeaveEvent *event)
-{
-    // 何もしてないオーバーライドしているメソッドですが、
-    // 消すとD&Dがうまくいきません
-    Q_UNUSED(event);
-}
-
-void ImageViewer::dragMoveEvent(QDragMoveEvent *event)
-{
-    // 何もしてないオーバーライドしているメソッドですが、
-    // 消すとD&Dがうまくいきません
-    Q_UNUSED(event);
-}
-
-void ImageViewer::dropEvent(QDropEvent *event)
-{
-    const QMimeData *mime = event->mimeData();
-    QList<QUrl> urls = mime->urls();
-
-    imgList.clear();
-    QList<QUrl>::const_iterator iterator;
-    for (iterator = urls.constBegin(); iterator != urls.constEnd(); ++iterator)
-    {
-        QString path = (*iterator).path();
-        QFileInfo info(path);
-        if (info.exists())
-        {
-            if (info.isDir())
-            {
-                openDir(path);
-            }
-            else if (isReadable(path))
-            {
-                imgList << path;
-            }
-        }
-    }
-    showImage(0);
 }

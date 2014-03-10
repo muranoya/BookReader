@@ -1,5 +1,6 @@
 #ifndef NULLPTR_H
 #define NULLPTR_H
+
 const class nullptr_t
 {
 public:
@@ -12,4 +13,5 @@ public:
 private:
     void operator&() const;
 } nullptr = {};
+
 #endif // NULLPTR_H

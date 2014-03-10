@@ -17,8 +17,8 @@ void VersionDialog::showVersion()
 {
     setWindowTitle(tr("バージョン"));
     ui->label_software->setText(tr("ソフトウェア名"));
-    ui->label_software_text->setText(QString(SOFTWARE_NAME));
+    ui->label_software_text->setText(BookReader::SOFTWARE_NAME);
     ui->label_version->setText(tr("バージョン"));
-    ui->label_version_text->setText(QString(SOFTWARE_VERSION));
+    ui->label_version_text->setText(BookReader::SOFTWARE_VERSION);
     exec();
 }

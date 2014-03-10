@@ -22,12 +22,12 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     nullptr.h \
-    ApplicationInfo.h \
     settingscaledialog.h \
     settings.h \
     versiondialog.h \
     settingrotatedialog.h \
-    imageviewer.h
+    imageviewer.h \
+    applicationinfo.h
 
 FORMS    += mainwindow.ui \
     settingscaledialog.ui \
