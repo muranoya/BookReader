@@ -241,7 +241,7 @@ void ImageViewer::dropEvent(QDropEvent *event)
     const QMimeData *mime = event->mimeData();
     QList<QUrl> urls = mime->urls();
 
-    if ((event->keyboardModifiers() & Qt::ControlModifier) == Qt::ControlModifier)
+    if ((event->keyboardModifiers() & Qt::ControlModifier) != Qt::ControlModifier)
     {
         imgList.clear();
     }

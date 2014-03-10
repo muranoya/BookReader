@@ -127,14 +127,6 @@ void MainWindow::on_menu_View_FullScreen_triggered()
     }
 }
 
-/******************* filter *******************/
-void MainWindow::on_menu_Filter_Antialiasing_triggered()
-{
-    imgView->setAntiAliasing(ui->menu_Filter_Antialiasing->isChecked());
-}
-
-/******************* window *******************/
-
 /******************* help *******************/
 void MainWindow::on_menu_Help_Version_triggered()
 {
@@ -152,16 +144,14 @@ void MainWindow::updateWindowState()
     }
     else
     {
-        title.append(tr(" [倍率:")).append(QString::number(imgView->getScale()*100.0, 'g', 4));
-        title.append(tr("% 回転:")).append(QString::number(imgView->getRotate(), 'g', 4));
-        title.append("度]");
+        title = tr("[%1/%2] %3 [倍率:%4% 回転:%5度]")
+                .arg(QString::number(imgView->getImageListIndex() + 1))
+                .arg(QString::number(imgView->getImageListCount()))
+                .arg(title)
+                .arg(QString::number(imgView->getScale() * 100.0, 'g', 4))
+                .arg(QString::number(imgView->getRotate(), 'g', 4));
         setWindowTitle(title);
     }
-}
-
-void MainWindow::playlistVisibleChanged(bool b)
-{
-    ui->menu_Window_List->setChecked(b);
 }
 
 /******************* event *******************/

@@ -51,6 +51,8 @@
     <addaction name="menu_File_Open"/>
     <addaction name="menu_File_FolderOpen"/>
     <addaction name="separator"/>
+    <addaction name="menu_File_Settings"/>
+    <addaction name="separator"/>
     <addaction name="menu_File_Close"/>
    </widget>
    <widget class="QMenu" name="menu_View">
@@ -67,24 +69,20 @@
     <addaction name="menu_View_Rotate270"/>
     <addaction name="menu_View_SetRotate"/>
     <addaction name="separator"/>
+    <addaction name="menu_View_FlipHorizontal"/>
+    <addaction name="separator"/>
     <addaction name="menu_View_FullScreen"/>
+    <addaction name="separator"/>
+    <addaction name="menu_View_Filter"/>
+    <addaction name="separator"/>
+    <addaction name="menu_View_Histgram"/>
+    <addaction name="menu_View_ToneCurve"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
      <string>ヘルプ</string>
     </property>
     <addaction name="menu_Help_Version"/>
-   </widget>
-   <widget class="QMenu" name="menu_Filter">
-    <property name="title">
-     <string>フィルタ</string>
-    </property>
-    <addaction name="menu_Filter_Monotone"/>
-    <addaction name="menu_Filter_Sharpness"/>
-    <addaction name="menu_Filter_Binarized"/>
-    <addaction name="menu_Filter_Averagin"/>
-    <addaction name="separator"/>
-    <addaction name="menu_Filter_Antialiasing"/>
    </widget>
    <widget class="QMenu" name="menu_Slideshow">
     <property name="title">
@@ -93,18 +91,9 @@
     <addaction name="menu_Slideshow_Slideshow"/>
     <addaction name="menu_Slideshow_Settings"/>
    </widget>
-   <widget class="QMenu" name="menu_Window">
-    <property name="title">
-     <string>ウィンドウ</string>
-    </property>
-    <addaction name="menu_Window_Histogram"/>
-    <addaction name="menu_Window_ToneCurve"/>
-   </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_View"/>
-   <addaction name="menu_Filter"/>
    <addaction name="menu_Slideshow"/>
-   <addaction name="menu_Window"/>
    <addaction name="menu_Help"/>
   </widget>
   <action name="menu_File_Open">
@@ -175,38 +164,6 @@
     <string>スライドショーの設定</string>
    </property>
   </action>
-  <action name="menu_Filter_Monotone">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>モノクロ</string>
-   </property>
-  </action>
-  <action name="menu_Filter_Sharpness">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>鮮鋭化</string>
-   </property>
-  </action>
-  <action name="menu_Window_List">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>プレイリスト</string>
-   </property>
-   <property name="toolTip">
-    <string>プレイリスト</string>
-   </property>
-  </action>
-  <action name="menu_Window_Histogram">
-   <property name="text">
-    <string>ヒストグラム</string>
-   </property>
-  </action>
   <action name="menu_View_Rotate90">
    <property name="checkable">
     <bool>true</bool>
@@ -239,27 +196,6 @@
     <string>回転角度を指定して表示する</string>
    </property>
   </action>
-  <action name="menu_Filter_Antialiasing">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>アンチエイリアシング</string>
-   </property>
-  </action>
-  <action name="menu_View_ScrollHand">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>スクロールハンドドラッグ</string>
-   </property>
-  </action>
-  <action name="menu_Window_Thumbnail">
-   <property name="text">
-    <string>サムネイル</string>
-   </property>
-  </action>
   <action name="menu_View_FitImage">
    <property name="checkable">
     <bool>true</bool>
@@ -268,22 +204,29 @@
     <string>画像に合わせて表示する</string>
    </property>
   </action>
-  <action name="menu_Filter_Binarized">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
+  <action name="menu_View_FlipHorizontal">
    <property name="text">
-    <string>二値化</string>
+    <string>左右反転</string>
    </property>
   </action>
-  <action name="menu_Filter_Averagin">
+  <action name="menu_View_Histgram">
    <property name="text">
-    <string>平均化</string>
+    <string>ヒストグラム</string>
    </property>
   </action>
-  <action name="menu_Window_ToneCurve">
+  <action name="menu_View_ToneCurve">
    <property name="text">
     <string>トーンカーブ</string>
+   </property>
+  </action>
+  <action name="menu_File_Settings">
+   <property name="text">
+    <string>設定</string>
+   </property>
+  </action>
+  <action name="menu_View_Filter">
+   <property name="text">
+    <string>フィルター</string>
    </property>
   </action>
  </widget>

@@ -45,17 +45,11 @@ private slots:
     void on_menu_View_SetRotate_triggered();
     void on_menu_View_FullScreen_triggered();
 
-    /******************* filter *******************/
-    void on_menu_Filter_Antialiasing_triggered();
-
-    /******************* window *******************/
-
     /******************* help *******************/
     void on_menu_Help_Version_triggered();
 
     /******************* util *******************/
     void updateWindowState();
-    void playlistVisibleChanged(bool b);
 
 private:
     Ui::MainWindow *ui;
