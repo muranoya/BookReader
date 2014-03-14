@@ -25,12 +25,21 @@ MainWindow::~MainWindow()
 /******************* file *******************/
 void MainWindow::on_menu_File_Open_triggered()
 {
+#ifdef __APPLE__
+    QString filename = QFileDialog::getOpenFileName(
+                this, tr("ファイルを開く"), dialog_File + "/test.txt",
+                tr("Images (*.png *.jpg *.jpeg *.bmp *.gif)"));
+#else
     QString filename = QFileDialog::getOpenFileName(
                 this, tr("ファイルを開く"), dialog_File,
                 tr("Images (*.png *.jpg *.jpeg *.bmp *.gif)"));
+#endif
 
     if (!filename.isEmpty())
     {
+        QFileInfo info(filename);
+        QDir dir = info.absoluteDir();
+        dialog_File = dir.absolutePath();
         imgView->loadFile(filename);
     }
 }
@@ -42,6 +51,7 @@ void MainWindow::on_menu_File_FolderOpen_triggered()
 
     if (!dirname.isEmpty())
     {
+        dialog_Directory = dirname;
         imgView->loadDir(dirname);
     }
 }
