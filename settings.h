@@ -1,14 +1,13 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-class Settings
+#include <QSettings>
+
+namespace BookReader
 {
-public:
-    Settings();
-    ~Settings();
-
-private:
-
-};
-
+namespace Settings
+{
+    static QSettings mysettings("settings.ini", QSettings::IniFormat);
+}
+}
 #endif // SETTINGS_H

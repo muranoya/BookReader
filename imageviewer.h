@@ -12,6 +12,7 @@
 #include <QDragLeaveEvent>
 #include <QDragMoveEvent>
 #include <QMimeData>
+#include <QScrollBar>
 
 class ImageViewer : public QGraphicsView
 {
@@ -44,13 +45,11 @@ public:
     QSize getImageSize() const;
     qreal getScale() const;
     ViewMode getScaleMode() const;
-    qreal getRotate() const;
 
     /***************** setter *******************/
     ImageViewer& setAntiAliasing(bool b);
     ImageViewer& setScale(ViewMode m, qreal s);
     ImageViewer& setScale(ViewMode m);
-    ImageViewer& setRotate(qreal deg);
 
     bool isReadable(const QString &path) const;
 
@@ -68,7 +67,7 @@ private:
     QGraphicsPixmapItem *view_item;
     QStringList imgList;
     int showingIndex;
-    qreal img_scale, img_rotate;
+    qreal img_scale;
     ViewMode mode;
 
     /***************** event *******************/

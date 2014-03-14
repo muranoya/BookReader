@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(imgView, SIGNAL(imageChanged()), SLOT(updateWindowState()));
     connect(imgView, SIGNAL(sizeChanged()), SLOT(updateWindowState()));
 
+    restoreSettings();
     updateWindowState();
 }
 
@@ -25,8 +26,8 @@ MainWindow::~MainWindow()
 void MainWindow::on_menu_File_Open_triggered()
 {
     QString filename = QFileDialog::getOpenFileName(
-                this, tr("ファイルを開く"), QString(),
-                tr("Imges (*.png *.jpg *.jpeg *.bmp *.gif)"));
+                this, tr("ファイルを開く"), dialog_File,
+                tr("Images (*.png *.jpg *.jpeg *.bmp *.gif)"));
 
     if (!filename.isEmpty())
     {
@@ -37,7 +38,7 @@ void MainWindow::on_menu_File_Open_triggered()
 void MainWindow::on_menu_File_FolderOpen_triggered()
 {
     QString dirname = QFileDialog::getExistingDirectory(
-                this, tr("ディレクトリを開く"), QString());
+                this, tr("ディレクトリを開く"), dialog_Directory);
 
     if (!dirname.isEmpty())
     {
@@ -53,17 +54,17 @@ void MainWindow::on_menu_File_Close_triggered()
 /******************* view *******************/
 void MainWindow::on_menu_View_FullSize_triggered()
 {
-    changeCheckedScaleMenu(ui->menu_View_FullSize, ImageViewer::FULLSIZE, 0.0);
+    changeCheckedScaleMenu(ui->menu_View_FullSize, ImageViewer::FULLSIZE);
 }
 
 void MainWindow::on_menu_View_FitWindow_triggered()
 {
-    changeCheckedScaleMenu(ui->menu_View_FitWindow, ImageViewer::FIT_WINDOW, 0.0);
+    changeCheckedScaleMenu(ui->menu_View_FitWindow, ImageViewer::FIT_WINDOW);
 }
 
 void MainWindow::on_menu_View_FitImage_triggered()
 {
-    changeCheckedScaleMenu(ui->menu_View_FitImage, ImageViewer::FIT_IMAGE, 0.0);
+    changeCheckedScaleMenu(ui->menu_View_FitImage, ImageViewer::FIT_IMAGE);
 }
 
 void MainWindow::on_menu_View_SetScale_triggered()
@@ -77,41 +78,6 @@ void MainWindow::on_menu_View_SetScale_triggered()
     else
     {
         ui->menu_View_SetScale->setChecked(false);
-    }
-}
-
-void MainWindow::on_menu_View_Rotate90_triggered()
-{
-    changeCheckedRotateMenu(ui->menu_View_Rotate90, 90.0);
-}
-
-void MainWindow::on_menu_View_Rotate180_triggered()
-{
-    changeCheckedRotateMenu(ui->menu_View_Rotate180, 180.0);
-}
-
-void MainWindow::on_menu_View_Rotate270_triggered()
-{
-    changeCheckedRotateMenu(ui->menu_View_Rotate270, 270.0);
-}
-
-void MainWindow::on_menu_View_SetRotate_triggered()
-{
-    if (ui->menu_View_SetRotate->isChecked())
-    {
-        SettingRotateDialog dialog(this);
-        if (dialog.getRotate(imgView->getRotate()))
-        {
-            changeCheckedRotateMenu(ui->menu_View_SetRotate, dialog.getValue());
-        }
-        else
-        {
-            ui->menu_View_SetRotate->setChecked(false);
-        }
-    }
-    else
-    {
-        changeCheckedRotateMenu(ui->menu_View_SetRotate, 0.0);
     }
 }
 
@@ -144,12 +110,11 @@ void MainWindow::updateWindowState()
     }
     else
     {
-        title = tr("[%1/%2] %3 [倍率:%4% 回転:%5度]")
+        title = tr("[%1/%2] %3 [倍率:%4%]")
                 .arg(QString::number(imgView->getImageListIndex() + 1))
                 .arg(QString::number(imgView->getImageListCount()))
                 .arg(title)
-                .arg(QString::number(imgView->getScale() * 100.0, 'g', 4))
-                .arg(QString::number(imgView->getRotate(), 'g', 4));
+                .arg(QString::number(imgView->getScale() * 100.0, 'g', 4));
         setWindowTitle(title);
     }
 }
@@ -161,6 +126,11 @@ void MainWindow::changeEvent(QEvent *event)
     {
         ui->menu_View_FullScreen->setChecked(isFullScreen());
     }
+}
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    Q_UNUSED(event);
+    saveSettings();
 }
 
 /******************* util *******************/
@@ -184,22 +154,59 @@ void MainWindow::changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, q
     updateWindowState();
 }
 
-void MainWindow::changeCheckedRotateMenu(QAction *act, qreal deg)
+void MainWindow::saveSettings()
 {
-    bool b = act->isChecked();
-    ui->menu_View_Rotate90->setChecked(false);
-    ui->menu_View_Rotate180->setChecked(false);
-    ui->menu_View_Rotate270->setChecked(false);
-    ui->menu_View_SetRotate->setChecked(false);
+    QSettings &settings = BookReader::Settings::mysettings;
 
-    act->setChecked(b);
-    if (b)
+    settings.beginGroup("MainWindow");
+    settings.setValue("size", size());
+    settings.endGroup();
+
+    settings.beginGroup("Main");
+    settings.setValue("dialog_file", dialog_File);
+    settings.setValue("dialog_directory", dialog_Directory);
+    settings.endGroup();
+
+    settings.beginGroup("Viewer");
+    settings.setValue("scaling_mode", imgView->getScaleMode());
+    settings.setValue("scaling_times", imgView->getScale());
+    //settings.setValue("completion", );
+    settings.endGroup();
+}
+
+void MainWindow::restoreSettings()
+{
+    QSettings &settings = BookReader::Settings::mysettings;
+
+    settings.beginGroup("MainWindow");
+    resize(settings.value("size", QSize(600, 400)).toSize());
+    settings.endGroup();
+
+    settings.beginGroup("Main");
+    dialog_File = settings.value("dialog_file", QString()).toString();
+    dialog_Directory = settings.value("dialog_directory", QString()).toString();
+    settings.endGroup();
+
+    settings.beginGroup("Viewer");
+    ImageViewer::ViewMode mode =
+            ImageViewer::ViewMode(settings.value("scaling_mode", ImageViewer::FULLSIZE).toInt());
+    switch (mode)
     {
-        imgView->setRotate(deg);
+    case ImageViewer::FULLSIZE:
+        changeCheckedScaleMenu(ui->menu_View_FullSize, mode);
+        break;
+    case ImageViewer::FIT_WINDOW:
+        changeCheckedScaleMenu(ui->menu_View_FitWindow, mode);
+        break;
+    case ImageViewer::FIT_IMAGE:
+        changeCheckedScaleMenu(ui->menu_View_FitImage, mode);
+        break;
+    case ImageViewer::CUSTOM_SCALE:
+        changeCheckedScaleMenu(ui->menu_View_SetScale, mode,
+                               settings.value("scaling_times", 0.0).toFloat());
+        break;
     }
-    else
-    {
-        imgView->setRotate(0.0);
-    }
-    updateWindowState();
+
+    //settings.value("completion", );
+    settings.endGroup();
 }

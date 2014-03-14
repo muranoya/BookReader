@@ -5,7 +5,7 @@ const int ImageViewer::extListLen = 5;
 
 ImageViewer::ImageViewer() : QGraphicsView(),
     view_img(nullptr), view_scene(new QGraphicsScene()), view_item(nullptr),
-    showingIndex(-1), img_scale(1.0), img_rotate(0.0), mode(FULLSIZE)
+    showingIndex(-1), img_scale(1.0), mode(FULLSIZE)
 {
     setScene(view_scene);
 }
@@ -159,11 +159,6 @@ ImageViewer::ViewMode ImageViewer::getScaleMode() const
     return mode;
 }
 
-qreal ImageViewer::getRotate() const
-{
-    return img_rotate;
-}
-
 /***************** setter *******************/
 ImageViewer& ImageViewer::setAntiAliasing(bool b)
 {
@@ -182,13 +177,6 @@ ImageViewer& ImageViewer::setScale(ViewMode m, qreal s)
 ImageViewer& ImageViewer::setScale(ViewMode m)
 {
     mode = m;
-    setupMatrix();
-    return *this;
-}
-
-ImageViewer& ImageViewer::setRotate(qreal deg)
-{
-    img_rotate = deg;
     setupMatrix();
     return *this;
 }
@@ -306,6 +294,8 @@ bool ImageViewer::showImage(int n)
 
     setupMatrix();
     imageChanged();
+    QScrollBar *vScrollBar = verticalScrollBar();
+    vScrollBar->setSliderPosition(0);
 
     return true;
 }
@@ -363,8 +353,6 @@ void ImageViewer::setupMatrix()
         matrix.scale(s, s);
         img_scale = s;
     }
-
-    matrix.rotate(img_rotate);
 
     setMatrix(matrix);
 }

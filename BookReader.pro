@@ -15,7 +15,6 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     settingscaledialog.cpp \
-    settings.cpp \
     versiondialog.cpp \
     settingrotatedialog.cpp \
     imageviewer.cpp

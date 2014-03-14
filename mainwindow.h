@@ -7,6 +7,7 @@
 #include "imageviewer.h"
 #include "nullptr.h"
 #include "applicationinfo.h"
+#include "settings.h"
 
 #include <QMainWindow>
 #include <QGraphicsScene>
@@ -15,6 +16,7 @@
 #include <QDir>
 #include <QFileDialog>
 #include <QMatrix>
+#include <QByteArray>
 
 namespace Ui
 {
@@ -39,10 +41,6 @@ private slots:
     void on_menu_View_FitWindow_triggered();
     void on_menu_View_FitImage_triggered();
     void on_menu_View_SetScale_triggered();
-    void on_menu_View_Rotate90_triggered();
-    void on_menu_View_Rotate180_triggered();
-    void on_menu_View_Rotate270_triggered();
-    void on_menu_View_SetRotate_triggered();
     void on_menu_View_FullScreen_triggered();
 
     /******************* help *******************/
@@ -54,14 +52,17 @@ private slots:
 private:
     Ui::MainWindow *ui;
     ImageViewer *imgView;
+    QString dialog_File;
+    QString dialog_Directory;
 
     /******************* event *******************/
     void changeEvent(QEvent *event);
+    void closeEvent(QCloseEvent *event);
 
     /******************* util *******************/
-    void changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, qreal s);
-    void changeCheckedRotateMenu(QAction *act, qreal deg);
-
+    void changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, qreal s = 0.0);
+    void saveSettings();
+    void restoreSettings();
 };
 
 #endif // MAINWINDOW_H

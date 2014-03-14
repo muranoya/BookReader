@@ -64,13 +64,6 @@
     <addaction name="menu_View_FitImage"/>
     <addaction name="menu_View_SetScale"/>
     <addaction name="separator"/>
-    <addaction name="menu_View_Rotate90"/>
-    <addaction name="menu_View_Rotate180"/>
-    <addaction name="menu_View_Rotate270"/>
-    <addaction name="menu_View_SetRotate"/>
-    <addaction name="separator"/>
-    <addaction name="menu_View_FlipHorizontal"/>
-    <addaction name="separator"/>
     <addaction name="menu_View_FullScreen"/>
     <addaction name="separator"/>
     <addaction name="menu_View_Filter"/>
@@ -164,38 +157,6 @@
     <string>スライドショーの設定</string>
    </property>
   </action>
-  <action name="menu_View_Rotate90">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>時計回りに90度回転</string>
-   </property>
-  </action>
-  <action name="menu_View_Rotate180">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>時計回りに180度回転</string>
-   </property>
-  </action>
-  <action name="menu_View_Rotate270">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>時計回りに270度回転</string>
-   </property>
-  </action>
-  <action name="menu_View_SetRotate">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>回転角度を指定して表示する</string>
-   </property>
-  </action>
   <action name="menu_View_FitImage">
    <property name="checkable">
     <bool>true</bool>
@@ -221,7 +182,7 @@
   </action>
   <action name="menu_File_Settings">
    <property name="text">
-    <string>設定</string>
+    <string>設定画面を開く</string>
    </property>
   </action>
   <action name="menu_View_Filter">
