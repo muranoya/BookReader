@@ -236,7 +236,7 @@ void ImageViewer::dropEvent(QDropEvent *event)
     QList<QUrl>::const_iterator iterator;
     for (iterator = urls.constBegin(); iterator != urls.constEnd(); ++iterator)
     {
-        QString path = (*iterator).path();
+        QString path = (*iterator).toLocalFile();
         QFileInfo info(path);
         if (info.exists())
         {
