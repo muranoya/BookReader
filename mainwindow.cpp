@@ -25,23 +25,24 @@ MainWindow::~MainWindow()
 /******************* file *******************/
 void MainWindow::on_menu_File_Open_triggered()
 {
+    QStringList files = QFileDialog::getOpenFileNames(
+                this, tr("ファイルを開く"),
 #ifdef __APPLE__
-    QString filename = QFileDialog::getOpenFileName(
-                this, tr("ファイルを開く"), dialog_File + "/test.txt",
-                tr("Images (*.png *.jpg *.jpeg *.bmp *.gif)"));
+                dialog_File+"/test.txt",
 #else
-    QString filename = QFileDialog::getOpenFileName(
-                this, tr("ファイルを開く"), dialog_File,
-                tr("Images (*.png *.jpg *.jpeg *.bmp *.gif)"));
+                dialog_File,
 #endif
+                tr("Images (*png *.jpg *.jpeg *.bmp *.gif"));
 
-    if (!filename.isEmpty())
+    if (files.isEmpty())
     {
-        QFileInfo info(filename);
-        QDir dir = info.absoluteDir();
-        dialog_File = dir.absolutePath();
-        imgView->loadFile(filename);
+        return;
     }
+
+    QFileInfo info(files.at(0));
+    QDir dir = info.absoluteDir();
+    dialog_File = dir.absolutePath();
+    imgView->loadFiles(files);
 }
 
 void MainWindow::on_menu_File_FolderOpen_triggered()
@@ -54,6 +55,12 @@ void MainWindow::on_menu_File_FolderOpen_triggered()
         dialog_Directory = dirname;
         imgView->loadDir(dirname);
     }
+}
+
+void MainWindow::on_menu_File_Settings_triggered()
+{
+    SettingsDialog dialog(this);
+    dialog.exec();
 }
 
 void MainWindow::on_menu_File_Close_triggered()
@@ -100,6 +107,19 @@ void MainWindow::on_menu_View_FullScreen_triggered()
     else
     {
         showNormal();
+    }
+}
+
+/******************* slideshow *******************/
+void MainWindow::on_menu_Slideshow_Slideshow_triggered()
+{
+    if (imgView->playSlideShow())
+    {
+        imgView->stopSlideShow();
+    }
+    else
+    {
+        imgView->startSlideShow();
     }
 }
 

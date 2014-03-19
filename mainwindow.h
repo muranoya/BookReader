@@ -3,11 +3,11 @@
 
 #include "versiondialog.h"
 #include "settingscaledialog.h"
-#include "settingrotatedialog.h"
 #include "imageviewer.h"
 #include "nullptr.h"
 #include "applicationinfo.h"
 #include "settings.h"
+#include "settingsdialog.h"
 
 #include <QMainWindow>
 #include <QGraphicsScene>
@@ -17,6 +17,8 @@
 #include <QFileDialog>
 #include <QMatrix>
 #include <QByteArray>
+
+#include <QTimer>
 
 namespace Ui
 {
@@ -34,6 +36,7 @@ private slots:
     /******************* file *******************/
     void on_menu_File_Open_triggered();
     void on_menu_File_FolderOpen_triggered();
+    void on_menu_File_Settings_triggered();
     void on_menu_File_Close_triggered();
 
     /******************* view *******************/
@@ -42,6 +45,9 @@ private slots:
     void on_menu_View_FitImage_triggered();
     void on_menu_View_SetScale_triggered();
     void on_menu_View_FullScreen_triggered();
+
+    /******************* slideshow *******************/
+    void on_menu_Slideshow_Slideshow_triggered();
 
     /******************* help *******************/
     void on_menu_Help_Version_triggered();

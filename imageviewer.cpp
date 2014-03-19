@@ -5,7 +5,7 @@ const int ImageViewer::extListLen = 5;
 
 ImageViewer::ImageViewer() : QGraphicsView(),
     view_img(nullptr), view_scene(new QGraphicsScene()), view_item(nullptr),
-    showingIndex(-1), img_scale(1.0), mode(FULLSIZE)
+    showingIndex(-1), img_scale(1.0), mode(FULLSIZE), slideshow(nullptr)
 {
     setScene(view_scene);
 }
@@ -15,39 +15,49 @@ ImageViewer::~ImageViewer()
     delete view_img;
     delete view_item;
     delete view_scene;
+    delete slideshow;
 }
 
 /***************** 画像読み込み *******************/
-bool ImageViewer::loadFile(const QString &path)
+void ImageViewer::loadFiles(const QStringList &paths)
 {
-    if (path.isEmpty())
+    if (paths.isEmpty())
     {
-        return false;
+        return;
     }
 
     imgList.clear();
-    imgList << path;
 
-    return showImage(0);
+    QStringList::const_iterator iterator;
+    for (iterator = paths.constBegin(); iterator != paths.constEnd(); ++iterator)
+    {
+        QFileInfo info(*iterator);
+        if (info.exists() && isReadable(*iterator))
+        {
+            imgList << *iterator;
+        }
+    }
+
+    showImage(0);
 }
 
-bool ImageViewer::loadDir(const QString &path)
+void ImageViewer::loadDir(const QString &path)
 {
     if (path.isEmpty())
     {
-        return false;
+        return;
     }
 
     QDir dir(path);
     if (!dir.exists())
     {
-        return false;
+        return;
     }
 
     imgList.clear();
     openDir(path);
 
-    return showImage(0);
+    showImage(0);
 }
 
 void ImageViewer::nextImage()
@@ -181,6 +191,7 @@ ImageViewer& ImageViewer::setScale(ViewMode m)
     return *this;
 }
 
+/***************** other *******************/
 bool ImageViewer::isReadable(const QString &path) const
 {
     QFileInfo info(path);
@@ -195,7 +206,38 @@ bool ImageViewer::isReadable(const QString &path) const
     return false;
 }
 
+void ImageViewer::startSlideShow()
+{
+    if (!playSlideShow())
+    {
+        slideshow = new QTimer(this);
+        connect(slideshow, SIGNAL(timeout()), this, SLOT(update_Timer_SlideShow()));
+        slideshow->start(3000);
+    }
+}
+
+void ImageViewer::stopSlideShow()
+{
+    if (playSlideShow())
+    {
+        slideshow->stop();
+        delete slideshow;
+        slideshow = nullptr;
+    }
+}
+
+bool ImageViewer::playSlideShow() const
+{
+    return slideshow != nullptr;
+}
+
 /***************** private *******************/
+/***************** slots *******************/
+void ImageViewer::update_Timer_SlideShow()
+{
+    nextImage();
+}
+
 /***************** event *******************/
 void ImageViewer::resizeEvent(QResizeEvent *event)
 {

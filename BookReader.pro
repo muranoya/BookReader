@@ -16,19 +16,19 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     settingscaledialog.cpp \
     versiondialog.cpp \
-    settingrotatedialog.cpp \
-    imageviewer.cpp
+    imageviewer.cpp \
+    settingsdialog.cpp
 
 HEADERS  += mainwindow.h \
     nullptr.h \
     settingscaledialog.h \
     settings.h \
     versiondialog.h \
-    settingrotatedialog.h \
     imageviewer.h \
-    applicationinfo.h
+    applicationinfo.h \
+    settingsdialog.h
 
 FORMS    += mainwindow.ui \
     settingscaledialog.ui \
     versiondialog.ui \
-    settingrotatedialog.ui
+    settingsdialog.ui

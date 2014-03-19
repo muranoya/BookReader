@@ -13,6 +13,7 @@
 #include <QDragMoveEvent>
 #include <QMimeData>
 #include <QScrollBar>
+#include <QTimer>
 
 class ImageViewer : public QGraphicsView
 {
@@ -30,8 +31,8 @@ public:
     ~ImageViewer();
 
     /***************** 画像読み込み *******************/
-    bool loadFile(const QString &path);
-    bool loadDir(const QString &path);
+    void loadFiles(const QStringList &paths);
+    void loadDir(const QString &path);
     void nextImage();
     void previousImage();
     void releaseImages();
@@ -51,11 +52,18 @@ public:
     ImageViewer& setScale(ViewMode m, qreal s);
     ImageViewer& setScale(ViewMode m);
 
+    /***************** other ********************/
     bool isReadable(const QString &path) const;
+    void startSlideShow();
+    void stopSlideShow();
+    bool playSlideShow() const;
 
 signals:
     void imageChanged();
     void sizeChanged();
+
+private slots:
+    void update_Timer_SlideShow();
 
 private:
     // 対応している拡張子
@@ -69,6 +77,7 @@ private:
     int showingIndex;
     qreal img_scale;
     ViewMode mode;
+    QTimer *slideshow;
 
     /***************** event *******************/
     void resizeEvent(QResizeEvent *event);

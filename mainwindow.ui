@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>591</width>
-    <height>392</height>
+    <width>485</width>
+    <height>279</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -40,7 +40,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>591</width>
+     <width>485</width>
      <height>22</height>
     </rect>
    </property>
@@ -67,9 +67,6 @@
     <addaction name="menu_View_FullScreen"/>
     <addaction name="separator"/>
     <addaction name="menu_View_Filter"/>
-    <addaction name="separator"/>
-    <addaction name="menu_View_Histgram"/>
-    <addaction name="menu_View_ToneCurve"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -82,11 +79,19 @@
      <string>スライドショー</string>
     </property>
     <addaction name="menu_Slideshow_Slideshow"/>
-    <addaction name="menu_Slideshow_Settings"/>
+   </widget>
+   <widget class="QMenu" name="menu_Window">
+    <property name="title">
+     <string>ウィンドウ</string>
+    </property>
+    <addaction name="menu_Window_PlayList"/>
+    <addaction name="menu_Window_Histgram"/>
+    <addaction name="menu_Window_ToneCurve"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_View"/>
    <addaction name="menu_Slideshow"/>
+   <addaction name="menu_Window"/>
    <addaction name="menu_Help"/>
   </widget>
   <action name="menu_File_Open">
@@ -152,32 +157,12 @@
     <string>スライドショー</string>
    </property>
   </action>
-  <action name="menu_Slideshow_Settings">
-   <property name="text">
-    <string>スライドショーの設定</string>
-   </property>
-  </action>
   <action name="menu_View_FitImage">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
     <string>画像に合わせて表示する</string>
-   </property>
-  </action>
-  <action name="menu_View_FlipHorizontal">
-   <property name="text">
-    <string>左右反転</string>
-   </property>
-  </action>
-  <action name="menu_View_Histgram">
-   <property name="text">
-    <string>ヒストグラム</string>
-   </property>
-  </action>
-  <action name="menu_View_ToneCurve">
-   <property name="text">
-    <string>トーンカーブ</string>
    </property>
   </action>
   <action name="menu_File_Settings">
@@ -188,6 +173,21 @@
   <action name="menu_View_Filter">
    <property name="text">
     <string>フィルター</string>
+   </property>
+  </action>
+  <action name="menu_Window_Histgram">
+   <property name="text">
+    <string>ヒストグラム</string>
+   </property>
+  </action>
+  <action name="menu_Window_ToneCurve">
+   <property name="text">
+    <string>トーンカーブ</string>
+   </property>
+  </action>
+  <action name="menu_Window_PlayList">
+   <property name="text">
+    <string>プレイリスト</string>
    </property>
   </action>
  </widget>
