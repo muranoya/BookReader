@@ -1,6 +1,7 @@
 #ifndef IMAGEMANAGER_H
 #define IMAGEMANAGER_H
 
+#include "playlistdock.h"
 #include "nullptr.h"
 
 #include <QGraphicsScene>
@@ -27,7 +28,7 @@ public:
         CUSTOM_SCALE,
     };
 
-    ImageViewer();
+    explicit ImageViewer(PlaylistDock *pl);
     ~ImageViewer();
 
     /***************** 画像読み込み *******************/
@@ -48,7 +49,6 @@ public:
     ViewMode getScaleMode() const;
 
     /***************** setter *******************/
-    ImageViewer& setAntiAliasing(bool b);
     ImageViewer& setScale(ViewMode m, qreal s);
     ImageViewer& setScale(ViewMode m);
 
@@ -73,8 +73,7 @@ private:
     QImage *view_img;
     QGraphicsScene *view_scene;
     QGraphicsPixmapItem *view_item;
-    QStringList imgList;
-    int showingIndex;
+    PlaylistDock *pldock;
     qreal img_scale;
     ViewMode mode;
     QTimer *slideshow;

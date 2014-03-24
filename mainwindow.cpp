@@ -3,14 +3,16 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    imgView(&pldock), pldock(this)
 {
     ui->setupUi(this);
 
-    imgView = new ImageViewer();
-    ui->gridLayout_2->addWidget(imgView);
-    connect(imgView, SIGNAL(imageChanged()), SLOT(updateWindowState()));
-    connect(imgView, SIGNAL(sizeChanged()), SLOT(updateWindowState()));
+    addDockWidget(Qt::LeftDockWidgetArea, &pldock);
+    ui->gridLayout_2->addWidget(&imgView);
+
+    connect(&imgView, SIGNAL(imageChanged()), SLOT(updateWindowState()));
+    connect(&imgView, SIGNAL(sizeChanged()), SLOT(updateWindowState()));
 
     restoreSettings();
     updateWindowState();
@@ -19,7 +21,6 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete imgView;
 }
 
 /******************* file *******************/
@@ -42,7 +43,7 @@ void MainWindow::on_menu_File_Open_triggered()
     QFileInfo info(files.at(0));
     QDir dir = info.absoluteDir();
     dialog_File = dir.absolutePath();
-    imgView->loadFiles(files);
+    imgView.loadFiles(files);
 }
 
 void MainWindow::on_menu_File_FolderOpen_triggered()
@@ -53,7 +54,7 @@ void MainWindow::on_menu_File_FolderOpen_triggered()
     if (!dirname.isEmpty())
     {
         dialog_Directory = dirname;
-        imgView->loadDir(dirname);
+        imgView.loadDir(dirname);
     }
 }
 
@@ -65,7 +66,7 @@ void MainWindow::on_menu_File_Settings_triggered()
 
 void MainWindow::on_menu_File_Close_triggered()
 {
-    imgView->releaseImages();
+    imgView.releaseImages();
 }
 
 /******************* view *******************/
@@ -87,7 +88,7 @@ void MainWindow::on_menu_View_FitImage_triggered()
 void MainWindow::on_menu_View_SetScale_triggered()
 {
     SettingScaleDialog dialog(this);
-    if (dialog.getScale(imgView->getScale()))
+    if (dialog.getScale(imgView.getScale()))
     {
         changeCheckedScaleMenu(ui->menu_View_SetScale, ImageViewer::CUSTOM_SCALE,
                                dialog.getValue());
@@ -113,14 +114,25 @@ void MainWindow::on_menu_View_FullScreen_triggered()
 /******************* slideshow *******************/
 void MainWindow::on_menu_Slideshow_Slideshow_triggered()
 {
-    if (imgView->playSlideShow())
+    if (imgView.playSlideShow())
     {
-        imgView->stopSlideShow();
+        imgView.stopSlideShow();
     }
     else
     {
-        imgView->startSlideShow();
+        imgView.startSlideShow();
     }
+}
+
+/******************* window *******************/
+void MainWindow::on_menu_Window_Hide_triggered()
+{
+    this->setWindowState(Qt::WindowMinimized);
+}
+
+void MainWindow::on_menu_Window_PlayList_triggered()
+{
+    pldock.setVisible(!pldock.isVisible());
 }
 
 /******************* help *******************/
@@ -133,7 +145,7 @@ void MainWindow::on_menu_Help_Version_triggered()
 /******************* util *******************/
 void MainWindow::updateWindowState()
 {
-    QString title = imgView->getFileName();
+    QString title = imgView.getFileName();
     if (title.isEmpty())
     {
         setWindowTitle(BookReader::SOFTWARE_NAME);
@@ -141,10 +153,10 @@ void MainWindow::updateWindowState()
     else
     {
         title = tr("[%1/%2] %3 [倍率:%4%]")
-                .arg(QString::number(imgView->getImageListIndex() + 1))
-                .arg(QString::number(imgView->getImageListCount()))
+                .arg(QString::number(imgView.getImageListIndex() + 1))
+                .arg(QString::number(imgView.getImageListCount()))
                 .arg(title)
-                .arg(QString::number(imgView->getScale() * 100.0, 'g', 4));
+                .arg(QString::number(imgView.getScale() * 100.0, 'g', 4));
         setWindowTitle(title);
     }
 }
@@ -175,11 +187,11 @@ void MainWindow::changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, q
 
     if (m == ImageViewer::CUSTOM_SCALE)
     {
-        imgView->setScale(m, s);
+        imgView.setScale(m, s);
     }
     else
     {
-        imgView->setScale(m);
+        imgView.setScale(m);
     }
     updateWindowState();
 }
@@ -198,8 +210,8 @@ void MainWindow::saveSettings()
     settings.endGroup();
 
     settings.beginGroup("Viewer");
-    settings.setValue("scaling_mode", imgView->getScaleMode());
-    settings.setValue("scaling_times", imgView->getScale());
+    settings.setValue("scaling_mode", imgView.getScaleMode());
+    settings.setValue("scaling_times", imgView.getScale());
     //settings.setValue("completion", );
     settings.endGroup();
 }

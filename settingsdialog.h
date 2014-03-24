@@ -3,14 +3,14 @@
 
 #include <QDialog>
 
-namespace Ui {
-class SettingsDialog;
+namespace Ui
+{
+    class SettingsDialog;
 }
 
 class SettingsDialog : public QDialog
 {
     Q_OBJECT
-
 public:
     explicit SettingsDialog(QWidget *parent = 0);
     ~SettingsDialog();

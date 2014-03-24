@@ -8,6 +8,7 @@
 #include "applicationinfo.h"
 #include "settings.h"
 #include "settingsdialog.h"
+#include "playlistdock.h"
 
 #include <QMainWindow>
 #include <QGraphicsScene>
@@ -15,9 +16,6 @@
 #include <QMouseEvent>
 #include <QDir>
 #include <QFileDialog>
-#include <QMatrix>
-#include <QByteArray>
-
 #include <QTimer>
 
 namespace Ui
@@ -49,15 +47,21 @@ private slots:
     /******************* slideshow *******************/
     void on_menu_Slideshow_Slideshow_triggered();
 
+    /******************* window *******************/
+    void on_menu_Window_Hide_triggered();
+
     /******************* help *******************/
     void on_menu_Help_Version_triggered();
 
     /******************* util *******************/
     void updateWindowState();
 
+    void on_menu_Window_PlayList_triggered();
+
 private:
     Ui::MainWindow *ui;
-    ImageViewer *imgView;
+    ImageViewer imgView;
+    PlaylistDock pldock;
     QString dialog_File;
     QString dialog_Directory;
 

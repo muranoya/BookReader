@@ -17,7 +17,8 @@ SOURCES += main.cpp\
     settingscaledialog.cpp \
     versiondialog.cpp \
     imageviewer.cpp \
-    settingsdialog.cpp
+    settingsdialog.cpp \
+    playlistdock.cpp
 
 HEADERS  += mainwindow.h \
     nullptr.h \
@@ -26,7 +27,8 @@ HEADERS  += mainwindow.h \
     versiondialog.h \
     imageviewer.h \
     applicationinfo.h \
-    settingsdialog.h
+    settingsdialog.h \
+    playlistdock.h
 
 FORMS    += mainwindow.ui \
     settingscaledialog.ui \

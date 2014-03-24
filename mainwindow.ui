@@ -84,6 +84,8 @@
     <property name="title">
      <string>ウィンドウ</string>
     </property>
+    <addaction name="menu_Window_Hide"/>
+    <addaction name="separator"/>
     <addaction name="menu_Window_PlayList"/>
     <addaction name="menu_Window_Histgram"/>
     <addaction name="menu_Window_ToneCurve"/>
@@ -97,6 +99,9 @@
   <action name="menu_File_Open">
    <property name="text">
     <string>ファイルを開く</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="menu_View_FullSize">
@@ -127,10 +132,16 @@
    <property name="text">
     <string>フォルダを開く</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
   </action>
   <action name="menu_File_Close">
    <property name="text">
     <string>ファイルを閉じる</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
    </property>
   </action>
   <action name="menu_View_SetScale">
@@ -147,6 +158,9 @@
    </property>
    <property name="text">
     <string>フルスクリーン</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
    </property>
   </action>
   <action name="menu_Slideshow_Slideshow">
@@ -188,6 +202,14 @@
   <action name="menu_Window_PlayList">
    <property name="text">
     <string>プレイリスト</string>
+   </property>
+  </action>
+  <action name="menu_Window_Hide">
+   <property name="text">
+    <string>最小化</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+M</string>
    </property>
   </action>
  </widget>
