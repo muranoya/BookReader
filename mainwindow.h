@@ -8,7 +8,6 @@
 #include "applicationinfo.h"
 #include "settings.h"
 #include "settingsdialog.h"
-#include "playlistdock.h"
 
 #include <QMainWindow>
 #include <QGraphicsScene>
@@ -49,6 +48,7 @@ private slots:
 
     /******************* window *******************/
     void on_menu_Window_Hide_triggered();
+    void on_menu_Window_PlayList_triggered();
 
     /******************* help *******************/
     void on_menu_Help_Version_triggered();
@@ -56,12 +56,9 @@ private slots:
     /******************* util *******************/
     void updateWindowState();
 
-    void on_menu_Window_PlayList_triggered();
-
 private:
     Ui::MainWindow *ui;
     ImageViewer imgView;
-    PlaylistDock pldock;
     QString dialog_File;
     QString dialog_Directory;
 

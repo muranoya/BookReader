@@ -4,6 +4,7 @@
 #include "playlistdock.h"
 #include "nullptr.h"
 
+#include <QMainWindow>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <QStringList>
@@ -28,7 +29,7 @@ public:
         CUSTOM_SCALE,
     };
 
-    explicit ImageViewer(PlaylistDock *pl);
+    explicit ImageViewer(QMainWindow *pl);
     ~ImageViewer();
 
     /***************** 画像読み込み *******************/
@@ -57,6 +58,8 @@ public:
     void startSlideShow();
     void stopSlideShow();
     bool playSlideShow() const;
+    bool isPlaylistVisibled() const;
+    void setPlaylistVisibled(bool visible);
 
 signals:
     void imageChanged();
@@ -64,6 +67,7 @@ signals:
 
 private slots:
     void update_Timer_SlideShow();
+    void on_PlaylistSelected();
 
 private:
     // 対応している拡張子
@@ -73,7 +77,7 @@ private:
     QImage *view_img;
     QGraphicsScene *view_scene;
     QGraphicsPixmapItem *view_item;
-    PlaylistDock *pldock;
+    PlaylistDock pldock;
     qreal img_scale;
     ViewMode mode;
     QTimer *slideshow;

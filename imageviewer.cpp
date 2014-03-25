@@ -3,11 +3,14 @@
 const QString ImageViewer::extList[5] = {"jpg", "png", "jpeg", "bmp", "gif"};
 const int ImageViewer::extListLen = 5;
 
-ImageViewer::ImageViewer(PlaylistDock *pl) : QGraphicsView(),
+ImageViewer::ImageViewer(QMainWindow *parent) : QGraphicsView(),
     view_img(nullptr), view_scene(new QGraphicsScene()), view_item(nullptr),
-    pldock(pl), img_scale(1.0), mode(FULLSIZE), slideshow(nullptr)
+    pldock(parent), img_scale(1.0), mode(FULLSIZE), slideshow(nullptr)
 {
     setScene(view_scene);
+
+    parent->addDockWidget(Qt::LeftDockWidgetArea, &pldock);
+    connect(&pldock, SIGNAL(playlistItemOpen()), this, SLOT(on_PlaylistSelected()));
 }
 
 ImageViewer::~ImageViewer()
@@ -26,7 +29,7 @@ void ImageViewer::loadFiles(const QStringList &paths)
         return;
     }
 
-    pldock->clear();
+    pldock.clear();
 
     QStringList::const_iterator iterator;
     for (iterator = paths.constBegin(); iterator != paths.constEnd(); ++iterator)
@@ -34,11 +37,11 @@ void ImageViewer::loadFiles(const QStringList &paths)
         QFileInfo info(*iterator);
         if (info.exists() && isReadable(*iterator))
         {
-            pldock->append(*iterator);
+            pldock.append(*iterator);
         }
     }
 
-    showImage(pldock->currentIndex());
+    showImage(pldock.currentIndex());
 }
 
 void ImageViewer::loadDir(const QString &path)
@@ -54,20 +57,20 @@ void ImageViewer::loadDir(const QString &path)
         return;
     }
 
-    pldock->clear();
+    pldock.clear();
     openDir(path);
 
-    showImage(pldock->currentIndex());
+    showImage(pldock.currentIndex());
 }
 
 void ImageViewer::nextImage()
 {
-    showImage(pldock->nextIndex());
+    showImage(pldock.nextIndex());
 }
 
 void ImageViewer::previousImage()
 {
-    showImage(pldock->previousIndex());
+    showImage(pldock.previousIndex());
 }
 
 void ImageViewer::releaseImages()
@@ -78,7 +81,7 @@ void ImageViewer::releaseImages()
     view_img = nullptr;
     view_item = nullptr;
 
-    pldock->clear();
+    pldock.clear();
 
     imageChanged();
 }
@@ -96,22 +99,22 @@ QStringList ImageViewer::getReadableExtension() const
 
 int ImageViewer::getImageListCount() const
 {
-    return pldock->count();
+    return pldock.count();
 }
 
 int ImageViewer::getImageListIndex() const
 {
-    return pldock->currentIndex();
+    return pldock.currentIndex();
 }
 
 QString ImageViewer::getFileName() const
 {
-    return pldock->getFileName();
+    return pldock.getFileName();
 }
 
 QString ImageViewer::getFilePath() const
 {
-    return pldock->getFilePath();
+    return pldock.getFilePath();
 }
 
 QSize ImageViewer::getImageSize() const
@@ -185,11 +188,26 @@ bool ImageViewer::playSlideShow() const
     return slideshow != nullptr;
 }
 
+bool ImageViewer::isPlaylistVisibled() const
+{
+    return pldock.isVisible();
+}
+
+void ImageViewer::setPlaylistVisibled(bool visible)
+{
+    pldock.setVisible(visible);
+}
+
 /***************** private *******************/
 /***************** slots *******************/
 void ImageViewer::update_Timer_SlideShow()
 {
     nextImage();
+}
+
+void ImageViewer::on_PlaylistSelected()
+{
+    showImage(pldock.currentIndex());
 }
 
 /***************** event *******************/
@@ -225,9 +243,9 @@ void ImageViewer::dropEvent(QDropEvent *event)
     const QMimeData *mime = event->mimeData();
     QList<QUrl> urls = mime->urls();
 
-    if ((event->keyboardModifiers() & Qt::ControlModifier) != Qt::ControlModifier)
+    if (event->dropAction() == Qt::CopyAction)
     {
-        pldock->clear();
+        pldock.clear();
     }
     QList<QUrl>::const_iterator iterator;
     for (iterator = urls.constBegin(); iterator != urls.constEnd(); ++iterator)
@@ -242,11 +260,11 @@ void ImageViewer::dropEvent(QDropEvent *event)
             }
             else if (isReadable(path))
             {
-                pldock->append(path);
+                pldock.append(path);
             }
         }
     }
-    showImage(pldock->currentIndex());
+    showImage(pldock.currentIndex());
 }
 
 void ImageViewer::mousePressEvent(QMouseEvent *event)
@@ -264,12 +282,12 @@ void ImageViewer::mousePressEvent(QMouseEvent *event)
 /***************** util *******************/
 bool ImageViewer::showImage(int n)
 {
-    if (! pldock->validIndex(n))
+    if (! pldock.validIndex(n))
     {
         return false;
     }
 
-    QImage *img = new QImage(pldock->getFilePath());
+    QImage *img = new QImage(pldock.getFilePath());
 
     if (img->isNull())
     {
@@ -306,7 +324,7 @@ void ImageViewer::openDir(const QString &path)
         {
             if (isReadable(*iterator))
             {
-                pldock->append(connectFilePath(path, *iterator));
+                pldock.append(connectFilePath(path, *iterator));
             }
         }
     }

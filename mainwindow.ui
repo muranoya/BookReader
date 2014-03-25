@@ -200,6 +200,9 @@
    </property>
   </action>
   <action name="menu_Window_PlayList">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>プレイリスト</string>
    </property>

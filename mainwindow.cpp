@@ -4,11 +4,9 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    imgView(&pldock), pldock(this)
+    imgView(this)
 {
     ui->setupUi(this);
-
-    addDockWidget(Qt::LeftDockWidgetArea, &pldock);
     ui->gridLayout_2->addWidget(&imgView);
 
     connect(&imgView, SIGNAL(imageChanged()), SLOT(updateWindowState()));
@@ -27,12 +25,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_menu_File_Open_triggered()
 {
     QStringList files = QFileDialog::getOpenFileNames(
-                this, tr("ファイルを開く"),
-#ifdef __APPLE__
-                dialog_File+"/test.txt",
-#else
-                dialog_File,
-#endif
+                this, tr("ファイルを開く"), dialog_File,
                 tr("Images (*png *.jpg *.jpeg *.bmp *.gif"));
 
     if (files.isEmpty())
@@ -132,7 +125,7 @@ void MainWindow::on_menu_Window_Hide_triggered()
 
 void MainWindow::on_menu_Window_PlayList_triggered()
 {
-    pldock.setVisible(!pldock.isVisible());
+    imgView.setPlaylistVisibled(!imgView.isPlaylistVisibled());
 }
 
 /******************* help *******************/
@@ -202,6 +195,7 @@ void MainWindow::saveSettings()
 
     settings.beginGroup("MainWindow");
     settings.setValue("size", size());
+    settings.setValue("location", pos());
     settings.endGroup();
 
     settings.beginGroup("Main");
@@ -214,6 +208,10 @@ void MainWindow::saveSettings()
     settings.setValue("scaling_times", imgView.getScale());
     //settings.setValue("completion", );
     settings.endGroup();
+
+    settings.beginGroup("Playlist");
+    settings.setValue("visible", imgView.isPlaylistVisibled());
+    settings.endGroup();
 }
 
 void MainWindow::restoreSettings()
@@ -222,6 +220,7 @@ void MainWindow::restoreSettings()
 
     settings.beginGroup("MainWindow");
     resize(settings.value("size", QSize(600, 400)).toSize());
+    move(settings.value("location", QPoint(100, 100)).toPoint());
     settings.endGroup();
 
     settings.beginGroup("Main");
@@ -248,7 +247,11 @@ void MainWindow::restoreSettings()
                                settings.value("scaling_times", 0.0).toFloat());
         break;
     }
-
     //settings.value("completion", );
+    settings.endGroup();
+
+    settings.beginGroup("Playlist");
+    imgView.setPlaylistVisibled(settings.value("visible", false).toBool());
+    ui->menu_Window_PlayList->setChecked(imgView.isPlaylistVisibled());
     settings.endGroup();
 }
