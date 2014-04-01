@@ -2,48 +2,50 @@
 #define PLAYLISTDOCK_H
 
 #include "nullptr.h"
+#include "util.h"
 
 #include <QList>
 #include <QDockWidget>
 #include <QListWidget>
 #include <QFileInfo>
 #include <QAction>
+#include <QDir>
 
 class PlaylistDock : public QDockWidget
 {
     Q_OBJECT
 public:
     PlaylistDock(QWidget *parent = 0, Qt::WindowFlags flags = 0);
-    ~PlaylistDock();
+    ~PlaylistDock() {}
 
-    void append(const QString& value);
-    const QString& at(int i) const;
+    /*
+     * 次のように関数を呼び出された場合
+     * list = ["/Users/packman/MyPictures", "/Users/packman/wallpaper.jpg"]
+     * level = 0
+     * MyPicturesディレクトリ以下のファイルは読み込まないが、wallpaper.jpgを読み込む。
+     *
+     * level = 1の場合
+     * MyPicturesディレクトリ以下のファイル(ディレクトリは読み込まない)と、wallpaper.jpgを読み込む。
+     *
+     * level < 0の場合
+     * 再帰的に全てのフォルダとファイルを読み込む。
+     */
+    void append(const QStringList& list, int level = 0);
+    QString at(int i) const;
     void clear();
-    QList<QString>::const_iterator constBegin() const
-    { return items.constBegin(); }
-    QList<QString>::const_iterator constEnd() const
-    { return items.constEnd(); }
-    bool contains(const QString& value) const
-    { return items.contains(value); }
-    int count() const { return items.count(); }
-    bool empty() const { return items.empty(); }
-    void insert(int i, const QString& value);
-    void remove(int i);
-    void remove(QListWidgetItem *i);
-    void swap(int i, int j);
+    int count() const;
+    bool empty() const;
 
-    QString getFileName() const;
-    QString getFilePath() const;
+    QString currentFileName() const;
+    QString currentFilePath() const;
 
-    int currentIndex() const { return index; }
-    int nextIndex();
-    int previousIndex();
-    bool validIndex(int index) const
-    { return index >= 0 && index < count(); }
+    int currentIndex() const;
+    QString nextFilePath();
+    QString previousFilePath();
 
 signals:
-    void playlistItemOpen();
-    void removePlaylistItem();
+    void itemOpen(QString path); // コンテキストメニューかリストアイテムのダブルクリックで開いた場合
+    void itemRemoved(bool currentFile);
 
 private slots:
     void m_open_triggered();
@@ -51,11 +53,13 @@ private slots:
     void itemDoubleClicked(QListWidgetItem* item);
 
 private:
-    QList<QString> items;
     QListWidget listwidget;
+    QAction m_open, m_remove;
+    QBrush normalBC, selectedBC;
     int index;
-    QAction m_open;
-    QAction m_remove;
+
+    bool validIndex(int index) const { return index >= 0 && index < count(); }
+    void remove(QList<QListWidgetItem*> items);
 };
 
 #endif // PLAYLISTDOCK_H

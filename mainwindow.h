@@ -6,8 +6,8 @@
 #include "imageviewer.h"
 #include "nullptr.h"
 #include "applicationinfo.h"
-#include "settings.h"
 #include "settingsdialog.h"
+#include "playlistdock.h"
 
 #include <QMainWindow>
 #include <QGraphicsScene>
@@ -16,6 +16,7 @@
 #include <QDir>
 #include <QFileDialog>
 #include <QTimer>
+#include <QSettings>
 
 namespace Ui
 {
@@ -34,7 +35,6 @@ private slots:
     void on_menu_File_Open_triggered();
     void on_menu_File_FolderOpen_triggered();
     void on_menu_File_Settings_triggered();
-    void on_menu_File_Close_triggered();
 
     /******************* view *******************/
     void on_menu_View_FullSize_triggered();
@@ -56,11 +56,25 @@ private slots:
     /******************* util *******************/
     void updateWindowState();
 
+    /******************* playlist event *******************/
+    void playlistVisibleChanged(bool visible);
+    void playlistItemRemoved(bool currentFile);
+    void playlistItemOpened(QString path);
+
+    /******************* image viewer event *******************/
+    void viewerRightClicked();
+    void viewerLeftClicked();
+    void viewerDropItems(QStringList list, bool copy);
+
+    void slideshow_Timer();
+
 private:
     Ui::MainWindow *ui;
     ImageViewer imgView;
+    PlaylistDock pldock;
     QString dialog_File;
     QString dialog_Directory;
+    QTimer slideshow;
 
     /******************* event *******************/
     void changeEvent(QEvent *event);

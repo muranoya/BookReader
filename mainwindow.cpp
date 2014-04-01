@@ -4,13 +4,22 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    imgView(this)
+    imgView(), pldock(this),
+    slideshow()
 {
     ui->setupUi(this);
     ui->gridLayout_2->addWidget(&imgView);
 
-    connect(&imgView, SIGNAL(imageChanged()), SLOT(updateWindowState()));
-    connect(&imgView, SIGNAL(sizeChanged()), SLOT(updateWindowState()));
+    addDockWidget(Qt::LeftDockWidgetArea, &pldock);
+    connect(&pldock, SIGNAL(itemOpen(QString)), this, SLOT(playlistItemOpened(QString)));
+    connect(&pldock, SIGNAL(itemRemoved(bool)), this, SLOT(playlistItemRemoved(bool)));
+    connect(&pldock, SIGNAL(visibilityChanged(bool)), this, SLOT(playlistVisibleChanged(bool)));
+
+    connect(&imgView, SIGNAL(rightClicked()), this, SLOT(viewerRightClicked()));
+    connect(&imgView, SIGNAL(leftClicked()), this, SLOT(viewerLeftClicked()));
+    connect(&imgView, SIGNAL(dropItems(QStringList,bool)), this, SLOT(viewerDropItems(QStringList,bool)));
+
+    connect(&slideshow, SIGNAL(timeout()), this, SLOT(slideshow_Timer()));
 
     restoreSettings();
     updateWindowState();
@@ -26,17 +35,18 @@ void MainWindow::on_menu_File_Open_triggered()
 {
     QStringList files = QFileDialog::getOpenFileNames(
                 this, tr("ファイルを開く"), dialog_File,
-                tr("Images (*png *.jpg *.jpeg *.bmp *.gif"));
+                tr("Images (*.png *.jpg *.jpeg *.bmp *.gif)"));
 
-    if (files.isEmpty())
+    if (!files.isEmpty())
     {
-        return;
+        QFileInfo info(files.at(0));
+        QDir dir = info.absoluteDir();
+        dialog_File = dir.absolutePath();
+        pldock.clear();
+        pldock.append(files);
+        imgView.showImage(pldock.currentFilePath());
+        updateWindowState();
     }
-
-    QFileInfo info(files.at(0));
-    QDir dir = info.absoluteDir();
-    dialog_File = dir.absolutePath();
-    imgView.loadFiles(files);
 }
 
 void MainWindow::on_menu_File_FolderOpen_triggered()
@@ -47,7 +57,10 @@ void MainWindow::on_menu_File_FolderOpen_triggered()
     if (!dirname.isEmpty())
     {
         dialog_Directory = dirname;
-        imgView.loadDir(dirname);
+        pldock.clear();
+        pldock.append(QStringList(dirname), 1);
+        imgView.showImage(pldock.currentFilePath());
+        updateWindowState();
     }
 }
 
@@ -55,11 +68,6 @@ void MainWindow::on_menu_File_Settings_triggered()
 {
     SettingsDialog dialog(this);
     dialog.exec();
-}
-
-void MainWindow::on_menu_File_Close_triggered()
-{
-    imgView.releaseImages();
 }
 
 /******************* view *******************/
@@ -107,13 +115,13 @@ void MainWindow::on_menu_View_FullScreen_triggered()
 /******************* slideshow *******************/
 void MainWindow::on_menu_Slideshow_Slideshow_triggered()
 {
-    if (imgView.playSlideShow())
+    if (slideshow.isActive())
     {
-        imgView.stopSlideShow();
+        slideshow.stop();
     }
     else
     {
-        imgView.startSlideShow();
+        slideshow.start(3000);
     }
 }
 
@@ -125,7 +133,7 @@ void MainWindow::on_menu_Window_Hide_triggered()
 
 void MainWindow::on_menu_Window_PlayList_triggered()
 {
-    imgView.setPlaylistVisibled(!imgView.isPlaylistVisibled());
+    pldock.setVisible(!pldock.isVisible());
 }
 
 /******************* help *******************/
@@ -138,7 +146,7 @@ void MainWindow::on_menu_Help_Version_triggered()
 /******************* util *******************/
 void MainWindow::updateWindowState()
 {
-    QString title = imgView.getFileName();
+    QString title = pldock.currentFileName();
     if (title.isEmpty())
     {
         setWindowTitle(BookReader::SOFTWARE_NAME);
@@ -146,11 +154,87 @@ void MainWindow::updateWindowState()
     else
     {
         title = tr("[%1/%2] %3 [倍率:%4%]")
-                .arg(QString::number(imgView.getImageListIndex() + 1))
-                .arg(QString::number(imgView.getImageListCount()))
+                .arg(QString::number(pldock.currentIndex() + 1))
+                .arg(QString::number(pldock.count()))
                 .arg(title)
                 .arg(QString::number(imgView.getScale() * 100.0, 'g', 4));
         setWindowTitle(title);
+    }
+}
+
+/******************* playlist event *******************/
+void MainWindow::playlistVisibleChanged(bool visible)
+{
+    ui->menu_Window_PlayList->setChecked(visible);
+}
+
+void MainWindow::playlistItemRemoved(bool currentFile)
+{
+    if (pldock.empty())
+    {
+        imgView.releaseImage();
+    }
+    else if (currentFile && !pldock.empty())
+    {
+        imgView.showImage(pldock.currentFilePath());
+    }
+    updateWindowState();
+}
+
+void MainWindow::playlistItemOpened(QString path)
+{
+    imgView.showImage(path);
+    updateWindowState();
+}
+
+/******************* image viewer event *******************/
+void MainWindow::viewerRightClicked()
+{
+    if (pldock.empty())
+    {
+        return;
+    }
+    imgView.showImage(pldock.previousFilePath());
+    updateWindowState();
+}
+
+void MainWindow::viewerLeftClicked()
+{
+    if (pldock.empty())
+    {
+        return;
+    }
+    imgView.showImage(pldock.nextFilePath());
+    updateWindowState();
+}
+
+void MainWindow::viewerDropItems(QStringList list, bool copy)
+{
+    bool isempty = pldock.empty();
+    if (!copy)
+    {
+        pldock.clear();
+    }
+
+    pldock.append(list, 1);
+
+    if (!copy || isempty)
+    {
+        imgView.showImage(pldock.currentFilePath());
+    }
+    updateWindowState();
+}
+
+void MainWindow::slideshow_Timer()
+{
+    if (pldock.empty())
+    {
+        slideshow.stop();
+        ui->menu_Slideshow_Slideshow->setChecked(false);
+    }
+    else
+    {
+        imgView.showImage(pldock.nextFilePath());
     }
 }
 
@@ -191,7 +275,7 @@ void MainWindow::changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, q
 
 void MainWindow::saveSettings()
 {
-    QSettings &settings = BookReader::Settings::mysettings;
+    QSettings settings(BookReader::SOFTWARE_ORGANIZATION, BookReader::SOFTWARE_NAME, this);
 
     settings.beginGroup("MainWindow");
     settings.setValue("size", size());
@@ -206,17 +290,16 @@ void MainWindow::saveSettings()
     settings.beginGroup("Viewer");
     settings.setValue("scaling_mode", imgView.getScaleMode());
     settings.setValue("scaling_times", imgView.getScale());
-    //settings.setValue("completion", );
     settings.endGroup();
 
     settings.beginGroup("Playlist");
-    settings.setValue("visible", imgView.isPlaylistVisibled());
+    settings.setValue("visible", pldock.isVisible());
     settings.endGroup();
 }
 
 void MainWindow::restoreSettings()
 {
-    QSettings &settings = BookReader::Settings::mysettings;
+    QSettings settings(BookReader::SOFTWARE_ORGANIZATION, BookReader::SOFTWARE_NAME, this);
 
     settings.beginGroup("MainWindow");
     resize(settings.value("size", QSize(600, 400)).toSize());
@@ -247,11 +330,10 @@ void MainWindow::restoreSettings()
                                settings.value("scaling_times", 0.0).toFloat());
         break;
     }
-    //settings.value("completion", );
     settings.endGroup();
 
     settings.beginGroup("Playlist");
-    imgView.setPlaylistVisibled(settings.value("visible", false).toBool());
-    ui->menu_Window_PlayList->setChecked(imgView.isPlaylistVisibled());
+    pldock.setVisible(settings.value("visible", false).toBool());
+    ui->menu_Window_PlayList->setChecked(pldock.isVisible());
     settings.endGroup();
 }

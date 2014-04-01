@@ -52,8 +52,6 @@
     <addaction name="menu_File_FolderOpen"/>
     <addaction name="separator"/>
     <addaction name="menu_File_Settings"/>
-    <addaction name="separator"/>
-    <addaction name="menu_File_Close"/>
    </widget>
    <widget class="QMenu" name="menu_View">
     <property name="title">
@@ -134,14 +132,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+D</string>
-   </property>
-  </action>
-  <action name="menu_File_Close">
-   <property name="text">
-    <string>ファイルを閉じる</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+W</string>
    </property>
   </action>
   <action name="menu_View_SetScale">
