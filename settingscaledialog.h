@@ -2,11 +2,10 @@
 #define SETTINGSCALEDIALOG_H
 
 #include <QDialog>
-
-namespace Ui
-{
-    class SettingScaleDialog;
-}
+#include <QGridLayout>
+#include <QLabel>
+#include <QDoubleSpinBox>
+#include <QDialogButtonBox>
 
 class SettingScaleDialog : public QDialog
 {
@@ -18,10 +17,17 @@ public:
     bool getScale(qreal ori);
     qreal getValue();
 
-private:
-    qreal scale;
+private slots:
+    void accepted_DialogButton();
+    void rejected_DialogButton();
 
-    Ui::SettingScaleDialog *ui;
+private:
+    QGridLayout *layout;
+    QDoubleSpinBox *spinbox;
+    QLabel *label;
+    QDialogButtonBox *buttonbox;
+
+    qreal scale;
 };
 
 #endif // SETTINGSCALEDIALOG_H

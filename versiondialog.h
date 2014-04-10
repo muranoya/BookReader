@@ -4,11 +4,9 @@
 #include "applicationinfo.h"
 
 #include <QDialog>
-
-namespace Ui
-{
-    class VersionDialog;
-}
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QDialogButtonBox>
 
 class VersionDialog : public QDialog
 {
@@ -17,10 +15,13 @@ public:
     explicit VersionDialog(QWidget *parent = 0);
     ~VersionDialog();
 
-    void showVersion();
+private slots:
+    void button_close();
 
 private:
-    Ui::VersionDialog *ui;
+    QVBoxLayout *layout;
+    QLabel *label;
+    QDialogButtonBox *button;
 };
 
 #endif // VERSIONDIALOG_H

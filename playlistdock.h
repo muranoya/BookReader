@@ -54,8 +54,10 @@ private slots:
 
 private:
     QListWidget listwidget;
-    QAction m_open, m_remove;
-    QBrush normalBC, selectedBC;
+    QAction m_open;
+    QAction m_remove;
+    QBrush normalBC;
+    QBrush selectedBC;
     int index;
 
     bool validIndex(int index) const { return index >= 0 && index < count(); }

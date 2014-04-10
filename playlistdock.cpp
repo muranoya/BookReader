@@ -3,8 +3,10 @@
 PlaylistDock::PlaylistDock(QWidget *parent, Qt::WindowFlags flags)
     : QDockWidget(tr("プレイリスト"), parent, flags),
       listwidget(),
-      m_open(tr("開く"), this), m_remove(tr("プレイリストから消す"), this),
-      normalBC(Qt::transparent), selectedBC(Qt::lightGray),
+      m_open(tr("開く"), this),
+      m_remove(tr("プレイリストから消す"), this),
+      normalBC(Qt::transparent),
+      selectedBC(Qt::lightGray),
       index(-1)
 {
     setWidget(&listwidget);

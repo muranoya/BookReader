@@ -1,24 +1,36 @@
 #include "versiondialog.h"
-#include "ui_versiondialog.h"
 
 VersionDialog::VersionDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::VersionDialog)
+    QDialog(parent,
+            Qt::Sheet |
+            Qt::WindowTitleHint |
+            Qt::WindowCloseButtonHint),
+    layout(new QVBoxLayout()),
+    label(new QLabel()),
+    button(new QDialogButtonBox(QDialogButtonBox::Close, Qt::Horizontal))
 {
-    ui->setupUi(this);
+    setLayout(layout);
+    layout->addWidget(label);
+    layout->addWidget(button);
+
+    setWindowTitle(tr("バージョン情報"));
+
+    label->setText(QString(tr("ソフトウェア名:%1\n"
+                              "バージョン:%2"))
+                   .arg(BookReader::SOFTWARE_NAME)
+                   .arg(BookReader::SOFTWARE_VERSION));
+
+    connect(button, SIGNAL(rejected()), this, SLOT(button_close()));
 }
 
 VersionDialog::~VersionDialog()
 {
-    delete ui;
+    delete layout;
+    delete label;
+    delete button;
 }
 
-void VersionDialog::showVersion()
+void VersionDialog::button_close()
 {
-    setWindowTitle(tr("バージョン"));
-    ui->label_software->setText(tr("ソフトウェア名"));
-    ui->label_software_text->setText(BookReader::SOFTWARE_NAME);
-    ui->label_version->setText(tr("バージョン"));
-    ui->label_version_text->setText(BookReader::SOFTWARE_VERSION);
-    exec();
+    close();
 }

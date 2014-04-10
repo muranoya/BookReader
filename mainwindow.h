@@ -8,20 +8,17 @@
 #include "applicationinfo.h"
 #include "settingsdialog.h"
 #include "playlistdock.h"
+#include "histgramdialog.h"
 
+#include <QMenuBar>
+#include <QMenu>
+#include <QAction>
 #include <QMainWindow>
-#include <QGraphicsScene>
-#include <QGraphicsPixmapItem>
 #include <QMouseEvent>
 #include <QDir>
 #include <QFileDialog>
 #include <QTimer>
 #include <QSettings>
-
-namespace Ui
-{
-    class MainWindow;
-}
 
 class MainWindow : public QMainWindow
 {
@@ -32,26 +29,27 @@ public:
 
 private slots:
     /******************* file *******************/
-    void on_menu_File_Open_triggered();
-    void on_menu_File_FolderOpen_triggered();
-    void on_menu_File_Settings_triggered();
+    void menu_file_open_triggered();
+    void menu_file_fopen_triggered();
+    void menu_file_settings_triggered();
 
     /******************* view *******************/
-    void on_menu_View_FullSize_triggered();
-    void on_menu_View_FitWindow_triggered();
-    void on_menu_View_FitImage_triggered();
-    void on_menu_View_SetScale_triggered();
-    void on_menu_View_FullScreen_triggered();
+    void menu_view_fullsize_triggered();
+    void menu_view_fitwindow_triggered();
+    void menu_view_fitimage_triggered();
+    void menu_view_setscale_triggered();
+    void menu_view_fullscreen_triggered();
 
     /******************* slideshow *******************/
-    void on_menu_Slideshow_Slideshow_triggered();
+    void menu_slideshow_slideshow_triggered();
 
     /******************* window *******************/
-    void on_menu_Window_Hide_triggered();
-    void on_menu_Window_PlayList_triggered();
+    void menu_window_hide_triggered();
+    void menu_window_playlist_triggered();
+    void menu_window_histgram_triggered();
 
     /******************* help *******************/
-    void on_menu_Help_Version_triggered();
+    void menu_help_version_triggered();
 
     /******************* util *******************/
     void updateWindowState();
@@ -65,22 +63,47 @@ private slots:
     void viewerRightClicked();
     void viewerLeftClicked();
     void viewerDropItems(QStringList list, bool copy);
+    void viewerSetNewImage();
 
     void slideshow_Timer();
 
+protected:
+    virtual void changeEvent(QEvent *event);
+    virtual void closeEvent(QCloseEvent *event);
+
 private:
-    Ui::MainWindow *ui;
-    ImageViewer imgView;
-    PlaylistDock pldock;
+    ImageViewer *imgView;
+    PlaylistDock *pldock;
+
+    QMenu *menu_file;
+    QAction *menu_file_open;
+    QAction *menu_file_fopen;
+    QAction *menu_file_settings;
+    QMenu *menu_view;
+    QAction *menu_view_fullsize;
+    QAction *menu_view_fitwindow;
+    QAction *menu_view_fitimage;
+    QAction *menu_view_setscale;
+    QAction *menu_view_fullscreen;
+    QAction *menu_view_filter;
+    QMenu *menu_slideshow;
+    QAction *menu_slideshow_slideshow;
+    QMenu *menu_window;
+    QAction *menu_window_hide;
+    QAction *menu_window_playlist;
+    QAction *menu_window_histgram;
+    QAction *menu_window_torncurve;
+    QMenu *menu_help;
+    QAction *menu_help_version;
+
+    HistgramDialog *histdialog;
+
     QString dialog_File;
     QString dialog_Directory;
     QTimer slideshow;
 
-    /******************* event *******************/
-    void changeEvent(QEvent *event);
-    void closeEvent(QCloseEvent *event);
-
     /******************* util *******************/
+    void createMenus();
     void changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, qreal s = 0.0);
     void saveSettings();
     void restoreSettings();
