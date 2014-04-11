@@ -25,7 +25,6 @@ protected:
 private:
     QVBoxLayout *baselayout;
     QLabel *view;
-    QPixmap *img;
 
     int graph_w;
     int graph_h;

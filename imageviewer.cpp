@@ -7,72 +7,43 @@ ImageViewer::ImageViewer(QWidget *parent)
     : QGraphicsView(parent),
       view_scene(new QGraphicsScene()),
       view_item(new QGraphicsPixmapItem()),
-      view_img(nullptr),
-      img_scale(1.0),
+      img_original(),
+      img_scaled(),
+      scale_value(1.0),
       vmode(FULLSIZE),
       imode(Bilinear)
 {
     setScene(view_scene);
+    view_scene->addItem(view_item);
 }
 
 ImageViewer::~ImageViewer()
 {
-    delete view_img;
     delete view_item;
     delete view_scene;
 }
 
 void ImageViewer::showImage(const QString &path)
 {
-    QImage *bmp = new QImage(path);
-    QImage *img(nullptr);
-    switch (imode)
-    {
-    case NearestNeighbor:
-        img = nearest_neighbor(bmp, img_scale);
-        break;
-    case Bilinear:
-        img = bilinear(bmp, img_scale);
-        break;
-    case Bicubic:
-        img = bicubic(bmp, img_scale);
-        break;
-    case Lanczos2:
-        break;
-    case Lanczos3:
-        break;
-    default:
-        break;
-    }
-    delete bmp;
+    QImage bmp(path);
+    img_original = bmp.convertToFormat(QImage::Format_ARGB32);
+    imageScale(img_original);
 
-    if (img == nullptr || img->isNull())
-    {
-        delete img;
-        return;
-    }
+    setGraphicsPixmapItem(img_scaled);
 
-    QGraphicsPixmapItem *item = new QGraphicsPixmapItem(QPixmap::fromImage(*img));
-    view_scene->addItem(item);
-    view_scene->setSceneRect(0.0, 0.0, img->width(), img->height());
-
-    delete view_img;
-    delete view_item;
-    view_img = img;
-    view_item = item;
-
-    QScrollBar *vScrollBar = verticalScrollBar();
-    vScrollBar->setSliderPosition(0);
+    verticalScrollBar()->setSliderPosition(0);
 
     setNewImage();
 }
 
 void ImageViewer::releaseImage()
 {
-    delete view_img;
+    view_scene->removeItem(view_item);
     delete view_item;
-    view_img = nullptr;
-    view_item = nullptr;
+    view_item = new QGraphicsPixmapItem();
+    view_scene->addItem(view_item);
+
+    view_scene->setSceneRect(0.0, 0.0, 0.0, 0.0);
 
     setNewImage();
 }
@@ -84,15 +55,21 @@ QStringList ImageViewer::getReadableExtension() const
     return list;
 }
 
-QSize ImageViewer::getImageSize() const
+QSize ImageViewer::getOriginalImageSize() const
 {
-    return (view_img == nullptr) ? QSize(0, 0)
-                                 : view_img->size();
+    return (img_original.isNull()) ? QSize(0, 0)
+                                   : img_original.size();
+}
+
+QSize ImageViewer::getScaledImageSize() const
+{
+    return (img_scaled.isNull()) ? QSize(0, 0)
+                                 : img_scaled.size();
 }
 
 qreal ImageViewer::getScale() const
 {
-    return img_scale;
+    return scale_value;
 }
 
 ImageViewer::ViewMode ImageViewer::getScaleMode() const
@@ -107,7 +84,7 @@ ImageViewer::InterpolationMode ImageViewer::getInterpolationMode() const
 
 QVector<int> ImageViewer::histgram() const
 {
-    if (view_img == nullptr)
+    if (img_original.isNull())
     {
         return QVector<int>();
     }
@@ -120,8 +97,8 @@ QVector<int> ImageViewer::histgram() const
         array[i] = 0;
     }
 
-    QRgb *bits = (QRgb*)view_img->bits();
-    int len = view_img->height() * view_img->width();
+    QRgb *bits = (QRgb*)img_original.bits();
+    int len = img_original.height() * img_original.width();
     for (int i(0); i < len; ++i)
     {
         QRgb rgb = *(bits+i);
@@ -140,14 +117,19 @@ QVector<int> ImageViewer::histgram() const
 
 ImageViewer& ImageViewer::setScale(ViewMode m, qreal s)
 {
-    vmode = m;
-    img_scale = s;
+    scale_value = s;
+    setScale(m);
     return *this;
 }
 
 ImageViewer& ImageViewer::setScale(ViewMode m)
 {
     vmode = m;
+    if (!img_original.isNull())
+    {
+        imageScale(img_original);
+        setGraphicsPixmapItem(img_scaled);
+    }
     return *this;
 }
 
@@ -159,7 +141,7 @@ ImageViewer& ImageViewer::setInterpolationMode(InterpolationMode mode)
 
 bool ImageViewer::empty() const
 {
-    return view_img == nullptr;
+    return img_original.isNull();
 }
 
 bool ImageViewer::isReadable(const QString &path) const
@@ -179,6 +161,12 @@ bool ImageViewer::isReadable(const QString &path) const
 void ImageViewer::resizeEvent(QResizeEvent *event)
 {
     QGraphicsView::resizeEvent(event);
+
+    if (!img_original.isNull())
+    {
+        imageScale(img_original);
+        setGraphicsPixmapItem(img_scaled);
+    }
 }
 
 void ImageViewer::dragEnterEvent(QDragEnterEvent *event)
@@ -231,18 +219,83 @@ void ImageViewer::mousePressEvent(QMouseEvent *event)
     }
 }
 
-QImage *ImageViewer::nearest_neighbor(const QImage *img, qreal s) const
+void ImageViewer::setGraphicsPixmapItem(QImage img)
 {
-    const int w(img->width());
-    const int h(img->height());
+    view_item->setPixmap(QPixmap::fromImage(img));
+    view_scene->setSceneRect(0.0, 0.0, img.width(), img.height());
+
+    img_scaled = img;
+}
+
+void ImageViewer::imageScale(const QImage img)
+{
+    qreal scale(1.0);
+
+    if (vmode == ImageViewer::CUSTOM_SCALE)
+    {
+        scale = scale_value;
+    }
+    else if (vmode == ImageViewer::FULLSIZE)
+    {
+        scale = 1.0;
+    }
+    else
+    {
+        qreal ws(1.0), hs(1.0);
+        if (width() < getOriginalImageSize().width())
+        {
+            ws = ((qreal)width()) / ((qreal)getOriginalImageSize().width());
+        }
+
+        if (height() < getOriginalImageSize().height())
+        {
+            hs = ((qreal)height()) / ((qreal)getOriginalImageSize().height());
+        }
+
+        if (vmode == ImageViewer::FIT_WINDOW)
+        {
+            scale = ws > hs ? hs : ws;
+        }
+        else if (vmode == ImageViewer::FIT_IMAGE)
+        {
+            scale = ws;
+        }
+    }
+    scale_value = scale;
+
+    switch (imode)
+    {
+    case NearestNeighbor:
+        img_scaled = nearest_neighbor(img, scale);
+        break;
+    case Bilinear:
+        img_scaled =  bilinear(img, scale);
+        break;
+    case Bicubic:
+        img_scaled = bicubic(img, scale);
+        break;
+    case Lanczos2:
+        break;
+    case Lanczos3:
+        break;
+    default:
+        // Warning;
+        break;
+    }
+}
+
+QImage ImageViewer::nearest_neighbor(const QImage img, qreal s) const
+{
+    const int w(img.width());
+    const int h(img.height());
     const int x1(w-1);
     const int y1(h-1);
     const int nw(w*s);
     const int nh(h*s);
 
-    QImage *nimg(new QImage(nw, nh, img->format()));
-    QRgb *nbits((QRgb*)nimg->bits());
-    const QRgb *bits((QRgb*)img->bits());
+    QImage nimg(nw, nh, img.format());
+    QRgb *nbits((QRgb*)nimg.bits());
+    const QRgb *bits((QRgb*)img.bits());
 
     for (int y(0); y < nh; ++y)
     {
@@ -258,16 +311,16 @@ QImage *ImageViewer::nearest_neighbor(const QImage *img, qreal s) const
     return nimg;
 }
 
-QImage *ImageViewer::bilinear(const QImage *img, qreal s) const
+QImage ImageViewer::bilinear(const QImage img, qreal s) const
 {
-    const int w(img->width());
-    const int h(img->height());
+    const int w(img.width());
+    const int h(img.height());
     const int nw(w*s);
     const int nh(h*s);
 
-    QImage *nimg(new QImage(nw, nh, img->format()));
-    QRgb *nbits((QRgb*)nimg->bits());
-    const QRgb *bits((QRgb*)img->bits());
+    QImage nimg(nw, nh, img.format());
+    QRgb *nbits((QRgb*)nimg.bits());
+    const QRgb *bits((QRgb*)img.bits());
 
     // 先に[x],[x]+1,(x-[x]),([x]+1-x)を先に計算して保存しておく。
     int icache[nw*2];
@@ -325,18 +378,18 @@ QImage *ImageViewer::bilinear(const QImage *img, qreal s) const
     return nimg;
 }
 
-QImage *ImageViewer::bicubic(const QImage *img, qreal s) const
+QImage ImageViewer::bicubic(const QImage img, qreal s) const
 {
-    const int w(img->width());
-    const int h(img->height());
+    const int w(img.width());
+    const int h(img.height());
     const int w1(w-1);
     const int h1(h-1);
     const int nw(w*s);
     const int nh(h*s);
 
-    QImage *nimg(new QImage(nw, nh, img->format()));
-    QRgb *nbits((QRgb*)nimg->bits());
-    const QRgb *bits((QRgb*)img->bits());
+    QImage nimg(nw, nh, img.format());
+    QRgb *nbits((QRgb*)nimg.bits());
+    const QRgb *bits((QRgb*)img.bits());
 
     qreal d1[4];
     int dr[4][4], dg[4][4], db[4][4], da[4][4];
@@ -390,11 +443,11 @@ QImage *ImageViewer::bicubic(const QImage *img, qreal s) const
 }
 
 /*
-QImage *ImageViewer::lanczos2(const QImage *img, qreal s) const
+QImage ImageViewer::lanczos2(const QImage img, qreal s) const
 {
 }
 
-QImage *ImageViewer::lanczos3(const QImage *img, qreal s) const
+QImage ImageViewer::lanczos3(const QImage img, qreal s) const
 {
 }
 */

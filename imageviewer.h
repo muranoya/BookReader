@@ -49,7 +49,8 @@ public:
     void releaseImage();
 
     QStringList getReadableExtension() const;
-    QSize getImageSize() const;
+    QSize getOriginalImageSize() const;
+    QSize getScaledImageSize() const;
     qreal getScale() const;
     ViewMode getScaleMode() const;
     InterpolationMode getInterpolationMode() const;
@@ -84,15 +85,19 @@ private:
 
     QGraphicsScene *view_scene;
     QGraphicsPixmapItem *view_item;
-    QImage *view_img;
-    qreal img_scale;
+    QImage img_original;
+    QImage img_scaled;
+    qreal scale_value;
     ViewMode vmode;
     InterpolationMode imode;
 
+    void setGraphicsPixmapItem(QImage img);
+    void imageScale(const QImage img);
+
     /***************** 画素補完 *******************/
-    QImage *nearest_neighbor(const QImage *img, qreal s) const;
-    QImage *bilinear(const QImage *img, qreal s) const;
-    QImage *bicubic(const QImage *img, qreal s) const;
+    QImage nearest_neighbor(const QImage img, qreal s) const;
+    QImage bilinear(const QImage img, qreal s) const;
+    QImage bicubic(const QImage img, qreal s) const;
     inline qreal bicubic_h(qreal t) const
     {
         const qreal u = std::fabs(t);
@@ -118,8 +123,8 @@ private:
                   +temp[3]*d3[3]);
     }
     /*
-    QImage *lanczos2(const QImage *img, qreal s) const;
-    QImage *lanczos3(const QImage *img, qreal s) const;
+    QImage lanczos2(const QImage img, qreal s) const;
+    QImage lanczos3(const QImage img, qreal s) const;
     */
 };
 

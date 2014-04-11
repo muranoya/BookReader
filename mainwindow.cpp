@@ -216,6 +216,16 @@ void MainWindow::playlistItemRemoved(bool currentFile)
     {
         imgView->showImage(pldock->currentFilePath());
     }
+
+    if (currentFile && histdialog->isVisible())
+    {
+        histdialog->releaseHistgramImage();
+
+        if (!pldock->empty())
+        {
+            histdialog->setHistgram(imgView->histgram());
+        }
+    }
     updateWindowState();
 }
 
@@ -267,7 +277,6 @@ void MainWindow::viewerSetNewImage()
 {
     if (histdialog->isVisible())
     {
-
         histdialog->releaseHistgramImage();
         if (!imgView->empty())
         {

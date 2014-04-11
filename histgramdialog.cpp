@@ -8,7 +8,6 @@ HistgramDialog::HistgramDialog(QWidget *parent)
               Qt::WindowStaysOnTopHint),
       baselayout(new QVBoxLayout()),
       view(new QLabel()),
-      img(nullptr),
       graph_w(277),
       graph_h(135),
       margin_top(5),
@@ -27,7 +26,6 @@ HistgramDialog::~HistgramDialog()
 {
     delete baselayout;
     delete view;
-    delete img;
 }
 
 void HistgramDialog::setHistgram(const QVector<int> &data)
@@ -37,11 +35,9 @@ void HistgramDialog::setHistgram(const QVector<int> &data)
         return;
     }
 
-    delete img;
-
     // 左に15pixel, 右に5pixel
     // 上に5pixel, 下に5pixelの余裕を持たせたサイズ
-    img = new QPixmap(graph_w, graph_h*3);
+    QPixmap img(graph_w, graph_h*3);
 
     int max = 0;
     for (int i(0); i < 256*3; ++i)
@@ -53,12 +49,12 @@ void HistgramDialog::setHistgram(const QVector<int> &data)
     }
     qreal s = max / qreal(graph_h-margin_top-margin_bottom-1);
 
-    paintHistgram(0, graph_h*0, graph_w, graph_h, *img, QColor(Qt::red),   data, 256*0, s);
-    paintHistgram(0, graph_h*1, graph_w, graph_h, *img, QColor(Qt::green), data, 256*1, s);
-    paintHistgram(0, graph_h*2, graph_w, graph_h, *img, QColor(Qt::blue),  data, 256*2, s);
+    paintHistgram(0, graph_h*0, graph_w, graph_h, img, QColor(Qt::red),   data, 256*0, s);
+    paintHistgram(0, graph_h*1, graph_w, graph_h, img, QColor(Qt::green), data, 256*1, s);
+    paintHistgram(0, graph_h*2, graph_w, graph_h, img, QColor(Qt::blue),  data, 256*2, s);
 
-    view->setPixmap(*img);
-    view->resize(img->size());
+    view->setPixmap(img);
+    view->resize(img.size());
     setFixedSize(view->size());
 
     show();
@@ -66,8 +62,11 @@ void HistgramDialog::setHistgram(const QVector<int> &data)
 
 void HistgramDialog::releaseHistgramImage()
 {
-    delete img;
-    img = nullptr;
+    baselayout->removeWidget(view);
+    delete view;
+
+    view = new QLabel();
+    baselayout->addWidget(view);
 }
 
 void HistgramDialog::closeEvent(QCloseEvent *e)
