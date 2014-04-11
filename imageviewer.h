@@ -94,6 +94,8 @@ private:
     void setGraphicsPixmapItem(QImage img);
     void imageScale(const QImage img);
 
+    bool isCopyDrop(Qt::KeyboardModifiers km);
+
     /***************** 画素補完 *******************/
     QImage nearest_neighbor(const QImage img, qreal s) const;
     QImage bilinear(const QImage img, qreal s) const;

@@ -203,8 +203,7 @@ void ImageViewer::dropEvent(QDropEvent *event)
         }
     }
 
-    dropItems(list,
-              (event->dropAction() & Qt::CopyAction) == Qt::CopyAction);
+    dropItems(list, isCopyDrop(event->keyboardModifiers()));
 }
 
 void ImageViewer::mousePressEvent(QMouseEvent *event)
@@ -259,6 +258,20 @@ void ImageViewer::imageScale(const QImage img)
         else if (vmode == ImageViewer::FIT_IMAGE)
         {
             scale = ws;
+/*
+            qreal nws(1.0);
+            int vscrlwidth(verticalScrollBar()->width());
+            if (height() < getOriginalImageSize().height()*ws)
+            {
+                // 縦スクロールが出るので、縦スクロール分widthを減らして倍率を再計算する
+                if (width()-vscrlwidth < getOriginalImageSize().width())
+                {
+                    nws = ((qreal)width()-vscrlwidth) / ((qreal)getOriginalImageSize().width());
+                }
+
+                scale = nws;
+            }
+*/
         }
     }
     scale_value = scale;
@@ -282,6 +295,15 @@ void ImageViewer::imageScale(const QImage img)
         // Warning;
         break;
     }
+}
+
+bool ImageViewer::isCopyDrop(Qt::KeyboardModifiers km)
+{
+#ifdef __APPLE__
+    return (km & Qt::AltModifier) == Qt::AltModifier;
+#else
+    return (km & Qt::ControlModifier) == Qt::ControlModifier;
+#endif
 }
 
 QImage ImageViewer::nearest_neighbor(const QImage img, qreal s) const
