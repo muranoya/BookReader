@@ -94,6 +94,7 @@ private:
     QAction *menu_window_histgram;
     QAction *menu_window_torncurve;
     QMenu *menu_help;
+    QAction *menu_help_benchmark;
     QAction *menu_help_version;
 
     HistgramDialog *histdialog;

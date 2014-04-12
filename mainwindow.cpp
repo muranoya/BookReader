@@ -55,6 +55,7 @@ MainWindow::~MainWindow()
     delete menu_window_torncurve;
 
     delete menu_help;
+    delete menu_help_benchmark;
     delete menu_help_version;
 }
 
@@ -375,8 +376,10 @@ void MainWindow::createMenus()
     menu_window_playlist = new QAction(tr("プレイリスト"), this);
     menu_window_playlist->setCheckable(true);
     menu_window_histgram = new QAction(tr("ヒストグラム"), this);
+    menu_window_histgram->setCheckable(true);
     menu_window_torncurve = new QAction(tr("トーンカーブ"), this);
     menu_window->addAction(menu_window_hide);
+    menu_window->addSeparator();
     menu_window->addAction(menu_window_playlist);
     menu_window->addAction(menu_window_histgram);
     menu_window->addAction(menu_window_torncurve);
@@ -387,7 +390,10 @@ void MainWindow::createMenus()
 
     menu_help = new QMenu(this);
     menu_help->setTitle(tr("ヘルプ"));
+    menu_help_benchmark = new QAction(tr("ベンチマーク"), this);
     menu_help_version = new QAction(tr("バージョン"), this);
+    menu_help->addAction(menu_help_benchmark);
+    menu_help->addSeparator();
     menu_help->addAction(menu_help_version);
     connect(menu_help_version, SIGNAL(triggered()), this, SLOT(menu_help_version_triggered()));
     menuBar()->addMenu(menu_help);
