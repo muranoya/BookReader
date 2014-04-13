@@ -166,7 +166,7 @@ void MainWindow::menu_window_playlist_triggered()
 {
     pldock->setVisible(!pldock->isVisible());
 }
-#include <iostream>
+
 void MainWindow::menu_window_histgram_triggered()
 {
     if (menu_window_histgram->isChecked())
