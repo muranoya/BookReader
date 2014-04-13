@@ -39,7 +39,7 @@ private:
                        QPaintDevice &img,
                        const QColor &graph,
                        const QVector<int> &data,
-                       int start, int s) const;
+                       int start, qreal s) const;
 };
 
 #endif // HISTGRAMDIALOG_H

@@ -77,7 +77,7 @@ void HistgramDialog::paintHistgram(int x, int y, int w, int h,
                                    QPaintDevice &drawing,
                                    const QColor &graph,
                                    const QVector<int> &data,
-                                   int start, int s) const
+                                   int start, qreal s) const
 {
     /*
      * 描画する画像の原点(0,0)は左上。
@@ -113,7 +113,7 @@ void HistgramDialog::paintHistgram(int x, int y, int w, int h,
                 painter.drawLine(x+i+margin_left+1,
                                  y+h-margin_bottom-1,
                                  x+i+margin_left+1,
-                                 y+h-margin_bottom-1-(data[start+i]/s));
+                                 y+h-margin_bottom-1-int(data[start+i]/s));
             }
         }
     }
