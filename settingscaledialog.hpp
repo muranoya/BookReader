@@ -14,20 +14,26 @@ public:
     explicit SettingScaleDialog(QWidget *parent = 0);
     ~SettingScaleDialog();
 
-    bool getScale(qreal ori);
-    qreal getValue();
+    bool getScale(const QSize size, const qreal ori);
+    qreal getValue() const;
 
 private slots:
     void accepted_DialogButton();
     void rejected_DialogButton();
+    void spinbox_valueChanged(double d);
 
 private:
     QGridLayout *layout;
     QDoubleSpinBox *spinbox;
-    QLabel *label;
+    QLabel *desc_label;
+    QLabel *height_label;
+    QLabel *desc_height_label;
+    QLabel *width_label;
+    QLabel *desc_width_label;
     QDialogButtonBox *buttonbox;
 
     qreal scale;
+    QSize img_size;
 };
 
 #endif // SETTINGSCALEDIALOG_H

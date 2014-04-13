@@ -1,4 +1,4 @@
-#include "imageviewer.h"
+#include "imageviewer.hpp"
 
 const QString ImageViewer::extList[5] = {"jpg", "png", "jpeg", "bmp", "gif"};
 const int ImageViewer::extListLen = 5;
@@ -38,12 +38,11 @@ void ImageViewer::showImage(const QString &path)
 
 void ImageViewer::releaseImage()
 {
-    view_scene->removeItem(view_item);
-    delete view_item;
-    view_item = new QGraphicsPixmapItem();
-    view_scene->addItem(view_item);
-
+    view_item->setPixmap(QPixmap());
     view_scene->setSceneRect(0.0, 0.0, 0.0, 0.0);
+
+    img_original = QImage();
+    img_scaled = QImage();
 
     setNewImage();
 }

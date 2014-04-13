@@ -1,6 +1,7 @@
 #ifndef NULLPTR_H
 #define NULLPTR_H
 
+#if __cplusplus <= 199711L
 const class nullptr_t
 {
 public:
@@ -13,5 +14,6 @@ public:
 private:
     void operator&() const;
 } nullptr = {};
+#endif
 
 #endif // NULLPTR_H

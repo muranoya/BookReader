@@ -1,14 +1,13 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "versiondialog.h"
-#include "settingscaledialog.h"
-#include "imageviewer.h"
-#include "nullptr.h"
-#include "applicationinfo.h"
-#include "settingsdialog.h"
-#include "playlistdock.h"
-#include "histgramdialog.h"
+#include "versiondialog.hpp"
+#include "settingscaledialog.hpp"
+#include "imageviewer.hpp"
+#include "applicationinfo.hpp"
+#include "settingsdialog.hpp"
+#include "playlistdock.hpp"
+#include "histgramdialog.hpp"
 
 #include <QMenuBar>
 #include <QMenu>
@@ -64,6 +63,8 @@ private slots:
     void viewerLeftClicked();
     void viewerDropItems(QStringList list, bool copy);
     void viewerSetNewImage();
+
+    void closeHistgramDialog();
 
     void slideshow_Timer();
 

@@ -1,10 +1,10 @@
 #ifndef VERSIONDIALOG_H
 #define VERSIONDIALOG_H
 
-#include "applicationinfo.h"
+#include "applicationinfo.hpp"
 
 #include <QDialog>
-#include <QVBoxLayout>
+#include <QGridLayout>
 #include <QLabel>
 #include <QDialogButtonBox>
 
@@ -19,8 +19,10 @@ private slots:
     void button_close();
 
 private:
-    QVBoxLayout *layout;
-    QLabel *label;
+    QGridLayout *layout;
+    QLabel *nameDesc, *nameLabel;
+    QLabel *verDesc,  *verLabel;
+    QLabel *qtDesc,   *qtLabel;
     QDialogButtonBox *button;
 };
 

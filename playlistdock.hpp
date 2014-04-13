@@ -1,8 +1,7 @@
 #ifndef PLAYLISTDOCK_H
 #define PLAYLISTDOCK_H
 
-#include "nullptr.h"
-#include "util.h"
+#include "nullptr.hpp"
 
 #include <QList>
 #include <QDockWidget>
@@ -10,6 +9,7 @@
 #include <QFileInfo>
 #include <QAction>
 #include <QDir>
+#include <QFileInfoList>
 
 class PlaylistDock : public QDockWidget
 {

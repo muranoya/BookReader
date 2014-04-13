@@ -19,19 +19,18 @@ SOURCES += main.cpp\
     imageviewer.cpp \
     settingsdialog.cpp \
     playlistdock.cpp \
-    util.cpp \
     histgramdialog.cpp
 
-HEADERS  += mainwindow.h \
-    nullptr.h \
-    settingscaledialog.h \
-    versiondialog.h \
-    imageviewer.h \
-    applicationinfo.h \
-    settingsdialog.h \
-    playlistdock.h \
-    util.h \
-    histgramdialog.h
+HEADERS  += \
+    nullptr.hpp \
+    applicationinfo.hpp \
+    histgramdialog.hpp \
+    imageviewer.hpp \
+    mainwindow.hpp \
+    playlistdock.hpp \
+    settingscaledialog.hpp \
+    settingsdialog.hpp \
+    versiondialog.hpp
 
 FORMS    += \
     settingsdialog.ui

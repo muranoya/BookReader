@@ -1,8 +1,6 @@
 #ifndef HISTGRAMDIALOG_H
 #define HISTGRAMDIALOG_H
 
-#include "nullptr.h"
-
 #include <QDialog>
 #include <QPixmap>
 #include <QLabel>
@@ -17,10 +15,13 @@ public:
     ~HistgramDialog();
 
     void setHistgram(const QVector<int> &data);
-    void releaseHistgramImage();
+    void releaseHistgram();
+
+signals:
+    void closeDialog();
 
 protected:
-    virtual void closeEvent(QCloseEvent *e);
+    virtual void closeEvent(QCloseEvent *event);
 
 private:
     QVBoxLayout *baselayout;

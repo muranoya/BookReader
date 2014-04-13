@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "mainwindow.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(imgView, SIGNAL(leftClicked()), this, SLOT(viewerLeftClicked()));
     connect(imgView, SIGNAL(dropItems(QStringList,bool)), this, SLOT(viewerDropItems(QStringList,bool)));
     connect(imgView, SIGNAL(setNewImage()), this, SLOT(viewerSetNewImage()));
+
+    connect(histdialog, SIGNAL(closeDialog()), this, SLOT(closeHistgramDialog()));
 
     connect(&slideshow, SIGNAL(timeout()), this, SLOT(slideshow_Timer()));
 
@@ -118,7 +120,7 @@ void MainWindow::menu_view_fitimage_triggered()
 void MainWindow::menu_view_setscale_triggered()
 {
     SettingScaleDialog dialog(this);
-    if (dialog.getScale(imgView->getScale()))
+    if (dialog.getScale(imgView->getOriginalImageSize(), imgView->getScale()))
     {
         changeCheckedScaleMenu(menu_view_setscale, ImageViewer::CUSTOM_SCALE,
                                dialog.getValue());
@@ -164,14 +166,16 @@ void MainWindow::menu_window_playlist_triggered()
 {
     pldock->setVisible(!pldock->isVisible());
 }
-
+#include <iostream>
 void MainWindow::menu_window_histgram_triggered()
 {
-    histdialog->releaseHistgramImage();
-    if (!imgView->empty())
+    if (menu_window_histgram->isChecked())
     {
         histdialog->setHistgram(imgView->histgram());
-        histdialog->show();
+    }
+    else
+    {
+        histdialog->close();
     }
 }
 
@@ -220,7 +224,7 @@ void MainWindow::playlistItemRemoved(bool currentFile)
 
     if (currentFile && histdialog->isVisible())
     {
-        histdialog->releaseHistgramImage();
+        histdialog->releaseHistgram();
 
         if (!pldock->empty())
         {
@@ -278,12 +282,17 @@ void MainWindow::viewerSetNewImage()
 {
     if (histdialog->isVisible())
     {
-        histdialog->releaseHistgramImage();
+        histdialog->releaseHistgram();
         if (!imgView->empty())
         {
             histdialog->setHistgram(imgView->histgram());
         }
     }
+}
+
+void MainWindow::closeHistgramDialog()
+{
+    menu_window_histgram->setChecked(false);
 }
 
 void MainWindow::slideshow_Timer()

@@ -1,4 +1,4 @@
-#include "histgramdialog.h"
+#include "histgramdialog.hpp"
 
 HistgramDialog::HistgramDialog(QWidget *parent)
     : QDialog(parent,
@@ -20,6 +20,9 @@ HistgramDialog::HistgramDialog(QWidget *parent)
     baselayout->setMargin(0);
     setLayout(baselayout);
     baselayout->addWidget(view);
+
+    view->resize(graph_w, graph_h*3);
+    setFixedSize(view->size());
 }
 
 HistgramDialog::~HistgramDialog()
@@ -30,49 +33,43 @@ HistgramDialog::~HistgramDialog()
 
 void HistgramDialog::setHistgram(const QVector<int> &data)
 {
-    if (data.size() != 256*3)
-    {
-        return;
-    }
+    view->setPixmap(QPixmap());
 
-    // 左に15pixel, 右に5pixel
-    // 上に5pixel, 下に5pixelの余裕を持たせたサイズ
-    QPixmap img(graph_w, graph_h*3);
-
-    int max = 0;
-    for (int i(0); i < 256*3; ++i)
+    if (data.size() == 256*3)
     {
-        if (max < data[i])
+        // 左に15pixel, 右に5pixel
+        // 上に5pixel, 下に5pixelの余裕を持たせたサイズ
+        QPixmap img(graph_w, graph_h*3);
+
+        int max = 0;
+        for (int i(0); i < 256*3; ++i)
         {
-            max = data[i];
+            if (max < data[i])
+            {
+                max = data[i];
+            }
         }
+        qreal s = max / qreal(graph_h-margin_top-margin_bottom-1);
+
+        paintHistgram(0, graph_h*0, graph_w, graph_h, img, QColor(Qt::red),   data, 256*0, s);
+        paintHistgram(0, graph_h*1, graph_w, graph_h, img, QColor(Qt::green), data, 256*1, s);
+        paintHistgram(0, graph_h*2, graph_w, graph_h, img, QColor(Qt::blue),  data, 256*2, s);
+
+        view->setPixmap(img);
     }
-    qreal s = max / qreal(graph_h-margin_top-margin_bottom-1);
-
-    paintHistgram(0, graph_h*0, graph_w, graph_h, img, QColor(Qt::red),   data, 256*0, s);
-    paintHistgram(0, graph_h*1, graph_w, graph_h, img, QColor(Qt::green), data, 256*1, s);
-    paintHistgram(0, graph_h*2, graph_w, graph_h, img, QColor(Qt::blue),  data, 256*2, s);
-
-    view->setPixmap(img);
-    view->resize(img.size());
-    setFixedSize(view->size());
 
     show();
 }
 
-void HistgramDialog::releaseHistgramImage()
+void HistgramDialog::releaseHistgram()
 {
-    baselayout->removeWidget(view);
-    delete view;
-
-    view = new QLabel();
-    baselayout->addWidget(view);
+    view->setPixmap(QPixmap());
 }
 
-void HistgramDialog::closeEvent(QCloseEvent *e)
+void HistgramDialog::closeEvent(QCloseEvent *event)
 {
-    Q_UNUSED(e);
-    releaseHistgramImage();
+    Q_UNUSED(event);
+    closeDialog();
 }
 
 // x,yはグラフの左上の点を、w,hはグラフの大きさを。

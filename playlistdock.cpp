@@ -1,4 +1,4 @@
-#include "playlistdock.h"
+#include "playlistdock.hpp"
 
 PlaylistDock::PlaylistDock(QWidget *parent, Qt::WindowFlags flags)
     : QDockWidget(tr("プレイリスト"), parent, flags),
@@ -54,12 +54,12 @@ void PlaylistDock::append(const QStringList &list, int level)
         else if (level != 0)
         {
             QDir dir(*iterator);
-            QStringList entrylist = dir.entryList();
+            QFileInfoList entrylist = dir.entryInfoList();
             QStringList newlist;
-            QStringList::const_iterator iterator2;
+            QFileInfoList::const_iterator iterator2;
             for (iterator2 = entrylist.constBegin(); iterator2 != entrylist.constEnd(); ++iterator2)
             {
-                newlist << BookReader::Util::connectFilePath(*iterator, *iterator2);
+                newlist << iterator2->filePath();
             }
             append(newlist, (level < 0 ? level : level-1));
         }
