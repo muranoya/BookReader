@@ -180,6 +180,12 @@ void MainWindow::menu_window_histgram_triggered()
 }
 
 /******************* help *******************/
+void MainWindow::menu_help_benchmark_triggered()
+{
+    BenchmarkDialog dialog(this);
+    dialog.exec();
+}
+
 void MainWindow::menu_help_version_triggered()
 {
     VersionDialog *dialog = new VersionDialog(this);
@@ -404,6 +410,7 @@ void MainWindow::createMenus()
     menu_help->addAction(menu_help_benchmark);
     menu_help->addSeparator();
     menu_help->addAction(menu_help_version);
+    connect(menu_help_benchmark, SIGNAL(triggered()), this, SLOT(menu_help_benchmark_triggered()));
     connect(menu_help_version, SIGNAL(triggered()), this, SLOT(menu_help_version_triggered()));
     menuBar()->addMenu(menu_help);
 }

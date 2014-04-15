@@ -44,6 +44,7 @@ public:
     ~ImageViewer();
 
     void showImage(const QString &path);
+    void showImage(const QImage &img);
     void releaseImage();
 
     QStringList getReadableExtension() const;

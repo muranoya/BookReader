@@ -26,7 +26,7 @@ VersionDialog::VersionDialog(QWidget *parent) :
     layout->addWidget(verLabel, 1, 1);
     layout->addWidget(qtDesc, 2, 0);
     layout->addWidget(qtLabel, 2, 1);
-    layout->addWidget(button, 3, 0, 3, 2);
+    layout->addWidget(button, 3, 0, 1, 2);
 
     setWindowTitle(tr("バージョン"));
 

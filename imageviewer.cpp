@@ -26,7 +26,12 @@ ImageViewer::~ImageViewer()
 void ImageViewer::showImage(const QString &path)
 {
     QImage bmp(path);
-    img_original = bmp.convertToFormat(QImage::Format_ARGB32);
+    showImage(bmp);
+}
+
+void ImageViewer::showImage(const QImage &img)
+{
+    img_original = img;
     imageScale(img_original);
 
     setGraphicsPixmapItem(img_scaled);
@@ -348,10 +353,10 @@ QImage ImageViewer::bilinear(const QImage img, qreal s) const
     qreal dcache[nw*2];
     for (int x(0), p(0), w1(w-1); x < nw; ++x, p+=2)
     {
-        const qreal x0(x/s);            //x;
-        const int xg(std::floor(x0));   //[x];
-        const qreal tx0(x0-xg);         //x-[x]
-        const qreal tx1(1-tx0);         //[x]+1-x
+        const qreal x0(x/s);             // x;
+        const int xg(std::floor(x0));    // [x];
+        const qreal tx0(x0-xg);          // x-[x]
+        const qreal tx1(1-tx0);          // [x]+1-x
         icache[p  ] = std::min(xg,w1);   // xg
         icache[p+1] = std::min(xg+1,w1); // xg+1
         dcache[p  ] = tx0;               // x-[x]
