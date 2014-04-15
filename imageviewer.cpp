@@ -31,7 +31,14 @@ void ImageViewer::showImage(const QString &path)
 
 void ImageViewer::showImage(const QImage &img)
 {
-    img_original = img;
+    if (img.format() != QImage::Format_ARGB32)
+    {
+        img_original = img.convertToFormat(QImage::Format_ARGB32);
+    }
+    else
+    {
+        img_original = img;
+    }
     imageScale(img_original);
 
     setGraphicsPixmapItem(img_scaled);
