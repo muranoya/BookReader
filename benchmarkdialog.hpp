@@ -33,10 +33,6 @@ private:
     QLCDNumber *bilinear_lcd;
     QLabel *bicubic_text;
     QLCDNumber *bicubic_lcd;
-    QLabel *lanczos2_text;
-    QLCDNumber *lanczos2_lcd;
-    QLabel *lanczos3_text;
-    QLCDNumber *lanczos3_lcd;
 
     QLabel *benchSize_text;
     QComboBox *comboBox;

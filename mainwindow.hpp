@@ -108,7 +108,7 @@ private:
 
     /******************* util *******************/
     void createMenus();
-    void changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, qreal s = 0.0);
+    void changeCheckedScaleMenu(QAction *act, const ImageViewer::ViewMode m, const qreal s = 0.0);
     void saveSettings();
     void restoreSettings();
 };

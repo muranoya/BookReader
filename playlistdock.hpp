@@ -30,8 +30,8 @@ public:
      * level < 0の場合
      * 再帰的に全てのフォルダとファイルを読み込む。
      */
-    void append(const QStringList& list, int level = 0);
-    QString at(int i) const;
+    void append(const QStringList& list, const int level = 0);
+    QString at(const int i) const;
     void clear();
     int count() const;
     bool empty() const;
@@ -68,7 +68,7 @@ private:
 
     void createMenus();
 
-    bool validIndex(int index) const { return index >= 0 && index < count(); }
+    bool validIndex(int index) const;
     void remove(QList<QListWidgetItem*> items);
 };
 

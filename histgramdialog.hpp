@@ -35,11 +35,11 @@ private:
     int margin_right;
 
     // リストには[R,G,B,A]のヒストグラム値を入れる
-    void paintHistgram(int x, int y, int w, int h,
+    void paintHistgram(const int x, const int y, const int w, const int h,
                        QPaintDevice &img,
                        const QColor &graph,
                        const QVector<int> &data,
-                       int start, qreal s) const;
+                       const int start, const qreal s) const;
 };
 
 #endif // HISTGRAMDIALOG_H

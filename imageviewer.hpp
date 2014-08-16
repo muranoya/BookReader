@@ -36,8 +36,6 @@ public:
         NearestNeighbor,
         Bilinear,
         Bicubic,
-        Lanczos2,
-        Lanczos3,
     };
 
     explicit ImageViewer(QWidget *parent = 0);
@@ -56,9 +54,9 @@ public:
 
     QVector<int> histgram() const;
 
-    ImageViewer& setScale(ViewMode m, qreal s);
-    ImageViewer& setScale(ViewMode m);
-    ImageViewer& setInterpolationMode(InterpolationMode mode);
+    ImageViewer& setScale(const ViewMode m, const qreal s);
+    ImageViewer& setScale(const ViewMode m);
+    ImageViewer& setInterpolationMode(const InterpolationMode mode);
 
     bool empty() const;
     bool isReadable(const QString &path) const;
@@ -70,6 +68,7 @@ signals:
     void setNewImage();
 
 protected:
+    virtual void keyPressEvent(QKeyEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
     virtual void dragEnterEvent(QDragEnterEvent *event);
     virtual void dragLeaveEvent(QDragLeaveEvent *event);
@@ -90,43 +89,17 @@ private:
     ViewMode vmode;
     InterpolationMode imode;
 
-    void setGraphicsPixmapItem(QImage img);
-    void imageScale(const QImage img);
+    void setGraphicsPixmapItem(const QImage& img);
+    void imageScale(const QImage& img);
 
-    bool isCopyDrop(Qt::KeyboardModifiers km);
+    bool isCopyDrop(const Qt::KeyboardModifiers km);
 
     /***************** 画素補完 *******************/
-    QImage nearest_neighbor(const QImage img, qreal s) const;
-    QImage bilinear(const QImage img, qreal s) const;
-    QImage bicubic(const QImage img, qreal s) const;
-    inline qreal bicubic_h(qreal t) const
-    {
-        const qreal u = std::fabs(t);
-        if (u <= 1)
-            return (u*u*u)-2*(u*u)+1; // (a+2)|t|^3 -(a+3)|t|^2 +1 |t|<=1のとき
-        else if (1 < u && u <= 2)
-            return -(u*u*u)+5*(u*u)-8*u+4; // a|t|^3 -5a|t|^2 +8a|t| -4a 1<t<=2のとき
-        return 0; // 0 2<|t|のとき
-    }
-    int bicubic_matmul(const qreal d1[4], const int d2[4][4], const qreal d3[4]) const
-    {
-        qreal temp[4];
-        for (int i(0); i < 4; ++i)
-        {
-            temp[i] = d1[0]*d2[0][i]
-                    + d1[1]*d2[1][i]
-                    + d1[2]*d2[2][i]
-                    + d1[3]*d2[3][i];
-        }
-        return int(temp[0]*d3[0]
-                  +temp[1]*d3[1]
-                  +temp[2]*d3[2]
-                  +temp[3]*d3[3]);
-    }
-    /*
-    QImage lanczos2(const QImage img, qreal s) const;
-    QImage lanczos3(const QImage img, qreal s) const;
-    */
+    static QImage nearest_neighbor(const QImage img, const qreal s);
+    static QImage bilinear(const QImage img, const qreal s);
+    static QImage bicubic(const QImage img, const qreal s);
+    static qreal bicubic_h(const qreal t);
+    static int bicubic_matmul(const qreal d1[4], const int d2[4][4], const qreal d3[4]);
 };
 
 #endif // IMAGEMANAGER_H

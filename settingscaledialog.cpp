@@ -4,16 +4,16 @@ SettingScaleDialog::SettingScaleDialog(QWidget *parent)
     : QDialog(parent,
               Qt::Sheet |
               Qt::WindowTitleHint |
-              Qt::WindowCloseButtonHint),
-      layout(new QGridLayout()),
-      spinbox(new QDoubleSpinBox()),
-      desc_label(new QLabel()),
-      height_label(new QLabel()),
-      desc_height_label(new QLabel()),
-      width_label(new QLabel()),
-      desc_width_label(new QLabel()),
-      buttonbox(new QDialogButtonBox(
-                    QDialogButtonBox::Ok|
+              Qt::WindowCloseButtonHint)
+    , layout(new QGridLayout())
+    , spinbox(new QDoubleSpinBox())
+    , desc_label(new QLabel())
+    , height_label(new QLabel())
+    , desc_height_label(new QLabel())
+    , width_label(new QLabel())
+    , desc_width_label(new QLabel())
+    , buttonbox(new QDialogButtonBox(
+                    QDialogButtonBox::Ok |
                     QDialogButtonBox::Cancel,
                     Qt::Horizontal))
 {
@@ -63,7 +63,8 @@ SettingScaleDialog::~SettingScaleDialog()
     delete buttonbox;
 }
 
-bool SettingScaleDialog::getScale(const QSize size, const qreal ori)
+bool
+SettingScaleDialog::getScale(const QSize size, const qreal ori)
 {
     img_size = size;
     width_label->setText(QString::number(size.width()));
@@ -83,22 +84,26 @@ bool SettingScaleDialog::getScale(const QSize size, const qreal ori)
     }
 }
 
-qreal SettingScaleDialog::getValue() const
+qreal
+SettingScaleDialog::getValue() const
 {
     return scale;
 }
 
-void SettingScaleDialog::accepted_DialogButton()
+void
+SettingScaleDialog::accepted_DialogButton()
 {
     done(QDialog::Accepted);
 }
 
-void SettingScaleDialog::rejected_DialogButton()
+void
+SettingScaleDialog::rejected_DialogButton()
 {
     done(QDialog::Rejected);
 }
 
-void SettingScaleDialog::spinbox_valueChanged(double d)
+void
+SettingScaleDialog::spinbox_valueChanged(const double d)
 {
     width_label->setText(QString::number(int(d*img_size.width())));
     height_label->setText(QString::number(int(d*img_size.height())));

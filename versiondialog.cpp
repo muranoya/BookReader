@@ -42,7 +42,8 @@ VersionDialog::~VersionDialog()
     delete button;
 }
 
-void VersionDialog::button_close()
+void
+VersionDialog::button_close()
 {
     close();
 }

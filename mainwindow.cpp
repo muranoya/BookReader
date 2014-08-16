@@ -1,11 +1,11 @@
 #include "mainwindow.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent),
-      imgView(new ImageViewer(this)),
-      pldock(new PlaylistDock(this)),
-      histdialog(new HistgramDialog()),
-      slideshow()
+    : QMainWindow(parent)
+    , imgView(new ImageViewer(this))
+    , pldock(new PlaylistDock(this))
+    , histdialog(new HistgramDialog())
+    , slideshow()
 {
     addDockWidget(Qt::LeftDockWidgetArea, pldock);
     setCentralWidget(imgView);
@@ -62,7 +62,8 @@ MainWindow::~MainWindow()
 }
 
 /******************* file *******************/
-void MainWindow::menu_file_open_triggered()
+void
+MainWindow::menu_file_open_triggered()
 {
     QStringList files = QFileDialog::getOpenFileNames(
                 this, tr("ファイルを開く"), dialog_File,
@@ -70,8 +71,8 @@ void MainWindow::menu_file_open_triggered()
 
     if (!files.isEmpty())
     {
-        QFileInfo info(files.at(0));
-        QDir dir = info.absoluteDir();
+        const QFileInfo info(files.at(0));
+        const QDir dir = info.absoluteDir();
         dialog_File = dir.absolutePath();
         pldock->clear();
         pldock->append(files);
@@ -80,7 +81,8 @@ void MainWindow::menu_file_open_triggered()
     }
 }
 
-void MainWindow::menu_file_fopen_triggered()
+void
+MainWindow::menu_file_fopen_triggered()
 {
     QString dirname = QFileDialog::getExistingDirectory(
                 this, tr("ディレクトリを開く"), dialog_Directory);
@@ -95,29 +97,34 @@ void MainWindow::menu_file_fopen_triggered()
     }
 }
 
-void MainWindow::menu_file_settings_triggered()
+void
+MainWindow::menu_file_settings_triggered()
 {
     SettingsDialog dialog(this);
     dialog.exec();
 }
 
 /******************* view *******************/
-void MainWindow::menu_view_fullsize_triggered()
+void
+MainWindow::menu_view_fullsize_triggered()
 {
     changeCheckedScaleMenu(menu_view_fullsize, ImageViewer::FULLSIZE);
 }
 
-void MainWindow::menu_view_fitwindow_triggered()
+void
+MainWindow::menu_view_fitwindow_triggered()
 {
     changeCheckedScaleMenu(menu_view_fitwindow, ImageViewer::FIT_WINDOW);
 }
 
-void MainWindow::menu_view_fitimage_triggered()
+void
+MainWindow::menu_view_fitimage_triggered()
 {
     changeCheckedScaleMenu(menu_view_fitimage, ImageViewer::FIT_IMAGE);
 }
 
-void MainWindow::menu_view_setscale_triggered()
+void
+MainWindow::menu_view_setscale_triggered()
 {
     SettingScaleDialog dialog(this);
     if (dialog.getScale(imgView->getOriginalImageSize(), imgView->getScale()))
@@ -131,7 +138,8 @@ void MainWindow::menu_view_setscale_triggered()
     }
 }
 
-void MainWindow::menu_view_fullscreen_triggered()
+void
+MainWindow::menu_view_fullscreen_triggered()
 {
     if (menu_view_fullscreen->isChecked())
     {
@@ -144,7 +152,8 @@ void MainWindow::menu_view_fullscreen_triggered()
 }
 
 /******************* slideshow *******************/
-void MainWindow::menu_slideshow_slideshow_triggered()
+void
+MainWindow::menu_slideshow_slideshow_triggered()
 {
     if (slideshow.isActive())
     {
@@ -157,17 +166,20 @@ void MainWindow::menu_slideshow_slideshow_triggered()
 }
 
 /******************* window *******************/
-void MainWindow::menu_window_hide_triggered()
+void
+MainWindow::menu_window_hide_triggered()
 {
     setWindowState(Qt::WindowMinimized);
 }
 
-void MainWindow::menu_window_playlist_triggered()
+void
+MainWindow::menu_window_playlist_triggered()
 {
     pldock->setVisible(!pldock->isVisible());
 }
 
-void MainWindow::menu_window_histgram_triggered()
+void
+MainWindow::menu_window_histgram_triggered()
 {
     if (menu_window_histgram->isChecked())
     {
@@ -180,20 +192,23 @@ void MainWindow::menu_window_histgram_triggered()
 }
 
 /******************* help *******************/
-void MainWindow::menu_help_benchmark_triggered()
+void
+MainWindow::menu_help_benchmark_triggered()
 {
     BenchmarkDialog dialog(this);
     dialog.exec();
 }
 
-void MainWindow::menu_help_version_triggered()
+void
+MainWindow::menu_help_version_triggered()
 {
     VersionDialog *dialog = new VersionDialog(this);
     dialog->show();
 }
 
 /******************* util *******************/
-void MainWindow::updateWindowState()
+void
+MainWindow::updateWindowState()
 {
     QString title = pldock->currentFileName();
     if (title.isEmpty())
@@ -212,12 +227,14 @@ void MainWindow::updateWindowState()
 }
 
 /******************* playlist event *******************/
-void MainWindow::playlistVisibleChanged(bool visible)
+void
+MainWindow::playlistVisibleChanged(bool visible)
 {
     menu_window_playlist->setChecked(visible);
 }
 
-void MainWindow::playlistItemRemoved(bool currentFile)
+void
+MainWindow::playlistItemRemoved(bool currentFile)
 {
     if (pldock->empty())
     {
@@ -240,14 +257,16 @@ void MainWindow::playlistItemRemoved(bool currentFile)
     updateWindowState();
 }
 
-void MainWindow::playlistItemOpened(QString path)
+void
+MainWindow::playlistItemOpened(QString path)
 {
     imgView->showImage(path);
     updateWindowState();
 }
 
 /******************* image viewer event *******************/
-void MainWindow::viewerRightClicked()
+void
+MainWindow::viewerRightClicked()
 {
     if (pldock->empty())
     {
@@ -257,7 +276,8 @@ void MainWindow::viewerRightClicked()
     updateWindowState();
 }
 
-void MainWindow::viewerLeftClicked()
+void
+MainWindow::viewerLeftClicked()
 {
     if (pldock->empty())
     {
@@ -267,9 +287,10 @@ void MainWindow::viewerLeftClicked()
     updateWindowState();
 }
 
-void MainWindow::viewerDropItems(QStringList list, bool copy)
+void
+MainWindow::viewerDropItems(QStringList list, bool copy)
 {
-    bool isempty = pldock->empty();
+    const bool isempty = pldock->empty();
     if (!copy)
     {
         pldock->clear();
@@ -284,7 +305,8 @@ void MainWindow::viewerDropItems(QStringList list, bool copy)
     updateWindowState();
 }
 
-void MainWindow::viewerSetNewImage()
+void
+MainWindow::viewerSetNewImage()
 {
     if (histdialog->isVisible())
     {
@@ -296,12 +318,14 @@ void MainWindow::viewerSetNewImage()
     }
 }
 
-void MainWindow::closeHistgramDialog()
+void
+MainWindow::closeHistgramDialog()
 {
     menu_window_histgram->setChecked(false);
 }
 
-void MainWindow::slideshow_Timer()
+void
+MainWindow::slideshow_Timer()
 {
     if (pldock->empty())
     {
@@ -314,7 +338,8 @@ void MainWindow::slideshow_Timer()
     }
 }
 
-void MainWindow::changeEvent(QEvent *event)
+void
+MainWindow::changeEvent(QEvent *event)
 {
     if (event->type() == QEvent::WindowStateChange)
     {
@@ -322,14 +347,16 @@ void MainWindow::changeEvent(QEvent *event)
     }
 }
 
-void MainWindow::closeEvent(QCloseEvent *event)
+void
+MainWindow::closeEvent(QCloseEvent *event)
 {
     Q_UNUSED(event);
     saveSettings();
 }
 
 /******************* util *******************/
-void MainWindow::createMenus()
+void
+MainWindow::createMenus()
 {
     menu_file = new QMenu(this);
     menu_file->setTitle(tr("ファイル"));
@@ -415,7 +442,8 @@ void MainWindow::createMenus()
     menuBar()->addMenu(menu_help);
 }
 
-void MainWindow::changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, qreal s)
+void
+MainWindow::changeCheckedScaleMenu(QAction *act, const ImageViewer::ViewMode m, const qreal s)
 {
     menu_view_fullsize->setChecked(false);
     menu_view_fitwindow->setChecked(false);
@@ -435,7 +463,8 @@ void MainWindow::changeCheckedScaleMenu(QAction *act, ImageViewer::ViewMode m, q
     updateWindowState();
 }
 
-void MainWindow::saveSettings()
+void
+MainWindow::saveSettings()
 {
     QSettings settings(BookReader::SOFTWARE_ORGANIZATION, BookReader::SOFTWARE_NAME, this);
 
@@ -459,7 +488,8 @@ void MainWindow::saveSettings()
     settings.endGroup();
 }
 
-void MainWindow::restoreSettings()
+void
+MainWindow::restoreSettings()
 {
     QSettings settings(BookReader::SOFTWARE_ORGANIZATION, BookReader::SOFTWARE_NAME, this);
 

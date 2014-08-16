@@ -20,7 +20,7 @@ public:
 private slots:
     void accepted_DialogButton();
     void rejected_DialogButton();
-    void spinbox_valueChanged(double d);
+    void spinbox_valueChanged(const double d);
 
 private:
     QGridLayout *layout;

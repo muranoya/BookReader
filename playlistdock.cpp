@@ -1,17 +1,17 @@
 #include "playlistdock.hpp"
 
 PlaylistDock::PlaylistDock(QWidget *parent, Qt::WindowFlags flags)
-    : QDockWidget(tr("プレイリスト"), parent, flags),
-      listwidget(new QListWidget()),
-      m_open(nullptr),
-      m_separator1(nullptr),
-      m_remove(nullptr),
-      m_allremove(nullptr),
-      m_separator2(nullptr),
-      m_allselect(nullptr),
-      normalBC(Qt::transparent),
-      selectedBC(Qt::lightGray),
-      index(-1)
+    : QDockWidget(tr("プレイリスト"), parent, flags)
+    , listwidget(new QListWidget())
+    , m_open(nullptr)
+    , m_separator1(nullptr)
+    , m_remove(nullptr)
+    , m_allremove(nullptr)
+    , m_separator2(nullptr)
+    , m_allselect(nullptr)
+    , normalBC(Qt::transparent)
+    , selectedBC(Qt::lightGray)
+    , index(-1)
 {
     setWidget(listwidget);
 
@@ -34,7 +34,8 @@ PlaylistDock::~PlaylistDock()
     delete m_allselect;
 }
 
-void PlaylistDock::append(const QStringList &list, int level)
+void
+PlaylistDock::append(const QStringList &list, const int level)
 {
     if (list.empty())
     {
@@ -44,7 +45,7 @@ void PlaylistDock::append(const QStringList &list, int level)
     QStringList::const_iterator iterator;
     for (iterator = list.constBegin(); iterator != list.constEnd(); ++iterator)
     {
-        QFileInfo info(*iterator);
+        const QFileInfo info(*iterator);
         if (info.isFile())
         {
             QListWidgetItem *newitem = new QListWidgetItem(info.fileName(), listwidget);
@@ -53,8 +54,8 @@ void PlaylistDock::append(const QStringList &list, int level)
         }
         else if (level != 0)
         {
-            QDir dir(*iterator);
-            QFileInfoList entrylist = dir.entryInfoList();
+            const QDir dir(*iterator);
+            const QFileInfoList entrylist = dir.entryInfoList();
             QStringList newlist;
             QFileInfoList::const_iterator iterator2;
             for (iterator2 = entrylist.constBegin(); iterator2 != entrylist.constEnd(); ++iterator2)
@@ -72,14 +73,16 @@ void PlaylistDock::append(const QStringList &list, int level)
     }
 }
 
-QString PlaylistDock::at(int i) const
+QString
+PlaylistDock::at(const int i) const
 {
     return listwidget->item(i)->data(Qt::ToolTipRole).toString();
 }
 
-void PlaylistDock::clear()
+void
+PlaylistDock::clear()
 {
-    bool contain(!empty());
+    const bool contain = !empty();
     while (listwidget->count() > 0)
     {
         QListWidgetItem *item = listwidget->item(0);
@@ -91,27 +94,31 @@ void PlaylistDock::clear()
     itemRemoved(contain);
 }
 
-int PlaylistDock::count() const
+int
+PlaylistDock::count() const
 {
     return listwidget->count();
 }
 
-bool PlaylistDock::empty() const
+bool
+PlaylistDock::empty() const
 {
     return count() == 0;
 }
 
-QString PlaylistDock::currentFileName() const
+QString
+PlaylistDock::currentFileName() const
 {
     if (validIndex(index))
     {
-        QFileInfo info(currentFilePath());
+        const QFileInfo info(currentFilePath());
         return info.fileName();
     }
     return QString();
 }
 
-QString PlaylistDock::currentFilePath() const
+QString
+PlaylistDock::currentFilePath() const
 {
     if (validIndex(index))
     {
@@ -120,14 +127,19 @@ QString PlaylistDock::currentFilePath() const
     return QString();
 }
 
-int PlaylistDock::currentIndex() const
+int
+PlaylistDock::currentIndex() const
 {
     return index;
 }
 
-QString PlaylistDock::nextFilePath()
+QString
+PlaylistDock::nextFilePath()
 {
-    if (empty()) return QString();
+    if (empty())
+    {
+        return QString();
+    }
 
     if (validIndex(index))
     {
@@ -143,9 +155,13 @@ QString PlaylistDock::nextFilePath()
     return currentFilePath();
 }
 
-QString PlaylistDock::previousFilePath()
+QString
+PlaylistDock::previousFilePath()
 {
-    if (empty()) return QString();
+    if (empty())
+    {
+        return QString();
+    }
 
     if (validIndex(index))
     {
@@ -161,7 +177,8 @@ QString PlaylistDock::previousFilePath()
     return currentFilePath();
 }
 
-void PlaylistDock::m_open_triggered()
+void
+PlaylistDock::m_open_triggered()
 {
     QList<QListWidgetItem*> litem = listwidget->selectedItems();
     if (!litem.empty())
@@ -172,30 +189,34 @@ void PlaylistDock::m_open_triggered()
         }
         index = listwidget->row(litem.at(0));
         litem.at(0)->setBackground(selectedBC);
-        itemOpen(currentFilePath());
+        emit itemOpen(currentFilePath());
     }
 }
 
-void PlaylistDock::m_remove_triggered()
+void
+PlaylistDock::m_remove_triggered()
 {
     remove(listwidget->selectedItems());
 }
 
-void PlaylistDock::m_allremove_triggered()
+void
+PlaylistDock::m_allremove_triggered()
 {
     clear();
 }
 
-void PlaylistDock::m_allselect_triggered()
+void
+PlaylistDock::m_allselect_triggered()
 {
-    const int size(count());
-    for (int i(0); i < size; ++i)
+    const int size = count();
+    for (int i = 0; i < size; ++i)
     {
         listwidget->item(i)->setSelected(true);
     }
 }
 
-void PlaylistDock::itemDoubleClicked(QListWidgetItem *item)
+void
+PlaylistDock::itemDoubleClicked(QListWidgetItem *item)
 {
     if (validIndex(index))
     {
@@ -203,10 +224,11 @@ void PlaylistDock::itemDoubleClicked(QListWidgetItem *item)
     }
     index = listwidget->row(item);
     item->setBackground(selectedBC);
-    itemOpen(currentFilePath());
+    emit itemOpen(currentFilePath());
 }
 
-void PlaylistDock::createMenus()
+void
+PlaylistDock::createMenus()
 {
     setContextMenuPolicy(Qt::ActionsContextMenu);
 
@@ -233,7 +255,14 @@ void PlaylistDock::createMenus()
     connect(m_allselect, SIGNAL(triggered()), this, SLOT(m_allselect_triggered()));
 }
 
-void PlaylistDock::remove(QList<QListWidgetItem*> items)
+bool
+PlaylistDock::validIndex(int index) const
+{
+     return index >= 0 && index < count();
+}
+
+void
+PlaylistDock::remove(QList<QListWidgetItem*> items)
 {
     bool contains = false;
     QListWidgetItem *current = validIndex(index) ? listwidget->item(index) : nullptr;
@@ -251,7 +280,7 @@ void PlaylistDock::remove(QList<QListWidgetItem*> items)
         }
         else
         {
-            int r = listwidget->row(*iterator);
+            const int r = listwidget->row(*iterator);
             if (r < index)
             {
                 --index;
