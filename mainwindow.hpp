@@ -19,6 +19,7 @@
 #include <QFileDialog>
 #include <QTimer>
 #include <QSettings>
+#include <QApplication>
 
 class MainWindow : public QMainWindow
 {
@@ -50,6 +51,7 @@ private slots:
 
     /******************* help *******************/
     void menu_help_benchmark_triggered();
+    void menu_help_aboutqt_triggered();
     void menu_help_version_triggered();
 
     /******************* util *******************/
@@ -98,6 +100,7 @@ private:
     QAction *menu_window_torncurve;
     QMenu *menu_help;
     QAction *menu_help_benchmark;
+    QAction *menu_help_aboutqt;
     QAction *menu_help_version;
 
     HistgramDialog *histdialog;

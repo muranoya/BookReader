@@ -58,6 +58,7 @@ MainWindow::~MainWindow()
 
     delete menu_help;
     delete menu_help_benchmark;
+    delete menu_help_aboutqt;
     delete menu_help_version;
 }
 
@@ -197,6 +198,12 @@ MainWindow::menu_help_benchmark_triggered()
 {
     BenchmarkDialog dialog(this);
     dialog.exec();
+}
+
+void
+MainWindow::menu_help_aboutqt_triggered()
+{
+    QApplication::aboutQt();
 }
 
 void
@@ -433,11 +440,14 @@ MainWindow::createMenus()
     menu_help = new QMenu(this);
     menu_help->setTitle(tr("ヘルプ"));
     menu_help_benchmark = new QAction(tr("ベンチマーク"), this);
+    menu_help_aboutqt = new QAction(tr("Qtについて"), this);
     menu_help_version = new QAction(tr("バージョン"), this);
     menu_help->addAction(menu_help_benchmark);
     menu_help->addSeparator();
+    menu_help->addAction(menu_help_aboutqt);
     menu_help->addAction(menu_help_version);
     connect(menu_help_benchmark, SIGNAL(triggered()), this, SLOT(menu_help_benchmark_triggered()));
+    connect(menu_help_aboutqt, SIGNAL(triggered()), this, SLOT(menu_help_aboutqt_triggered()));
     connect(menu_help_version, SIGNAL(triggered()), this, SLOT(menu_help_version_triggered()));
     menuBar()->addMenu(menu_help);
 }
