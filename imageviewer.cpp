@@ -194,11 +194,11 @@ ImageViewer::keyPressEvent(QKeyEvent *event)
 
     if (event->key() == Qt::Key_Left)
     {
-        emit leftClicked();
+        emit rightClicked();
     }
     else if (event->key() == Qt::Key_Right)
     {
-        emit rightClicked();
+        emit leftClicked();
     }
 }
 
