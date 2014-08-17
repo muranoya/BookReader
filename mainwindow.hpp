@@ -39,12 +39,11 @@ private slots:
     void menu_view_fitwindow_triggered();
     void menu_view_fitimage_triggered();
     void menu_view_setscale_triggered();
+    void menu_view_slideshow_triggered();
     void menu_view_fullscreen_triggered();
 
-    /******************* slideshow *******************/
-    void menu_slideshow_slideshow_triggered();
-
     /******************* window *******************/
+    void menu_window_alwaystop_triggered();
     void menu_window_hide_triggered();
     void menu_window_playlist_triggered();
     void menu_window_histgram_triggered();
@@ -55,7 +54,7 @@ private slots:
     void menu_help_version_triggered();
 
     /******************* util *******************/
-    void updateWindowState();
+    void updateWindowText();
 
     /******************* playlist event *******************/
     void playlistVisibleChanged(bool visible);
@@ -89,15 +88,14 @@ private:
     QAction *menu_view_fitwindow;
     QAction *menu_view_fitimage;
     QAction *menu_view_setscale;
+    QAction *menu_view_slideshow;
     QAction *menu_view_fullscreen;
     QAction *menu_view_filter;
-    QMenu *menu_slideshow;
-    QAction *menu_slideshow_slideshow;
     QMenu *menu_window;
+    QAction *menu_window_alwaystop;
     QAction *menu_window_hide;
     QAction *menu_window_playlist;
     QAction *menu_window_histgram;
-    QAction *menu_window_torncurve;
     QMenu *menu_help;
     QAction *menu_help_benchmark;
     QAction *menu_help_aboutqt;

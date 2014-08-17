@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
     createMenus();
 
     restoreSettings();
-    updateWindowState();
+    updateWindowText();
 }
 
 MainWindow::~MainWindow()
@@ -44,17 +44,15 @@ MainWindow::~MainWindow()
     delete menu_view_fitwindow;
     delete menu_view_fitimage;
     delete menu_view_setscale;
+    delete menu_view_slideshow;
     delete menu_view_fullscreen;
     delete menu_view_filter;
 
-    delete menu_slideshow;
-    delete menu_slideshow_slideshow;
-
     delete menu_window;
+    delete menu_window_alwaystop;
     delete menu_window_hide;
     delete menu_window_playlist;
     delete menu_window_histgram;
-    delete menu_window_torncurve;
 
     delete menu_help;
     delete menu_help_benchmark;
@@ -78,7 +76,7 @@ MainWindow::menu_file_open_triggered()
         pldock->clear();
         pldock->append(files);
         imgView->showImage(pldock->currentFilePath());
-        updateWindowState();
+        updateWindowText();
     }
 }
 
@@ -94,7 +92,7 @@ MainWindow::menu_file_fopen_triggered()
         pldock->clear();
         pldock->append(QStringList(dirname), 1);
         imgView->showImage(pldock->currentFilePath());
-        updateWindowState();
+        updateWindowText();
     }
 }
 
@@ -140,6 +138,20 @@ MainWindow::menu_view_setscale_triggered()
 }
 
 void
+MainWindow::menu_view_slideshow_triggered()
+{
+    if (slideshow.isActive())
+    {
+        slideshow.stop();
+    }
+    else
+    {
+        slideshow.start(3000);
+    }
+    updateWindowText();
+}
+
+void
 MainWindow::menu_view_fullscreen_triggered()
 {
     if (menu_view_fullscreen->isChecked())
@@ -152,21 +164,22 @@ MainWindow::menu_view_fullscreen_triggered()
     }
 }
 
-/******************* slideshow *******************/
+/******************* window *******************/
 void
-MainWindow::menu_slideshow_slideshow_triggered()
+MainWindow::menu_window_alwaystop_triggered()
 {
-    if (slideshow.isActive())
+    if (menu_window_alwaystop->isChecked())
     {
-        slideshow.stop();
+        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     }
     else
     {
-        slideshow.start(3000);
+        setWindowFlags(windowFlags() & (!Qt::WindowStaysOnTopHint));
     }
+
+    show();
 }
 
-/******************* window *******************/
 void
 MainWindow::menu_window_hide_triggered()
 {
@@ -215,7 +228,7 @@ MainWindow::menu_help_version_triggered()
 
 /******************* util *******************/
 void
-MainWindow::updateWindowState()
+MainWindow::updateWindowText()
 {
     QString title = pldock->currentFileName();
     if (title.isEmpty())
@@ -229,6 +242,12 @@ MainWindow::updateWindowState()
                 .arg(QString::number(pldock->count()))
                 .arg(title)
                 .arg(QString::number(imgView->getScale() * 100.0, 'g', 4));
+
+        if (slideshow.isActive())
+        {
+            title = tr("%1 [スライドショー]")
+                    .arg(title);
+        }
         setWindowTitle(title);
     }
 }
@@ -261,14 +280,14 @@ MainWindow::playlistItemRemoved(bool currentFile)
             histdialog->setHistgram(imgView->histgram());
         }
     }
-    updateWindowState();
+    updateWindowText();
 }
 
 void
 MainWindow::playlistItemOpened(QString path)
 {
     imgView->showImage(path);
-    updateWindowState();
+    updateWindowText();
 }
 
 /******************* image viewer event *******************/
@@ -280,7 +299,7 @@ MainWindow::viewerRightClicked()
         return;
     }
     imgView->showImage(pldock->previousFilePath());
-    updateWindowState();
+    updateWindowText();
 }
 
 void
@@ -291,7 +310,7 @@ MainWindow::viewerLeftClicked()
         return;
     }
     imgView->showImage(pldock->nextFilePath());
-    updateWindowState();
+    updateWindowText();
 }
 
 void
@@ -309,7 +328,7 @@ MainWindow::viewerDropItems(QStringList list, bool copy)
     {
         imgView->showImage(pldock->currentFilePath());
     }
-    updateWindowState();
+    updateWindowText();
 }
 
 void
@@ -337,12 +356,13 @@ MainWindow::slideshow_Timer()
     if (pldock->empty())
     {
         slideshow.stop();
-        menu_slideshow_slideshow->setChecked(false);
+        menu_view_slideshow->setChecked(false);
     }
     else
     {
         imgView->showImage(pldock->nextFilePath());
     }
+    updateWindowText();
 }
 
 void
@@ -391,14 +411,19 @@ MainWindow::createMenus()
     menu_view_fitimage->setCheckable(true);
     menu_view_setscale = new QAction(tr("倍率を指定して表示する"), this);
     menu_view_setscale->setCheckable(true);
+    menu_view_slideshow = new QAction(tr("スライドショー"), this);
+    menu_view_slideshow->setShortcut(tr("Ctrl+Shift+F"));
+    menu_view_slideshow->setCheckable(true);
     menu_view_fullscreen = new QAction(tr("フルスクリーン"), this);
     menu_view_fullscreen->setCheckable(true);
-    menu_view_fullscreen->setShortcut(tr("Meta+Ctrl+F"));
+    menu_view_fullscreen->setShortcut(tr("Ctrl+F"));
     menu_view_filter = new QAction(tr("フィルター"), this);
     menu_view->addAction(menu_view_fullsize);
     menu_view->addAction(menu_view_fitwindow);
     menu_view->addAction(menu_view_fitimage);
     menu_view->addAction(menu_view_setscale);
+    menu_view->addSeparator();
+    menu_view->addAction(menu_view_slideshow);
     menu_view->addSeparator();
     menu_view->addAction(menu_view_fullscreen);
     menu_view->addSeparator();
@@ -407,31 +432,26 @@ MainWindow::createMenus()
     connect(menu_view_fitwindow, SIGNAL(triggered()), this, SLOT(menu_view_fitwindow_triggered()));
     connect(menu_view_fitimage, SIGNAL(triggered()), this, SLOT(menu_view_fitimage_triggered()));
     connect(menu_view_setscale, SIGNAL(triggered()), this, SLOT(menu_view_setscale_triggered()));
+    connect(menu_view_slideshow, SIGNAL(triggered()), this, SLOT(menu_view_slideshow_triggered()));
     connect(menu_view_fullscreen, SIGNAL(triggered()), this, SLOT(menu_view_fullscreen_triggered()));
     menuBar()->addMenu(menu_view);
 
-    menu_slideshow = new QMenu(this);
-    menu_slideshow->setTitle(tr("スライドショー"));
-    menu_slideshow_slideshow = new QAction(tr("スライドショー"), this);
-    menu_slideshow_slideshow->setCheckable(true);
-    menu_slideshow->addAction(menu_slideshow_slideshow);
-    connect(menu_slideshow_slideshow, SIGNAL(triggered()), this, SLOT(menu_slideshow_slideshow_triggered()));
-    menuBar()->addMenu(menu_slideshow);
-
     menu_window = new QMenu(this);
     menu_window->setTitle(tr("ウィンドウ"));
+    menu_window_alwaystop = new QAction(tr("常に手前に表示する"), this);
+    menu_window_alwaystop->setCheckable(true);
     menu_window_hide = new QAction(tr("最小化"), this);
     menu_window_hide->setShortcut(tr("Ctrl+M"));
     menu_window_playlist = new QAction(tr("プレイリスト"), this);
     menu_window_playlist->setCheckable(true);
     menu_window_histgram = new QAction(tr("ヒストグラム"), this);
     menu_window_histgram->setCheckable(true);
-    menu_window_torncurve = new QAction(tr("トーンカーブ"), this);
+    menu_window->addAction(menu_window_alwaystop);
     menu_window->addAction(menu_window_hide);
     menu_window->addSeparator();
     menu_window->addAction(menu_window_playlist);
     menu_window->addAction(menu_window_histgram);
-    menu_window->addAction(menu_window_torncurve);
+    connect(menu_window_alwaystop, SIGNAL(triggered()), this, SLOT(menu_window_alwaystop_triggered()));
     connect(menu_window_hide, SIGNAL(triggered()), this, SLOT(menu_window_hide_triggered()));
     connect(menu_window_playlist, SIGNAL(triggered()), this, SLOT(menu_window_playlist_triggered()));
     connect(menu_window_histgram, SIGNAL(triggered()), this, SLOT(menu_window_histgram_triggered()));
@@ -470,7 +490,7 @@ MainWindow::changeCheckedScaleMenu(QAction *act, const ImageViewer::ViewMode m, 
     {
         imgView->setScale(m);
     }
-    updateWindowState();
+    updateWindowText();
 }
 
 void
