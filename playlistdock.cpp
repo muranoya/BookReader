@@ -12,10 +12,15 @@ PlaylistDock::PlaylistDock(QWidget *parent, Qt::WindowFlags flags)
     , normalBC(Qt::transparent)
     , selectedBC(Qt::lightGray)
     , index(-1)
+    , slideshow_timer()
+    , slideshow_repeat(false)
+    , slideshow_interval(3000)
 {
     setWidget(listwidget);
 
     connect(listwidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(itemDoubleClicked(QListWidgetItem*)));
+
+    connect(&slideshow_timer, SIGNAL(timeout()), this, SLOT(slideshow_loop()));
 
     listwidget->setDefaultDropAction(Qt::MoveAction);
     listwidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -71,12 +76,6 @@ PlaylistDock::append(const QStringList &list, const int level)
         index = 0;
         listwidget->item(index)->setBackground(selectedBC);
     }
-}
-
-QString
-PlaylistDock::at(const int i) const
-{
-    return listwidget->item(i)->data(Qt::ToolTipRole).toString();
 }
 
 void
@@ -178,6 +177,51 @@ PlaylistDock::previousFilePath()
 }
 
 void
+PlaylistDock::setSlideshowRepeat(bool flag)
+{
+    slideshow_repeat = flag;
+}
+
+bool
+PlaylistDock::getSlideshowRepeat()
+{
+    return slideshow_repeat;
+}
+
+void
+PlaylistDock::setSlideshowInterval(int msec)
+{
+    slideshow_interval = msec;
+}
+
+int
+PlaylistDock::getSlideshowInterval()
+{
+    return slideshow_interval;
+}
+
+bool
+PlaylistDock::isPlayingSlideshow()
+{
+    return slideshow_timer.isActive();
+}
+
+void
+PlaylistDock::startSlideshow()
+{
+    slideshow_start_index = index;
+    slideshow_timer.start(slideshow_interval);
+}
+
+void
+PlaylistDock::stopSlideshow()
+{
+    slideshow_timer.stop();
+
+    emit slideshow_stop();
+}
+
+void
 PlaylistDock::m_open_triggered()
 {
     QList<QListWidgetItem*> litem = listwidget->selectedItems();
@@ -225,6 +269,23 @@ PlaylistDock::itemDoubleClicked(QListWidgetItem *item)
     index = listwidget->row(item);
     item->setBackground(selectedBC);
     emit itemOpen(currentFilePath());
+}
+
+void
+PlaylistDock::slideshow_loop()
+{
+    if (empty())
+    {
+        stopSlideshow();
+    }
+    else
+    {
+        emit slideshow_change(nextFilePath());
+        if ((!slideshow_repeat) && index == slideshow_start_index)
+        {
+            stopSlideshow();
+        }
+    }
 }
 
 void

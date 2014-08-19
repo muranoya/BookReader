@@ -9,6 +9,7 @@
 #include "playlistdock.hpp"
 #include "histgramdialog.hpp"
 #include "benchmarkdialog.hpp"
+#include "appsettings.hpp"
 
 #include <QMenuBar>
 #include <QMenu>
@@ -17,8 +18,6 @@
 #include <QMouseEvent>
 #include <QDir>
 #include <QFileDialog>
-#include <QTimer>
-#include <QSettings>
 #include <QApplication>
 
 class MainWindow : public QMainWindow
@@ -60,6 +59,8 @@ private slots:
     void playlistVisibleChanged(bool visible);
     void playlistItemRemoved(bool currentFile);
     void playlistItemOpened(QString path);
+    void playlistSlideshowStop();
+    void playlistSlideshowChange(QString name);
 
     /******************* image viewer event *******************/
     void viewerRightClicked();
@@ -68,8 +69,6 @@ private slots:
     void viewerSetNewImage();
 
     void closeHistgramDialog();
-
-    void slideshow_Timer();
 
 protected:
     virtual void changeEvent(QEvent *event);
@@ -103,15 +102,13 @@ private:
 
     HistgramDialog *histdialog;
 
-    QString dialog_File;
-    QString dialog_Directory;
-    QTimer slideshow;
-
     /******************* util *******************/
     void createMenus();
     void changeCheckedScaleMenu(QAction *act, const ImageViewer::ViewMode m, const qreal s = 0.0);
-    void saveSettings();
-    void restoreSettings();
+    void setWindowTopMost(bool flag);
+    bool getWindowTopMost();
+    void applySettings();
+    void storeSettings();
 };
 
 #endif // MAINWINDOW_H

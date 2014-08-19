@@ -5,7 +5,6 @@ MainWindow::MainWindow(QWidget *parent)
     , imgView(new ImageViewer(this))
     , pldock(new PlaylistDock(this))
     , histdialog(new HistgramDialog())
-    , slideshow()
 {
     addDockWidget(Qt::LeftDockWidgetArea, pldock);
     setCentralWidget(imgView);
@@ -13,6 +12,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(pldock, SIGNAL(itemOpen(QString)), this, SLOT(playlistItemOpened(QString)));
     connect(pldock, SIGNAL(itemRemoved(bool)), this, SLOT(playlistItemRemoved(bool)));
     connect(pldock, SIGNAL(visibilityChanged(bool)), this, SLOT(playlistVisibleChanged(bool)));
+    connect(pldock, SIGNAL(slideshow_stop()), this, SLOT(playlistSlideshowStop()));
+    connect(pldock, SIGNAL(slideshow_change(QString)), this, SLOT(playlistSlideshowChange(QString)));
 
     connect(imgView, SIGNAL(rightClicked()), this, SLOT(viewerRightClicked()));
     connect(imgView, SIGNAL(leftClicked()), this, SLOT(viewerLeftClicked()));
@@ -21,11 +22,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(histdialog, SIGNAL(closeDialog()), this, SLOT(closeHistgramDialog()));
 
-    connect(&slideshow, SIGNAL(timeout()), this, SLOT(slideshow_Timer()));
-
     createMenus();
 
-    restoreSettings();
+    AppSettings::LoadSettings();
+    applySettings();
     updateWindowText();
 }
 
@@ -65,14 +65,14 @@ void
 MainWindow::menu_file_open_triggered()
 {
     QStringList files = QFileDialog::getOpenFileNames(
-                this, tr("ファイルを開く"), dialog_File,
+                this, tr("ファイルを開く"), AppSettings::main_dialog_file,
                 tr("Images (*.png *.jpg *.jpeg *.bmp *.gif)"));
 
     if (!files.isEmpty())
     {
         const QFileInfo info(files.at(0));
         const QDir dir = info.absoluteDir();
-        dialog_File = dir.absolutePath();
+        AppSettings::main_dialog_file = dir.absolutePath();
         pldock->clear();
         pldock->append(files);
         imgView->showImage(pldock->currentFilePath());
@@ -84,13 +84,13 @@ void
 MainWindow::menu_file_fopen_triggered()
 {
     QString dirname = QFileDialog::getExistingDirectory(
-                this, tr("ディレクトリを開く"), dialog_Directory);
+                this, tr("ディレクトリを開く"), AppSettings::main_dialog_dir);
 
     if (!dirname.isEmpty())
     {
-        dialog_Directory = dirname;
+        AppSettings::main_dialog_dir = dirname;
         pldock->clear();
-        pldock->append(QStringList(dirname), 1);
+        pldock->append(QStringList(dirname), AppSettings::main_open_dir_level);
         imgView->showImage(pldock->currentFilePath());
         updateWindowText();
     }
@@ -101,6 +101,8 @@ MainWindow::menu_file_settings_triggered()
 {
     SettingsDialog dialog(this);
     dialog.exec();
+
+    imgView->setInterpolationMode(ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
 }
 
 /******************* view *******************/
@@ -140,13 +142,15 @@ MainWindow::menu_view_setscale_triggered()
 void
 MainWindow::menu_view_slideshow_triggered()
 {
-    if (slideshow.isActive())
+    if (pldock->isPlayingSlideshow())
     {
-        slideshow.stop();
+        pldock->stopSlideshow();
     }
     else
     {
-        slideshow.start(3000);
+        pldock->setSlideshowRepeat(AppSettings::playlist_slideshow_repeat);
+        pldock->setSlideshowInterval(int(AppSettings::playlist_slideshow_interval*1000));
+        pldock->startSlideshow();
     }
     updateWindowText();
 }
@@ -168,16 +172,7 @@ MainWindow::menu_view_fullscreen_triggered()
 void
 MainWindow::menu_window_alwaystop_triggered()
 {
-    if (menu_window_alwaystop->isChecked())
-    {
-        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-    }
-    else
-    {
-        setWindowFlags(windowFlags() & (!Qt::WindowStaysOnTopHint));
-    }
-
-    show();
+    setWindowTopMost(menu_window_alwaystop->isChecked());
 }
 
 void
@@ -243,7 +238,7 @@ MainWindow::updateWindowText()
                 .arg(title)
                 .arg(QString::number(imgView->getScale() * 100.0, 'g', 4));
 
-        if (slideshow.isActive())
+        if (pldock->isPlayingSlideshow())
         {
             title = tr("%1 [スライドショー]")
                     .arg(title);
@@ -290,6 +285,20 @@ MainWindow::playlistItemOpened(QString path)
     updateWindowText();
 }
 
+void
+MainWindow::playlistSlideshowStop()
+{
+    updateWindowText();
+    menu_view_slideshow->setChecked(false);
+}
+
+void
+MainWindow::playlistSlideshowChange(QString name)
+{
+    imgView->showImage(name);
+    updateWindowText();
+}
+
 /******************* image viewer event *******************/
 void
 MainWindow::viewerRightClicked()
@@ -322,7 +331,7 @@ MainWindow::viewerDropItems(QStringList list, bool copy)
         pldock->clear();
     }
 
-    pldock->append(list, 1);
+    pldock->append(list, AppSettings::main_open_dir_level);
 
     if (!copy || isempty)
     {
@@ -351,21 +360,6 @@ MainWindow::closeHistgramDialog()
 }
 
 void
-MainWindow::slideshow_Timer()
-{
-    if (pldock->empty())
-    {
-        slideshow.stop();
-        menu_view_slideshow->setChecked(false);
-    }
-    else
-    {
-        imgView->showImage(pldock->nextFilePath());
-    }
-    updateWindowText();
-}
-
-void
 MainWindow::changeEvent(QEvent *event)
 {
     if (event->type() == QEvent::WindowStateChange)
@@ -378,7 +372,8 @@ void
 MainWindow::closeEvent(QCloseEvent *event)
 {
     Q_UNUSED(event);
-    saveSettings();
+    storeSettings();
+    AppSettings::SaveSettings();
 }
 
 /******************* util *******************/
@@ -494,48 +489,28 @@ MainWindow::changeCheckedScaleMenu(QAction *act, const ImageViewer::ViewMode m, 
 }
 
 void
-MainWindow::saveSettings()
+MainWindow::setWindowTopMost(bool flag)
 {
-    QSettings settings(BookReader::SOFTWARE_ORGANIZATION, BookReader::SOFTWARE_NAME, this);
+    setWindowFlags(flag ? (windowFlags() | Qt::WindowStaysOnTopHint)
+                        : (windowFlags() & (!Qt::WindowStaysOnTopHint)));
+    show();
+}
 
-    settings.beginGroup("MainWindow");
-    settings.setValue("size", size());
-    settings.setValue("location", pos());
-    settings.endGroup();
-
-    settings.beginGroup("Main");
-    settings.setValue("dialog_file", dialog_File);
-    settings.setValue("dialog_directory", dialog_Directory);
-    settings.endGroup();
-
-    settings.beginGroup("Viewer");
-    settings.setValue("scaling_mode", imgView->getScaleMode());
-    settings.setValue("scaling_times", imgView->getScale());
-    settings.endGroup();
-
-    settings.beginGroup("Playlist");
-    settings.setValue("visible", pldock->isVisible());
-    settings.endGroup();
+bool
+MainWindow::getWindowTopMost()
+{
+    return bool(windowFlags() & Qt::WindowStaysOnTopHint);
 }
 
 void
-MainWindow::restoreSettings()
+MainWindow::applySettings()
 {
-    QSettings settings(BookReader::SOFTWARE_ORGANIZATION, BookReader::SOFTWARE_NAME, this);
+    resize(AppSettings::mainwindow_size);
+    move(AppSettings::mainwindow_pos);
+    setWindowTopMost(AppSettings::mainwindow_topmost);
+    menu_window_alwaystop->setChecked(AppSettings::mainwindow_topmost);
 
-    settings.beginGroup("MainWindow");
-    resize(settings.value("size", QSize(600, 400)).toSize());
-    move(settings.value("location", QPoint(100, 100)).toPoint());
-    settings.endGroup();
-
-    settings.beginGroup("Main");
-    dialog_File = settings.value("dialog_file", QString()).toString();
-    dialog_Directory = settings.value("dialog_directory", QString()).toString();
-    settings.endGroup();
-
-    settings.beginGroup("Viewer");
-    ImageViewer::ViewMode mode =
-            ImageViewer::ViewMode(settings.value("scaling_mode", ImageViewer::FULLSIZE).toInt());
+    ImageViewer::ViewMode mode = ImageViewer::ViewMode(AppSettings::viewer_scaling_mode);
     switch (mode)
     {
     case ImageViewer::FULLSIZE:
@@ -548,14 +523,25 @@ MainWindow::restoreSettings()
         changeCheckedScaleMenu(menu_view_fitimage, mode);
         break;
     case ImageViewer::CUSTOM_SCALE:
-        changeCheckedScaleMenu(menu_view_setscale, mode,
-                               settings.value("scaling_times", 0.0).toFloat());
+        changeCheckedScaleMenu(menu_view_setscale, mode, AppSettings::viewer_scaling_times);
         break;
     }
-    settings.endGroup();
+    imgView->setInterpolationMode(ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
 
-    settings.beginGroup("Playlist");
-    pldock->setVisible(settings.value("visible", false).toBool());
+    pldock->setVisible(AppSettings::playlist_visible);
     menu_window_playlist->setChecked(pldock->isVisible());
-    settings.endGroup();
+}
+
+void
+MainWindow::storeSettings()
+{
+    AppSettings::mainwindow_size = size();
+    AppSettings::mainwindow_pos = pos();
+    AppSettings::mainwindow_topmost = getWindowTopMost();
+
+    AppSettings::viewer_scaling_mode = int(imgView->getScaleMode());
+    AppSettings::viewer_scaling_times = imgView->getScale();
+    AppSettings::viewer_ipixmode = int(imgView->getInterpolationMode());
+
+    AppSettings::playlist_visible = pldock->isVisible();
 }

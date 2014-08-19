@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     settingsdialog.cpp \
     playlistdock.cpp \
     histgramdialog.cpp \
-    benchmarkdialog.cpp
+    benchmarkdialog.cpp \
+    appsettings.cpp
 
 HEADERS  += \
     nullptr.hpp \
@@ -32,7 +33,7 @@ HEADERS  += \
     settingscaledialog.hpp \
     settingsdialog.hpp \
     versiondialog.hpp \
-    benchmarkdialog.hpp
+    benchmarkdialog.hpp \
+    appsettings.hpp
 
-FORMS    += \
-    settingsdialog.ui
+FORMS    +=

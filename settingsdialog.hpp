@@ -2,11 +2,17 @@
 #define SETTINGSDIALOG_H
 
 #include <QDialog>
+#include <QVBoxLayout>
+#include <QGridLayout>
+#include <QGroupBox>
+#include <QRadioButton>
+#include <QCheckBox>
+#include <QLabel>
+#include <QSpinBox>
+#include <QDialogButtonBox>
 
-namespace Ui
-{
-    class SettingsDialog;
-}
+#include "appsettings.hpp"
+#include "imageviewer.hpp"
 
 class SettingsDialog : public QDialog
 {
@@ -15,8 +21,33 @@ public:
     explicit SettingsDialog(QWidget *parent = 0);
     ~SettingsDialog();
 
+private slots:
+    void button_save();
+    void button_cancel();
+
 private:
-    Ui::SettingsDialog *ui;
+    QVBoxLayout *layout;
+    QDialogButtonBox *buttonbox;
+
+    QGroupBox *group_InterpolatingPixel;
+    QVBoxLayout *ipix_layout;
+    QRadioButton *ipix_nearest;
+    QRadioButton *ipix_bilinear;
+    QRadioButton *ipix_bicubic;
+
+    QGroupBox *group_OpenDir;
+    QGridLayout *open_rec_layout;
+    QLabel *open_rec_dir_level_text;
+    QSpinBox *open_rec_dir_level;
+
+    QGroupBox *group_Slideshow;
+    QGridLayout *slideshow_layout;
+    QLabel *slideshow_interval_text;
+    QSpinBox *slideshow_interval_value;
+    QCheckBox *slideshow_repeat;
+
+    void loadSettings();
+    void saveSettings();
 };
 
 #endif // SETTINGSDIALOG_H
