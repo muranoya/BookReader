@@ -9,16 +9,16 @@ MainWindow::MainWindow(QWidget *parent)
     addDockWidget(Qt::LeftDockWidgetArea, pldock);
     setCentralWidget(imgView);
 
-    connect(pldock, SIGNAL(itemOpen(QString)), this, SLOT(playlistItemOpened(QString)));
-    connect(pldock, SIGNAL(itemRemoved(bool)), this, SLOT(playlistItemRemoved(bool)));
-    connect(pldock, SIGNAL(visibilityChanged(bool)), this, SLOT(playlistVisibleChanged(bool)));
-    connect(pldock, SIGNAL(slideshow_stop()), this, SLOT(playlistSlideshowStop()));
+    connect(pldock, SIGNAL(itemOpen(QString)),         this, SLOT(playlistItemOpened(QString)));
+    connect(pldock, SIGNAL(itemRemoved(bool)),         this, SLOT(playlistItemRemoved(bool)));
+    connect(pldock, SIGNAL(visibilityChanged(bool)),   this, SLOT(playlistVisibleChanged(bool)));
+    connect(pldock, SIGNAL(slideshow_stop()),          this, SLOT(playlistSlideshowStop()));
     connect(pldock, SIGNAL(slideshow_change(QString)), this, SLOT(playlistSlideshowChange(QString)));
 
-    connect(imgView, SIGNAL(rightClicked()), this, SLOT(viewerRightClicked()));
-    connect(imgView, SIGNAL(leftClicked()), this, SLOT(viewerLeftClicked()));
+    connect(imgView, SIGNAL(rightClicked()),              this, SLOT(viewerRightClicked()));
+    connect(imgView, SIGNAL(leftClicked()),               this, SLOT(viewerLeftClicked()));
     connect(imgView, SIGNAL(dropItems(QStringList,bool)), this, SLOT(viewerDropItems(QStringList,bool)));
-    connect(imgView, SIGNAL(setNewImage()), this, SLOT(viewerSetNewImage()));
+    connect(imgView, SIGNAL(setNewImage()),               this, SLOT(viewerSetNewImage()));
 
     connect(histdialog, SIGNAL(closeDialog()), this, SLOT(closeHistgramDialog()));
 

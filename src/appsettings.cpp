@@ -19,7 +19,8 @@ int AppSettings::playlist_slideshow_interval;
 void
 AppSettings::SaveSettings()
 {
-    QSettings settings(BookReader::SOFTWARE_ORGANIZATION, BookReader::SOFTWARE_NAME);
+    QSettings settings(BookReader::SOFTWARE_ORGANIZATION,
+            BookReader::SOFTWARE_NAME);
 
     settings.beginGroup("MainWindow");
     settings.setValue("size", mainwindow_size);
@@ -49,7 +50,8 @@ AppSettings::SaveSettings()
 void
 AppSettings::LoadSettings()
 {
-    QSettings settings(BookReader::SOFTWARE_ORGANIZATION, BookReader::SOFTWARE_NAME);
+    QSettings settings(BookReader::SOFTWARE_ORGANIZATION,
+            BookReader::SOFTWARE_NAME);
 
     settings.beginGroup("MainWindow");
     mainwindow_size = settings.value("size", QSize(600, 400)).toSize();
