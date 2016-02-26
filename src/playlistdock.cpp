@@ -302,7 +302,7 @@ PlaylistDock::createMenus()
     m_separator2 = new QAction(this);
     m_separator2->setSeparator(true);
 
-    m_open = new QAction(tr("開く"), this);
+    m_open = new QAction(tr("表示する"), this);
     m_remove = new QAction(tr("削除する"), this);
     m_allremove = new QAction(tr("全て削除する"), this);
     m_allselect = new QAction(tr("全て選択する"), this);

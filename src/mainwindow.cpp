@@ -50,7 +50,6 @@ MainWindow::~MainWindow()
     delete menu_view_filter;
 
     delete menu_window;
-    delete menu_window_alwaystop;
     delete menu_window_hide;
     delete menu_window_playlist;
     delete menu_window_histgram;
@@ -177,12 +176,6 @@ MainWindow::menu_view_fullscreen_triggered()
 
 /******************* window *******************/
 void
-MainWindow::menu_window_alwaystop_triggered()
-{
-    setWindowTopMost(menu_window_alwaystop->isChecked());
-}
-
-void
 MainWindow::menu_window_hide_triggered()
 {
     setWindowState(Qt::WindowMinimized);
@@ -239,10 +232,12 @@ MainWindow::updateWindowText()
     }
     else
     {
-        title = tr("[%1/%2] %3 [倍率:%4%]")
+        title = tr("[%1/%2] %3 [%4 %5] [倍率:%6%]")
                 .arg(QString::number(pldock->currentIndex() + 1))
                 .arg(QString::number(pldock->count()))
                 .arg(title)
+                .arg(imgView->getImageSize().width())
+                .arg(imgView->getImageSize().height())
                 .arg(QString::number(imgView->getScale() * 100.0, 'g', 4));
 
         if (pldock->isPlayingSlideshow())
@@ -383,6 +378,13 @@ MainWindow::closeEvent(QCloseEvent *event)
     AppSettings::SaveSettings();
 }
 
+void
+MainWindow::resizeEvent(QResizeEvent *event)
+{
+    Q_UNUSED(event);
+    updateWindowText();
+}
+
 /******************* util *******************/
 void
 MainWindow::createMenus()
@@ -445,20 +447,16 @@ MainWindow::createMenus()
 
     menu_window = new QMenu(this);
     menu_window->setTitle(tr("ウィンドウ"));
-    menu_window_alwaystop = new QAction(tr("常に手前に表示する"), this);
-    menu_window_alwaystop->setCheckable(true);
     menu_window_hide = new QAction(tr("最小化"), this);
     menu_window_hide->setShortcut(tr("Ctrl+M"));
     menu_window_playlist = new QAction(tr("プレイリスト"), this);
     menu_window_playlist->setCheckable(true);
     menu_window_histgram = new QAction(tr("ヒストグラム"), this);
     menu_window_histgram->setCheckable(true);
-    menu_window->addAction(menu_window_alwaystop);
     menu_window->addAction(menu_window_hide);
     menu_window->addSeparator();
     menu_window->addAction(menu_window_playlist);
     menu_window->addAction(menu_window_histgram);
-    connect(menu_window_alwaystop, SIGNAL(triggered()), this, SLOT(menu_window_alwaystop_triggered()));
     connect(menu_window_hide, SIGNAL(triggered()), this, SLOT(menu_window_hide_triggered()));
     connect(menu_window_playlist, SIGNAL(triggered()), this, SLOT(menu_window_playlist_triggered()));
     connect(menu_window_histgram, SIGNAL(triggered()), this, SLOT(menu_window_histgram_triggered()));
@@ -501,26 +499,10 @@ MainWindow::changeCheckedScaleMenu(QAction *act, const ImageViewer::ViewMode m, 
 }
 
 void
-MainWindow::setWindowTopMost(bool flag)
-{
-    setWindowFlags(flag ? (windowFlags() | Qt::WindowStaysOnTopHint)
-                        : (windowFlags() & (!Qt::WindowStaysOnTopHint)));
-    show();
-}
-
-bool
-MainWindow::getWindowTopMost()
-{
-    return bool(windowFlags() & Qt::WindowStaysOnTopHint);
-}
-
-void
 MainWindow::applySettings()
 {
     resize(AppSettings::mainwindow_size);
     move(AppSettings::mainwindow_pos);
-    setWindowTopMost(AppSettings::mainwindow_topmost);
-    menu_window_alwaystop->setChecked(AppSettings::mainwindow_topmost);
 
     ImageViewer::ViewMode mode = ImageViewer::ViewMode(AppSettings::viewer_scaling_mode);
     switch (mode)
@@ -549,7 +531,6 @@ MainWindow::storeSettings()
 {
     AppSettings::mainwindow_size = size();
     AppSettings::mainwindow_pos = pos();
-    AppSettings::mainwindow_topmost = getWindowTopMost();
 
     AppSettings::viewer_scaling_mode = int(imgView->getScaleMode());
     AppSettings::viewer_scaling_times = imgView->getScale();

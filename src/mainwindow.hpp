@@ -43,7 +43,7 @@ private slots:
     void menu_view_fullscreen_triggered();
 
     /******************* window *******************/
-    void menu_window_alwaystop_triggered();
+    //void menu_window_alwaystop_triggered();
     void menu_window_hide_triggered();
     void menu_window_playlist_triggered();
     void menu_window_histgram_triggered();
@@ -74,6 +74,7 @@ private slots:
 protected:
     virtual void changeEvent(QEvent *event);
     virtual void closeEvent(QCloseEvent *event);
+    virtual void resizeEvent(QResizeEvent *event);
 
 private:
     ImageViewer *imgView;
@@ -93,7 +94,6 @@ private:
     QAction *menu_view_fullscreen;
     QAction *menu_view_filter;
     QMenu *menu_window;
-    QAction *menu_window_alwaystop;
     QAction *menu_window_hide;
     QAction *menu_window_playlist;
     QAction *menu_window_histgram;
@@ -107,8 +107,6 @@ private:
     /******************* util *******************/
     void createMenus();
     void changeCheckedScaleMenu(QAction *act, const ImageViewer::ViewMode m, const qreal s = 0.0);
-    void setWindowTopMost(bool flag);
-    bool getWindowTopMost();
     void applySettings();
     void storeSettings();
 };

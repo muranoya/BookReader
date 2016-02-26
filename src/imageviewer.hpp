@@ -60,6 +60,7 @@ public:
 
     bool empty() const;
     bool isReadable(const QString &path) const;
+    QSize getImageSize() const;
 
 signals:
     void rightClicked();

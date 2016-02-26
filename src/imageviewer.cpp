@@ -187,6 +187,19 @@ ImageViewer::isReadable(const QString &path) const
     return false;
 }
 
+QSize
+ImageViewer::getImageSize() const
+{
+    if (empty())
+    {
+        return QSize(0, 0);
+    }
+    else
+    {
+        return img_original.size();
+    }
+}
+
 void
 ImageViewer::keyPressEvent(QKeyEvent *event)
 {
@@ -316,20 +329,29 @@ ImageViewer::imageScale(const QImage& img)
     }
     scale_value = scale;
 
-    switch (imode)
+    // この判定方法は浮動小数点数の比較としては
+    // 要対処案件な気もするが，とりあえずまあいいか
+    if (scale_value == 1.0)
     {
-    case NearestNeighbor:
-        img_scaled = nearest_neighbor(img, scale);
-        break;
-    case Bilinear:
-        img_scaled =  bilinear(img, scale);
-        break;
-    case Bicubic:
-        img_scaled = bicubic(img, scale);
-        break;
-    default:
-        // Warning;
-        break;
+        img_scaled = img;
+    }
+    else
+    {
+        switch (imode)
+        {
+            case NearestNeighbor:
+                img_scaled = nearest_neighbor(img, scale);
+                break;
+            case Bilinear:
+                img_scaled =  bilinear(img, scale);
+                break;
+            case Bicubic:
+                img_scaled = bicubic(img, scale);
+                break;
+            default:
+                // Warning;
+                break;
+        }
     }
 }
 
