@@ -57,17 +57,21 @@ PlaylistDock::append(const QStringList &list, const int level)
             newitem->setData(Qt::ToolTipRole, *iterator);
             listwidget->addItem(newitem);
         }
-        else if (level != 0)
+        else if (level > 0)
         {
             const QDir dir(*iterator);
             const QFileInfoList entrylist = dir.entryInfoList();
             QStringList newlist;
             QFileInfoList::const_iterator iterator2;
+            int canonical_len = info.canonicalPath().length();
             for (iterator2 = entrylist.constBegin(); iterator2 != entrylist.constEnd(); ++iterator2)
             {
-                newlist << iterator2->filePath();
+                if (canonical_len < (*iterator2).canonicalPath().length())
+                {
+                    newlist << iterator2->filePath();
+                }
             }
-            append(newlist, (level < 0 ? level : level-1));
+            append(newlist, level-1);
         }
     }
 
@@ -362,3 +366,4 @@ PlaylistDock::remove(QList<QListWidgetItem*> items)
 
     itemRemoved(contains);
 }
+

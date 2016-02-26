@@ -32,6 +32,7 @@ private slots:
     void menu_file_open_triggered();
     void menu_file_fopen_triggered();
     void menu_file_settings_triggered();
+    void menu_file_exit_triggered();
 
     /******************* view *******************/
     void menu_view_fullsize_triggered();
@@ -82,6 +83,7 @@ private:
     QAction *menu_file_open;
     QAction *menu_file_fopen;
     QAction *menu_file_settings;
+    QAction *menu_file_exit;
     QMenu *menu_view;
     QAction *menu_view_fullsize;
     QAction *menu_view_fitwindow;

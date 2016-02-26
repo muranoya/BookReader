@@ -14,7 +14,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     , ipix_bicubic(new QRadioButton(tr("Bicubic")))
     , group_OpenDir(new QGroupBox(tr("ディレクトリを開く方法")))
     , open_rec_layout(new QGridLayout())
-    , open_rec_dir_level_text(new QLabel(tr("サブディレクトリの深さ(-1は全て)")))
+    , open_rec_dir_level_text(new QLabel(tr("サブディレクトリの深さ")))
     , open_rec_dir_level(new QSpinBox())
     , group_Slideshow(new QGroupBox(tr("スライドショー"), this))
     , slideshow_layout(new QGridLayout())
@@ -31,7 +31,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     ipix_layout->addWidget(ipix_bicubic);
 
     group_OpenDir->setLayout(open_rec_layout);
-    open_rec_dir_level->setRange(-1, 20);
+    open_rec_dir_level->setRange(0, 999);
     open_rec_layout->addWidget(open_rec_dir_level_text, 0, 0, 1, 1);
     open_rec_layout->addWidget(open_rec_dir_level, 0, 1, 1, 1);
 

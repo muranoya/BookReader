@@ -38,6 +38,7 @@ MainWindow::~MainWindow()
     delete menu_file_open;
     delete menu_file_fopen;
     delete menu_file_settings;
+    delete menu_file_exit;
 
     delete menu_view;
     delete menu_view_fullsize;
@@ -66,7 +67,7 @@ MainWindow::menu_file_open_triggered()
 {
     QStringList files = QFileDialog::getOpenFileNames(
                 this, tr("ファイルを開く"), AppSettings::main_dialog_file,
-                tr("Images (*.png *.jpg *.jpeg *.bmp *.gif)"));
+                "Images (*.png *.jpg *.jpeg *.bmp *.gif)");
 
     if (!files.isEmpty())
     {
@@ -103,6 +104,12 @@ MainWindow::menu_file_settings_triggered()
     dialog.exec();
 
     imgView->setInterpolationMode(ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
+}
+
+void
+MainWindow::menu_file_exit_triggered()
+{
+    QApplication::quit();
 }
 
 /******************* view *******************/
@@ -387,13 +394,18 @@ MainWindow::createMenus()
     menu_file_fopen = new QAction(tr("フォルダを開く"), this);
     menu_file_fopen->setShortcut(tr("Ctrl+D"));
     menu_file_settings = new QAction(tr("設定画面を開く"), this);
+    menu_file_exit = new QAction(tr("終了"), this);
+    menu_file_exit->setShortcut(tr("Ctrl+Q"));
     menu_file->addAction(menu_file_open);
     menu_file->addAction(menu_file_fopen);
     menu_file->addSeparator();
     menu_file->addAction(menu_file_settings);
+    menu_file->addSeparator();
+    menu_file->addAction(menu_file_exit);
     connect(menu_file_open, SIGNAL(triggered()), this, SLOT(menu_file_open_triggered()));
     connect(menu_file_fopen, SIGNAL(triggered()), this, SLOT(menu_file_fopen_triggered()));
     connect(menu_file_settings, SIGNAL(triggered()), this, SLOT(menu_file_settings_triggered()));
+    connect(menu_file_exit, SIGNAL(triggered()), this, SLOT(menu_file_exit_triggered()));
     menuBar()->addMenu(menu_file);
 
     menu_view = new QMenu(this);

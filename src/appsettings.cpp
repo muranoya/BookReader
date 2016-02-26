@@ -62,7 +62,7 @@ AppSettings::LoadSettings()
     settings.beginGroup("Main");
     main_dialog_file = settings.value("dialog_file", QString()).toString();
     main_dialog_dir = settings.value("location", QString()).toString();
-    main_open_dir_level = settings.value("open_dir_level", 0).toInt();
+    main_open_dir_level = settings.value("open_dir_level", 999).toInt();
     settings.endGroup();
 
     settings.beginGroup("Viewer");

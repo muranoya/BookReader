@@ -19,18 +19,6 @@ public:
     PlaylistDock(QWidget *parent = 0, Qt::WindowFlags flags = 0);
     ~PlaylistDock();
 
-    /*
-     * 次のように関数を呼び出された場合
-     * list = ["/Users/packman/MyPictures", "/Users/packman/wallpaper.jpg"]
-     * level = 0
-     * MyPicturesディレクトリ以下のファイルは読み込まないが、wallpaper.jpgを読み込む。
-     *
-     * level = 1の場合
-     * MyPicturesディレクトリ以下のファイル(ディレクトリは読み込まない)と、wallpaper.jpgを読み込む。
-     *
-     * level < 0の場合
-     * 再帰的に全てのフォルダとファイルを読み込む。
-     */
     void append(const QStringList& list, const int level = 0);
     void clear();
     int count() const;
