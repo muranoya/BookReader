@@ -8,7 +8,6 @@
 #include "settingsdialog.hpp"
 #include "playlistdock.hpp"
 #include "histgramdialog.hpp"
-#include "benchmarkdialog.hpp"
 #include "appsettings.hpp"
 
 #include <QMenuBar>
@@ -48,7 +47,6 @@ private slots:
     void menu_window_histgram_triggered();
 
     /******************* help *******************/
-    void menu_help_benchmark_triggered();
     void menu_help_aboutqt_triggered();
     void menu_help_version_triggered();
 
@@ -97,7 +95,6 @@ private:
     QAction *menu_window_playlist;
     QAction *menu_window_histgram;
     QMenu *menu_help;
-    QAction *menu_help_benchmark;
     QAction *menu_help_aboutqt;
     QAction *menu_help_version;
 

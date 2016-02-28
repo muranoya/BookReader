@@ -123,6 +123,12 @@ ImageViewer::getOriginalImageSize(int idx) const
     }
 }
 
+QSize
+ImageViewer::getCombinedImageSize() const
+{
+    return img_combined.isNull() ? QSize() : img_combined.size();
+}
+
 qreal
 ImageViewer::getScale() const
 {
