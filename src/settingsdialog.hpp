@@ -35,6 +35,11 @@ private:
     QRadioButton *ipix_bilinear;
     QRadioButton *ipix_bicubic;
 
+    QGroupBox *group_ImageCount;
+    QGridLayout *image_count_layout;
+    QLabel *image_count_text;
+    QSpinBox *image_count_value;
+
     QGroupBox *group_OpenDir;
     QGridLayout *open_rec_layout;
     QLabel *open_rec_dir_level_text;
@@ -44,7 +49,6 @@ private:
     QGridLayout *slideshow_layout;
     QLabel *slideshow_interval_text;
     QSpinBox *slideshow_interval_value;
-    QCheckBox *slideshow_repeat;
 
     void loadSettings();
     void saveSettings();

@@ -43,7 +43,6 @@ private slots:
     void menu_view_fullscreen_triggered();
 
     /******************* window *******************/
-    //void menu_window_alwaystop_triggered();
     void menu_window_hide_triggered();
     void menu_window_playlist_triggered();
     void menu_window_histgram_triggered();
@@ -59,9 +58,9 @@ private slots:
     /******************* playlist event *******************/
     void playlistVisibleChanged(bool visible);
     void playlistItemRemoved(bool currentFile);
-    void playlistItemOpened(QString path);
+    void playlistItemOpened(QStringList path);
     void playlistSlideshowStop();
-    void playlistSlideshowChange(QString name);
+    void playlistSlideshowChange(QStringList name);
 
     /******************* image viewer event *******************/
     void viewerRightClicked();
@@ -106,7 +105,8 @@ private:
 
     /******************* util *******************/
     void createMenus();
-    void changeCheckedScaleMenu(QAction *act, const ImageViewer::ViewMode m, const qreal s = 0.0);
+    void changeCheckedScaleMenu(QAction *act,
+            const ImageViewer::ViewMode m, const qreal s = 0.0);
     void applySettings();
     void storeSettings();
 };

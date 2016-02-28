@@ -12,15 +12,18 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     , ipix_nearest(new QRadioButton(tr("Nearest Neighbor")))
     , ipix_bilinear(new QRadioButton(tr("Bilinear")))
     , ipix_bicubic(new QRadioButton(tr("Bicubic")))
+    , group_ImageCount(new QGroupBox(tr("画像の同時表示数"), this))
+    , image_count_layout(new QGridLayout())
+    , image_count_text(new QLabel(tr("画像の同時表示数")))
+    , image_count_value(new QSpinBox())
     , group_OpenDir(new QGroupBox(tr("ディレクトリを開く方法")))
     , open_rec_layout(new QGridLayout())
     , open_rec_dir_level_text(new QLabel(tr("サブディレクトリの深さ")))
     , open_rec_dir_level(new QSpinBox())
     , group_Slideshow(new QGroupBox(tr("スライドショー"), this))
     , slideshow_layout(new QGridLayout())
-    , slideshow_interval_text(new QLabel(tr("スライドショーの間隔")))
+    , slideshow_interval_text(new QLabel(tr("スライドショーの間隔(ms)")))
     , slideshow_interval_value(new QSpinBox())
-    , slideshow_repeat(new QCheckBox(tr("リピートする")))
 {
     setWindowTitle(tr("設定"));
     setLayout(layout);
@@ -29,6 +32,11 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     ipix_layout->addWidget(ipix_nearest);
     ipix_layout->addWidget(ipix_bilinear);
     ipix_layout->addWidget(ipix_bicubic);
+
+    group_ImageCount->setLayout(image_count_layout);
+    image_count_value->setRange(1, 36);
+    image_count_layout->addWidget(image_count_text, 0, 0, 1, 1);
+    image_count_layout->addWidget(image_count_value, 0, 1, 1, 1);
 
     group_OpenDir->setLayout(open_rec_layout);
     open_rec_dir_level->setRange(0, 999);
@@ -40,9 +48,9 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     slideshow_interval_value->setSingleStep(1000);
     slideshow_layout->addWidget(slideshow_interval_text, 0, 0, 1, 1);
     slideshow_layout->addWidget(slideshow_interval_value, 0, 1, 1, 1);
-    slideshow_layout->addWidget(slideshow_repeat, 1, 0, 1, 2);
 
     layout->addWidget(group_InterpolatingPixel);
+    layout->addWidget(group_ImageCount);
     layout->addWidget(group_OpenDir);
     layout->addWidget(group_Slideshow);
     layout->addWidget(buttonbox);
@@ -61,6 +69,11 @@ SettingsDialog::~SettingsDialog()
     delete ipix_layout;
     delete group_InterpolatingPixel;
 
+    delete image_count_value;
+    delete image_count_text;
+    delete image_count_layout;
+    delete group_ImageCount;
+
     delete open_rec_dir_level_text;
     delete open_rec_dir_level;
     delete open_rec_layout;
@@ -68,7 +81,6 @@ SettingsDialog::~SettingsDialog()
 
     delete slideshow_interval_text;
     delete slideshow_interval_value;
-    delete slideshow_repeat;
     delete slideshow_layout;
     delete group_Slideshow;
 
@@ -105,10 +117,11 @@ SettingsDialog::loadSettings()
         break;
     }
 
+    image_count_value->setValue(AppSettings::viewer_image_count);
+
     open_rec_dir_level->setValue(AppSettings::main_open_dir_level);
 
     slideshow_interval_value->setValue(AppSettings::playlist_slideshow_interval);
-    slideshow_repeat->setChecked(AppSettings::playlist_slideshow_repeat);
 }
 
 void
@@ -127,8 +140,9 @@ SettingsDialog::saveSettings()
         AppSettings::viewer_ipixmode = int(ImageViewer::Bicubic);
     }
 
+    AppSettings::viewer_image_count = image_count_value->value();
+
     AppSettings::main_open_dir_level = open_rec_dir_level->value();
 
     AppSettings::playlist_slideshow_interval = slideshow_interval_value->value();
-    AppSettings::playlist_slideshow_repeat = slideshow_repeat->isChecked();
 }

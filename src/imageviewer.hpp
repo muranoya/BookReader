@@ -15,7 +15,8 @@
 #include <QVector>
 
 /*
- * QImage::bits,QImage::scanLineは、それぞれ横方向の画素が入っており左上が原点、
+ * QImage::bits,QImage::scanLineは、それぞれ横方向の画素が
+ * 入っており左上が原点、
  * 右がX軸正方向、下がY軸正方向と仮定している。
  * つまり、scanLine(0)は、1番上の画素の1行を指すポインタと解釈する。
  * bitsは同様に、1番上の1行の次は2行目と続く。
@@ -41,13 +42,15 @@ public:
     explicit ImageViewer(QWidget *parent = 0);
     ~ImageViewer();
 
-    void showImage(const QString &path);
-    void showImage(const QImage &img);
+    void showImage(const QStringList& paths);
+    void showImage(const QVector<QImage>& imgs);
     void releaseImage();
 
+    int imageCount() const;
+
     QStringList getReadableExtension() const;
-    QSize getOriginalImageSize() const;
-    QSize getScaledImageSize() const;
+    QSize getOriginalImageSize(int idx) const;
+    QSize getCombinedImageSize() const;
     qreal getScale() const;
     ViewMode getScaleMode() const;
     InterpolationMode getInterpolationMode() const;
@@ -60,7 +63,6 @@ public:
 
     bool empty() const;
     bool isReadable(const QString &path) const;
-    QSize getImageSize() const;
 
 signals:
     void rightClicked();
@@ -84,7 +86,13 @@ private:
 
     QGraphicsScene *view_scene;
     QGraphicsPixmapItem *view_item;
-    QImage img_original;
+    // 同時に表示する画像数
+    int img_count;
+    // 個々の画像
+    QVector<QImage> img_orgs;
+    // 全ての画像を1枚の画像に連結したもの
+    QImage img_combined;
+    // 拡縮後の画像
     QImage img_scaled;
     qreal scale_value;
     ViewMode vmode;
@@ -92,6 +100,7 @@ private:
 
     void setGraphicsPixmapItem(const QImage& img);
     void imageScale(const QImage& img);
+    void imageCombine(QImage& img, const QVector<QImage>& imgs) const;
 
     bool isCopyDrop(const Qt::KeyboardModifiers km);
 

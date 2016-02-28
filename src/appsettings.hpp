@@ -14,7 +14,6 @@ public:
     // Group - MainWindow
     static QSize mainwindow_size;
     static QPoint mainwindow_pos;
-    static bool mainwindow_topmost;
 
     // Group - Main
     static QString main_dialog_file;
@@ -25,10 +24,10 @@ public:
     static int viewer_scaling_mode;
     static qreal viewer_scaling_times;
     static int viewer_ipixmode;
+    static int viewer_image_count;
 
     // Group - Playlist
     static bool playlist_visible;
-    static bool playlist_slideshow_repeat;
     static int playlist_slideshow_interval;
 
     static void SaveSettings();

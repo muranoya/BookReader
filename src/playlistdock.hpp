@@ -23,28 +23,31 @@ public:
     void clear();
     int count() const;
     bool empty() const;
+    int getNumOfImages() const;
+    void setNumOfImages(int n);
 
-    QString currentFileName() const;
-    QString currentFilePath() const;
+    QString currentFileName(int idx) const;
+    QStringList currentFileNames() const;
+    QString currentFilePath(int idx) const;
+    QStringList currentFilePaths() const;
 
-    int currentIndex() const;
-    QString nextFilePath();
-    QString previousFilePath();
+    int currentIndex(int idx) const;
+    QStringList nextFilePath();
+    QStringList previousFilePath();
 
-    void setSlideshowRepeat(bool flag);
-    bool getSlideshowRepeat();
     void setSlideshowInterval(int msec);
-    int getSlideshowInterval();
-    bool isPlayingSlideshow();
+    int getSlideshowInterval() const;
+    bool isPlayingSlideshow() const;
     void startSlideshow();
     void stopSlideshow();
 
 signals:
-    void itemOpen(QString path); // コンテキストメニューかリストアイテムのダブルクリックで開いた場合
+    // コンテキストメニューかリストアイテムのダブルクリックで開いた場合
+    void itemOpen(QStringList paths);
     void itemRemoved(bool currentFile);
 
     void slideshow_stop();
-    void slideshow_change(QString name);
+    void slideshow_change(QStringList name);
 
 private slots:
     void m_open_triggered();
@@ -66,15 +69,14 @@ private:
     QBrush normalBC;
     QBrush selectedBC;
     int index;
+    int num_of_images;
 
     QTimer slideshow_timer;
-    bool slideshow_repeat;
-    int slideshow_start_index;
     int slideshow_interval;
 
     void createMenus();
 
-    bool validIndex(int index) const;
+    bool validIndex(int idx) const;
     void remove(QList<QListWidgetItem*> items);
 };
 

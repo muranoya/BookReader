@@ -9,11 +9,11 @@ MainWindow::MainWindow(QWidget *parent)
     addDockWidget(Qt::LeftDockWidgetArea, pldock);
     setCentralWidget(imgView);
 
-    connect(pldock, SIGNAL(itemOpen(QString)),         this, SLOT(playlistItemOpened(QString)));
+    connect(pldock, SIGNAL(itemOpen(QStringList)),     this, SLOT(playlistItemOpened(QStringList)));
     connect(pldock, SIGNAL(itemRemoved(bool)),         this, SLOT(playlistItemRemoved(bool)));
     connect(pldock, SIGNAL(visibilityChanged(bool)),   this, SLOT(playlistVisibleChanged(bool)));
     connect(pldock, SIGNAL(slideshow_stop()),          this, SLOT(playlistSlideshowStop()));
-    connect(pldock, SIGNAL(slideshow_change(QString)), this, SLOT(playlistSlideshowChange(QString)));
+    connect(pldock, SIGNAL(slideshow_change(QStringList)), this, SLOT(playlistSlideshowChange(QStringList)));
 
     connect(imgView, SIGNAL(rightClicked()),              this, SLOT(viewerRightClicked()));
     connect(imgView, SIGNAL(leftClicked()),               this, SLOT(viewerLeftClicked()));
@@ -75,7 +75,7 @@ MainWindow::menu_file_open_triggered()
         AppSettings::main_dialog_file = dir.absolutePath();
         pldock->clear();
         pldock->append(files);
-        imgView->showImage(pldock->currentFilePath());
+        imgView->showImage(pldock->currentFilePaths());
         updateWindowText();
     }
 }
@@ -91,7 +91,7 @@ MainWindow::menu_file_fopen_triggered()
         AppSettings::main_dialog_dir = dirname;
         pldock->clear();
         pldock->append(QStringList(dirname), AppSettings::main_open_dir_level);
-        imgView->showImage(pldock->currentFilePath());
+        imgView->showImage(pldock->currentFilePaths());
         updateWindowText();
     }
 }
@@ -103,6 +103,7 @@ MainWindow::menu_file_settings_triggered()
     dialog.exec();
 
     imgView->setInterpolationMode(ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
+    pldock->setNumOfImages(AppSettings::viewer_image_count);
 }
 
 void
@@ -133,6 +134,7 @@ MainWindow::menu_view_fitimage_triggered()
 void
 MainWindow::menu_view_setscale_triggered()
 {
+    /*
     SettingScaleDialog dialog(this);
     if (dialog.getScale(imgView->getOriginalImageSize(), imgView->getScale()))
     {
@@ -143,6 +145,7 @@ MainWindow::menu_view_setscale_triggered()
     {
         menu_view_setscale->setChecked(false);
     }
+    */
 }
 
 void
@@ -154,8 +157,7 @@ MainWindow::menu_view_slideshow_triggered()
     }
     else
     {
-        pldock->setSlideshowRepeat(AppSettings::playlist_slideshow_repeat);
-        pldock->setSlideshowInterval(int(AppSettings::playlist_slideshow_interval*1000));
+        pldock->setSlideshowInterval(int(AppSettings::playlist_slideshow_interval));
         pldock->startSlideshow();
     }
     updateWindowText();
@@ -225,25 +227,51 @@ MainWindow::menu_help_version_triggered()
 void
 MainWindow::updateWindowText()
 {
-    QString title = pldock->currentFileName();
-    if (title.isEmpty())
+    if (pldock->count() == 0)
     {
         setWindowTitle(BookReader::SOFTWARE_NAME);
     }
     else
     {
-        title = tr("[%1/%2] %3 [%4 %5] [倍率:%6%]")
-                .arg(QString::number(pldock->currentIndex() + 1))
-                .arg(QString::number(pldock->count()))
-                .arg(title)
-                .arg(imgView->getImageSize().width())
-                .arg(imgView->getImageSize().height())
-                .arg(QString::number(imgView->getScale() * 100.0, 'g', 4));
+        QString str1;
+        if (pldock->getNumOfImages() == 1)
+        {
+            str1 = tr("[%1/%2]")
+                .arg(pldock->currentIndex(0)+1)
+                .arg(pldock->count());
+        }
+        else
+        {
+            str1 = tr("[%1-%2/%3]")
+                .arg(pldock->currentIndex(0)+1)
+                .arg(pldock->currentIndex(pldock->getNumOfImages()-1)+1)
+                .arg(pldock->count());
+        }
+
+        QSize s = imgView->getOriginalImageSize(0);
+        QString str2 = tr("%1 [%2, %3]")
+            .arg(pldock->currentFileName(0))
+            .arg(s.width())
+            .arg(s.height());
+        for (int i = 1; i < pldock->getNumOfImages(); ++i)
+        {
+            s = imgView->getOriginalImageSize(i);
+            str2 = tr("%1 / %2 [%3, %4]")
+                .arg(str2)
+                .arg(pldock->currentFileName(i))
+                .arg(s.width())
+                .arg(s.height());
+        }
+
+        QString title = tr("%1 %2 倍率:%3%")
+            .arg(str1)
+            .arg(str2)
+            .arg(QString::number(imgView->getScale() * 100.0, 'g', 4));
 
         if (pldock->isPlayingSlideshow())
         {
             title = tr("%1 [スライドショー]")
-                    .arg(title);
+                .arg(title);
         }
         setWindowTitle(title);
     }
@@ -265,7 +293,7 @@ MainWindow::playlistItemRemoved(bool currentFile)
     }
     else if (currentFile && !pldock->empty())
     {
-        imgView->showImage(pldock->currentFilePath());
+        imgView->showImage(pldock->currentFilePaths());
     }
 
     if (currentFile && histdialog->isVisible())
@@ -281,7 +309,7 @@ MainWindow::playlistItemRemoved(bool currentFile)
 }
 
 void
-MainWindow::playlistItemOpened(QString path)
+MainWindow::playlistItemOpened(QStringList path)
 {
     imgView->showImage(path);
     updateWindowText();
@@ -295,7 +323,7 @@ MainWindow::playlistSlideshowStop()
 }
 
 void
-MainWindow::playlistSlideshowChange(QString name)
+MainWindow::playlistSlideshowChange(QStringList name)
 {
     imgView->showImage(name);
     updateWindowText();
@@ -337,7 +365,7 @@ MainWindow::viewerDropItems(QStringList list, bool copy)
 
     if (!copy || isempty)
     {
-        imgView->showImage(pldock->currentFilePath());
+        imgView->showImage(pldock->currentFilePaths());
     }
     updateWindowText();
 }
@@ -521,7 +549,7 @@ MainWindow::applySettings()
         break;
     }
     imgView->setInterpolationMode(ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
-
+    pldock->setNumOfImages(AppSettings::viewer_image_count);
     pldock->setVisible(AppSettings::playlist_visible);
     menu_window_playlist->setChecked(pldock->isVisible());
 }
@@ -535,6 +563,7 @@ MainWindow::storeSettings()
     AppSettings::viewer_scaling_mode = int(imgView->getScaleMode());
     AppSettings::viewer_scaling_times = imgView->getScale();
     AppSettings::viewer_ipixmode = int(imgView->getInterpolationMode());
+    AppSettings::viewer_image_count = int(pldock->getNumOfImages());
 
     AppSettings::playlist_visible = pldock->isVisible();
 }

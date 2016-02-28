@@ -24,7 +24,7 @@ BenchmarkDialog::BenchmarkDialog(QWidget *parent)
     bicubic_text->setText(tr("Bicubic"));
     bicubic_lcd->setSegmentStyle(QLCDNumber::Flat);
     benchSize_text->setText(tr("サイズ"));
-    comboBox->addItems(QStringList() << "1000" << "1500" << "2000" << "2500" << "3000");
+    comboBox->addItems(QStringList() << "1000" << "1500" << "2000" << "2500" << "3000" << "3500" << "4000");
     startButton->setText(tr("開始"));
 
     layout->addWidget(nearest_text, 0, 0);
@@ -71,19 +71,19 @@ BenchmarkDialog::startButtonClicked()
 
     viewer.setInterpolationMode(ImageViewer::NearestNeighbor);
     timer.start();
-    viewer.showImage(img);
+    //viewer.showImage(img);
     elapsed = timer.elapsed();
     nearest_lcd->display(static_cast<int>(elapsed));
 
     viewer.setInterpolationMode(ImageViewer::Bilinear);
     timer.start();
-    viewer.showImage(img);
+    //viewer.showImage(img);
     elapsed = timer.elapsed();
     bilinear_lcd->display(static_cast<int>(elapsed));
 
     viewer.setInterpolationMode(ImageViewer::Bicubic);
     timer.start();
-    viewer.showImage(img);
+    //viewer.showImage(img);
     elapsed = timer.elapsed();
     bicubic_lcd->display(static_cast<int>(elapsed));
 }

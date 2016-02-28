@@ -7,7 +7,9 @@ ImageViewer::ImageViewer(QWidget *parent)
     : QGraphicsView(parent)
     , view_scene(new QGraphicsScene())
     , view_item(new QGraphicsPixmapItem())
-    , img_original()
+    , img_count(0)
+    , img_orgs()
+    , img_combined()
     , img_scaled()
     , scale_value(1.0)
     , vmode(FULLSIZE)
@@ -24,24 +26,50 @@ ImageViewer::~ImageViewer()
 }
 
 void
-ImageViewer::showImage(const QString &path)
+ImageViewer::showImage(const QStringList& paths)
 {
-    QImage bmp(path);
-    showImage(bmp);
+    QVector<QImage> imgs;
+    QStringList::const_iterator i;
+
+    img_count = 0;
+    for (i = paths.constBegin(); i != paths.constEnd(); ++i)
+    {
+        imgs << QImage(*i);
+        img_count++;
+    }
+    showImage(imgs);
+    imgs.clear();
 }
 
 void
-ImageViewer::showImage(const QImage &img)
+ImageViewer::showImage(const QVector<QImage> &imgs)
 {
-    if (img.format() != QImage::Format_ARGB32)
+    QImage temp;
+    int max_height = 0;
+    int width_sum = 0;
+
+    img_orgs.clear();
+    for (QVector<QImage>::const_iterator i = imgs.constBegin();
+            i != imgs.constEnd();
+            ++i)
     {
-        img_original = img.convertToFormat(QImage::Format_ARGB32);
+        temp = *i;
+        if (temp.height() > max_height) max_height = temp.height();
+        width_sum += temp.width();
+
+        if (temp.format() == QImage::Format_ARGB32)
+        {
+            img_orgs << temp;
+        }
+        else
+        {
+            img_orgs << temp.convertToFormat(QImage::Format_ARGB32);
+        }
     }
-    else
-    {
-        img_original = img;
-    }
-    imageScale(img_original);
+
+    img_combined = QImage(width_sum, max_height, QImage::Format_ARGB32);
+    imageCombine(img_combined, img_orgs);
+    imageScale(img_combined);
 
     setGraphicsPixmapItem(img_scaled);
 
@@ -56,10 +84,18 @@ ImageViewer::releaseImage()
     view_item->setPixmap(QPixmap());
     view_scene->setSceneRect(0.0, 0.0, 0.0, 0.0);
 
-    img_original = QImage();
+    img_count = 0;
+    img_orgs.clear();
+    img_combined = QImage();
     img_scaled = QImage();
 
     emit setNewImage();
+}
+
+int
+ImageViewer::imageCount() const
+{
+    return img_count;
 }
 
 QStringList
@@ -74,17 +110,17 @@ ImageViewer::getReadableExtension() const
 }
 
 QSize
-ImageViewer::getOriginalImageSize() const
+ImageViewer::getOriginalImageSize(int idx) const
 {
-    return (img_original.isNull()) ? QSize(0, 0)
-                                   : img_original.size();
-}
-
-QSize
-ImageViewer::getScaledImageSize() const
-{
-    return (img_scaled.isNull()) ? QSize(0, 0)
-                                 : img_scaled.size();
+    if (0 <= idx && idx < imageCount())
+    {
+        return img_orgs[idx].isNull() ? QSize()
+                                      : img_orgs[idx].size();
+    }
+    else
+    {
+        return QSize();
+    }
 }
 
 qreal
@@ -108,7 +144,7 @@ ImageViewer::getInterpolationMode() const
 QVector<int>
 ImageViewer::histgram() const
 {
-    if (img_original.isNull())
+    if (img_combined.isNull())
     {
         return QVector<int>();
     }
@@ -121,8 +157,8 @@ ImageViewer::histgram() const
         array[i] = 0;
     }
 
-    const QRgb *bits = (QRgb*)img_original.bits();
-    const int len = img_original.height() * img_original.width();
+    const QRgb *bits = (QRgb*)img_combined.bits();
+    const int len = img_combined.height() * img_combined.width();
     for (int i = 0; i < len; ++i)
     {
         const QRgb rgb = *(bits+i);
@@ -151,9 +187,9 @@ ImageViewer&
 ImageViewer::setScale(const ViewMode m)
 {
     vmode = m;
-    if (!img_original.isNull())
+    if (!img_combined.isNull())
     {
-        imageScale(img_original);
+        imageScale(img_combined);
         setGraphicsPixmapItem(img_scaled);
     }
     return *this;
@@ -169,7 +205,7 @@ ImageViewer::setInterpolationMode(const InterpolationMode mode)
 bool
 ImageViewer::empty() const
 {
-    return img_original.isNull();
+    return img_combined.isNull();
 }
 
 bool
@@ -185,19 +221,6 @@ ImageViewer::isReadable(const QString &path) const
         }
     }
     return false;
-}
-
-QSize
-ImageViewer::getImageSize() const
-{
-    if (empty())
-    {
-        return QSize(0, 0);
-    }
-    else
-    {
-        return img_original.size();
-    }
 }
 
 void
@@ -220,9 +243,9 @@ ImageViewer::resizeEvent(QResizeEvent *event)
 {
     QGraphicsView::resizeEvent(event);
 
-    if (!img_original.isNull())
+    if (!img_combined.isNull())
     {
-        imageScale(img_original);
+        imageScale(img_combined);
         setGraphicsPixmapItem(img_scaled);
     }
 }
@@ -288,8 +311,6 @@ ImageViewer::setGraphicsPixmapItem(const QImage& img)
 {
     view_item->setPixmap(QPixmap::fromImage(img));
     view_scene->setSceneRect(0.0, 0.0, img.width(), img.height());
-
-    img_scaled = img;
 }
 
 void
@@ -308,14 +329,14 @@ ImageViewer::imageScale(const QImage& img)
     else
     {
         qreal ws = 1.0, hs = 1.0;
-        if (width() < getOriginalImageSize().width())
+        if (width() < img.width())
         {
-            ws = ((qreal)width()) / ((qreal)getOriginalImageSize().width());
+            ws = ((qreal)width()) / ((qreal)img.width());
         }
 
-        if (height() < getOriginalImageSize().height())
+        if (height() < img.height())
         {
-            hs = ((qreal)height()) / ((qreal)getOriginalImageSize().height());
+            hs = ((qreal)height()) / ((qreal)img.height());
         }
 
         if (vmode == ImageViewer::FIT_WINDOW)
@@ -352,6 +373,51 @@ ImageViewer::imageScale(const QImage& img)
                 // Warning;
                 break;
         }
+    }
+}
+
+void
+ImageViewer::imageCombine(QImage& img, const QVector<QImage>& imgs) const
+{
+    int x, y;
+    int w, h, h2, sum_width = 0;
+    const int ww = img.width();
+    const int hh = img.height();
+    const QImage *vimg;
+    QRgb *dst_bits = (QRgb*)img.bits();
+    const QRgb *src_bits;
+
+    QVector<QImage>::const_iterator i;
+    for (i = imgs.constBegin(); i != imgs.constEnd(); ++i)
+    {
+        vimg = i;
+        w = vimg->width();
+        h = vimg->height();
+        src_bits = (QRgb*)vimg->constBits();
+
+        h2 = (hh - h) / 2;
+        for (y = 0; y < h2; ++y)
+        {
+            for (x = 0; x < w; ++x)
+            {
+                *(dst_bits+x+sum_width+y*ww) = qRgba(255, 255, 255, 255);
+            }
+        }
+        for (y = 0 ; y < h; ++y)
+        {
+            for (x = 0; x < w; ++x)
+            {
+                *(dst_bits+x+sum_width+(y+h2)*ww) = *(src_bits+x+y*w);
+            }
+        }
+        for (y = h+h2 ; y < hh; ++y)
+        {
+            for (x = 0; x < w; ++x)
+            {
+                *(dst_bits+x+sum_width+y*ww) = qRgba(255, 255, 255, 255);
+            }
+        }
+        sum_width += w;
     }
 }
 
