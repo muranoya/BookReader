@@ -27,14 +27,14 @@ private:
     QVBoxLayout *baselayout;
     QLabel *view;
 
-    int graph_w;
-    int graph_h;
-    int margin_top;
-    int margin_bottom;
-    int margin_left;
-    int margin_right;
+    const int graph_w;
+    const int graph_h;
+    const int margin_top;
+    const int margin_bottom;
+    const int margin_left;
+    const int margin_right;
 
-    // リストには[R,G,B,A]のヒストグラム値を入れる
+    // リストには[R,G,B]のヒストグラム値を入れる
     void paintHistgram(const int x, const int y, const int w, const int h,
                        QPaintDevice &img,
                        const QColor &graph,

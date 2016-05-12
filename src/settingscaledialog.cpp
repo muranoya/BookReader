@@ -43,9 +43,12 @@ SettingScaleDialog::SettingScaleDialog(QWidget *parent)
     layout->addWidget(height_label, 2, 1);
     layout->addWidget(buttonbox, 3, 0, 1, 2, Qt::AlignRight);
 
-    connect(buttonbox, SIGNAL(accepted()), this, SLOT(accepted_DialogButton()));
-    connect(buttonbox, SIGNAL(rejected()), this, SLOT(rejected_DialogButton()));
-    connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(spinbox_valueChanged(double)));
+    connect(buttonbox, SIGNAL(accepted()),
+            this, SLOT(accepted_DialogButton()));
+    connect(buttonbox, SIGNAL(rejected()),
+            this, SLOT(rejected_DialogButton()));
+    connect(spinbox, SIGNAL(valueChanged(double)),
+            this, SLOT(spinbox_valueChanged(double)));
 }
 
 SettingScaleDialog::~SettingScaleDialog()

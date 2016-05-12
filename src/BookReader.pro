@@ -1,16 +1,9 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2014-01-30T02:43:04
-#
-#-------------------------------------------------
-
 QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = BookReader
 TEMPLATE = app
-
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -20,7 +13,8 @@ SOURCES += main.cpp\
     settingsdialog.cpp \
     playlistdock.cpp \
     histgramdialog.cpp \
-    appsettings.cpp
+    appsettings.cpp \
+    image.cpp
 
 HEADERS  += \
     nullptr.hpp \
@@ -32,6 +26,10 @@ HEADERS  += \
     settingscaledialog.hpp \
     settingsdialog.hpp \
     versiondialog.hpp \
-    appsettings.hpp
+    appsettings.hpp \
+    image.hpp
 
 FORMS    +=
+
+QMAKE_CXXFLAGS += -mfma -mavx2
+QMAKE_CFLAGS   += -mfma -mavx2

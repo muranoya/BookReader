@@ -1,21 +1,15 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "versiondialog.hpp"
-#include "settingscaledialog.hpp"
 #include "imageviewer.hpp"
-#include "applicationinfo.hpp"
-#include "settingsdialog.hpp"
 #include "playlistdock.hpp"
 #include "histgramdialog.hpp"
-#include "appsettings.hpp"
 
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
 #include <QMainWindow>
 #include <QMouseEvent>
-#include <QDir>
 #include <QFileDialog>
 #include <QApplication>
 

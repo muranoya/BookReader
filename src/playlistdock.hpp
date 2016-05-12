@@ -8,7 +8,6 @@
 #include <QListWidget>
 #include <QFileInfo>
 #include <QAction>
-#include <QDir>
 #include <QFileInfoList>
 #include <QTimer>
 

@@ -1,4 +1,6 @@
+#include <QSettings>
 #include "appsettings.hpp"
+#include "applicationinfo.hpp"
 
 QSize AppSettings::mainwindow_size;
 QPoint AppSettings::mainwindow_pos;

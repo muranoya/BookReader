@@ -1,4 +1,5 @@
 #include "versiondialog.hpp"
+#include "applicationinfo.hpp"
 
 VersionDialog::VersionDialog(QWidget *parent) :
     QDialog(parent,
@@ -30,7 +31,8 @@ VersionDialog::VersionDialog(QWidget *parent) :
 
     setWindowTitle(tr("バージョン"));
 
-    connect(button, SIGNAL(rejected()), this, SLOT(button_close()));
+    connect(button, SIGNAL(rejected()),
+            this, SLOT(button_close()));
 }
 
 VersionDialog::~VersionDialog()
@@ -47,3 +49,4 @@ VersionDialog::button_close()
 {
     close();
 }
+

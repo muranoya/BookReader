@@ -11,9 +11,6 @@
 #include <QSpinBox>
 #include <QDialogButtonBox>
 
-#include "appsettings.hpp"
-#include "imageviewer.hpp"
-
 class SettingsDialog : public QDialog
 {
     Q_OBJECT

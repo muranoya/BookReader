@@ -1,3 +1,4 @@
+#include <QDir>
 #include "playlistdock.hpp"
 
 PlaylistDock::PlaylistDock(QWidget *parent, Qt::WindowFlags flags)
@@ -17,9 +18,11 @@ PlaylistDock::PlaylistDock(QWidget *parent, Qt::WindowFlags flags)
 {
     setWidget(listwidget);
 
-    connect(listwidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(itemDoubleClicked(QListWidgetItem*)));
+    connect(listwidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
+            this, SLOT(itemDoubleClicked(QListWidgetItem*)));
 
-    connect(&slideshow_timer, SIGNAL(timeout()), this, SLOT(slideshow_loop()));
+    connect(&slideshow_timer, SIGNAL(timeout()),
+            this, SLOT(slideshow_loop()));
 
     listwidget->setDefaultDropAction(Qt::MoveAction);
     listwidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -41,33 +44,31 @@ PlaylistDock::~PlaylistDock()
 void
 PlaylistDock::append(const QStringList &list, const int level)
 {
-    if (list.empty())
-    {
-        return;
-    }
+    if (list.empty()) return;
 
-    QStringList::const_iterator iterator;
-    for (iterator = list.constBegin(); iterator != list.constEnd(); ++iterator)
+    for (QStringList::const_iterator i = list.constBegin();
+            i != list.constEnd(); ++i)
     {
-        const QFileInfo info(*iterator);
+        const QFileInfo info(*i);
         if (info.isFile())
         {
-            QListWidgetItem *newitem = new QListWidgetItem(info.fileName(), listwidget);
-            newitem->setData(Qt::ToolTipRole, *iterator);
+            QListWidgetItem *newitem =
+                new QListWidgetItem(info.fileName(), listwidget);
+            newitem->setData(Qt::ToolTipRole, *i);
             listwidget->addItem(newitem);
         }
         else if (level > 0)
         {
-            const QDir dir(*iterator);
+            const QDir dir(*i);
             const QFileInfoList entrylist = dir.entryInfoList();
+            const int canonical_len = info.canonicalPath().length();
             QStringList newlist;
-            QFileInfoList::const_iterator iterator2;
-            int canonical_len = info.canonicalPath().length();
-            for (iterator2 = entrylist.constBegin(); iterator2 != entrylist.constEnd(); ++iterator2)
+            for (QFileInfoList::const_iterator j = entrylist.constBegin();
+                    j != entrylist.constEnd(); ++j)
             {
-                if (canonical_len < (*iterator2).canonicalPath().length())
+                if (canonical_len < j->canonicalPath().length())
                 {
-                    newlist << iterator2->filePath();
+                    newlist << j->filePath();
                 }
             }
             append(newlist, level-1);
@@ -77,11 +78,10 @@ PlaylistDock::append(const QStringList &list, const int level)
     if (!validIndex(index) && validIndex(0))
     {
         index = 0;
-        int tidx;
         const int len = getNumOfImages();
         for (int i = 0; i < len; ++i)
         {
-            tidx = (index + i) % count();
+            int tidx = (index + i) % count();
             listwidget->item(tidx)->setBackground(selectedBC);
         }
     }
@@ -175,11 +175,10 @@ QStringList
 PlaylistDock::currentFilePaths() const
 {
     QStringList list;
-    QString str;
     const int len = getNumOfImages();
     for (int i = 0; i < len; ++i)
     {
-        str = currentFilePath(i);
+        QString str = currentFilePath(i);
         if (str.isEmpty())
         {
             break;
@@ -203,16 +202,12 @@ QStringList
 PlaylistDock::nextFilePath()
 {
     QStringList list;
-    if (empty())
-    {
-        return list;
-    }
+    if (empty()) return list;
 
-    int tidx;
     const int len = getNumOfImages();
     for (int i = 0; i < len; ++i)
     {
-        tidx = (index + i) % count();
+        int tidx = (index + i) % count();
         if (validIndex(tidx))
         {
             listwidget->item(tidx)->setBackground(normalBC);
@@ -222,7 +217,7 @@ PlaylistDock::nextFilePath()
     index = (index + num_of_images) % count();
     for (int i = 0; i < len; ++i)
     {
-        tidx = (index + i) % count();
+        int tidx = (index + i) % count();
         listwidget->item(tidx)->setBackground(selectedBC);
         list << currentFilePath(i);
     }
@@ -233,16 +228,12 @@ QStringList
 PlaylistDock::previousFilePath()
 {
     QStringList list;
-    if (empty())
-    {
-        return list;
-    }
+    if (empty()) return list;
 
-    int tidx;
     const int len = getNumOfImages();
     for (int i = 0; i < len; ++i)
     {
-        tidx = (index + i) % count();
+        int tidx = (index + i) % count();
         if (validIndex(tidx))
         {
             listwidget->item(tidx)->setBackground(normalBC);
@@ -250,14 +241,11 @@ PlaylistDock::previousFilePath()
     }
 
     index = (index - num_of_images) % count();
-    if (index < 0)
-    {
-        index += count();
-    }
+    if (index < 0) index += count();
 
     for (int i = 0; i < len; ++i)
     {
-        tidx = (index + i) % count();
+        int tidx = (index + i) % count();
         listwidget->item(tidx)->setBackground(selectedBC);
         list << currentFilePath(i);
     }
@@ -299,18 +287,14 @@ void
 PlaylistDock::m_open_triggered()
 {
     QList<QListWidgetItem*> litem = listwidget->selectedItems();
-    if (litem.empty())
-    {
-        return;
-    }
+    if (litem.empty()) return;
 
-    int tidx;
     const int len = getNumOfImages();
     if (validIndex(index))
     {
         for (int i = 0; i < len; ++i)
         {
-            tidx = (index + i) % count();
+            int tidx = (index + i) % count();
             listwidget->item(tidx)->setBackground(normalBC);
         }
     }
@@ -318,7 +302,7 @@ PlaylistDock::m_open_triggered()
     index = listwidget->row(litem.at(0));
     for (int i = 0; i < len; ++i)
     {
-        tidx = (index + i) % count();
+        int tidx = (index + i) % count();
         listwidget->item(tidx)->setBackground(selectedBC);
     }
 
@@ -350,18 +334,14 @@ PlaylistDock::m_allselect_triggered()
 void
 PlaylistDock::itemDoubleClicked(QListWidgetItem *item)
 {
-    if (item == nullptr)
-    {
-        return;
-    }
+    if (item == nullptr) return;
 
-    int tidx;
     const int len = getNumOfImages();
     if (validIndex(index))
     {
         for (int i = 0; i < len; ++i)
         {
-            tidx = (index + i) % count();
+            int tidx = (index + i) % count();
             listwidget->item(tidx)->setBackground(normalBC);
         }
     }
@@ -369,7 +349,7 @@ PlaylistDock::itemDoubleClicked(QListWidgetItem *item)
     index = listwidget->row(item);
     for (int i = 0; i < len; ++i)
     {
-        tidx = (index + i) % count();
+        int tidx = (index + i) % count();
         listwidget->item(tidx)->setBackground(selectedBC);
     }
 
@@ -411,10 +391,14 @@ PlaylistDock::createMenus()
     addAction(m_separator2);
     addAction(m_allselect);
 
-    connect(m_open,      SIGNAL(triggered()), this, SLOT(m_open_triggered()));
-    connect(m_remove,    SIGNAL(triggered()), this, SLOT(m_remove_triggered()));
-    connect(m_allremove, SIGNAL(triggered()), this, SLOT(m_allremove_triggered()));
-    connect(m_allselect, SIGNAL(triggered()), this, SLOT(m_allselect_triggered()));
+    connect(m_open,      SIGNAL(triggered()),
+            this, SLOT(m_open_triggered()));
+    connect(m_remove,    SIGNAL(triggered()),
+            this, SLOT(m_remove_triggered()));
+    connect(m_allremove, SIGNAL(triggered()),
+            this, SLOT(m_allremove_triggered()));
+    connect(m_allselect, SIGNAL(triggered()),
+            this, SLOT(m_allselect_triggered()));
 }
 
 bool
@@ -427,28 +411,26 @@ void
 PlaylistDock::remove(QList<QListWidgetItem*> items)
 {
     bool contains = false;
-    QListWidgetItem *current = validIndex(index) ? listwidget->item(index) : nullptr;
+    QListWidgetItem *current = validIndex(index) ? listwidget->item(index)
+                                                 : nullptr;
 
-    QList<QListWidgetItem*>::const_iterator iterator;
-    for (iterator = items.constBegin(); iterator != items.constEnd(); ++iterator)
+    for (QList<QListWidgetItem*>::const_iterator i = items.constBegin();
+            i != items.constEnd(); ++i)
     {
-        if (current == *iterator)
+        if (current == *i)
         {
-            listwidget->removeItemWidget(*iterator);
-            delete *iterator;
+            listwidget->removeItemWidget(*i);
+            delete *i;
             --index;
             nextFilePath();
             contains = true;
         }
         else
         {
-            const int r = listwidget->row(*iterator);
-            if (r < index)
-            {
-                --index;
-            }
-            listwidget->removeItemWidget(*iterator);
-            delete *iterator;
+            const int r = listwidget->row(*i);
+            if (r < index) --index;
+            listwidget->removeItemWidget(*i);
+            delete *i;
         }
     }
 
@@ -458,11 +440,10 @@ PlaylistDock::remove(QList<QListWidgetItem*> items)
     }
     else if (validIndex(index))
     {
-        int tidx;
         const int len = getNumOfImages();
         for (int i = 0; i < len; ++i)
         {
-            tidx = (index + i) % count();
+            int tidx = (index + i) % count();
             listwidget->item(tidx)->setBackground(selectedBC);
         }
     }

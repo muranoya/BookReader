@@ -1,8 +1,6 @@
 #ifndef VERSIONDIALOG_H
 #define VERSIONDIALOG_H
 
-#include "applicationinfo.hpp"
-
 #include <QDialog>
 #include <QGridLayout>
 #include <QLabel>

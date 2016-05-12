@@ -1,4 +1,10 @@
+#include <QDir>
 #include "mainwindow.hpp"
+#include "versiondialog.hpp"
+#include "settingscaledialog.hpp"
+#include "applicationinfo.hpp"
+#include "appsettings.hpp"
+#include "settingsdialog.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -9,18 +15,28 @@ MainWindow::MainWindow(QWidget *parent)
     addDockWidget(Qt::LeftDockWidgetArea, pldock);
     setCentralWidget(imgView);
 
-    connect(pldock, SIGNAL(itemOpen(QStringList)),     this, SLOT(playlistItemOpened(QStringList)));
-    connect(pldock, SIGNAL(itemRemoved(bool)),         this, SLOT(playlistItemRemoved(bool)));
-    connect(pldock, SIGNAL(visibilityChanged(bool)),   this, SLOT(playlistVisibleChanged(bool)));
-    connect(pldock, SIGNAL(slideshow_stop()),          this, SLOT(playlistSlideshowStop()));
-    connect(pldock, SIGNAL(slideshow_change(QStringList)), this, SLOT(playlistSlideshowChange(QStringList)));
+    connect(pldock, SIGNAL(itemOpen(QStringList)),
+            this, SLOT(playlistItemOpened(QStringList)));
+    connect(pldock, SIGNAL(itemRemoved(bool)),
+            this, SLOT(playlistItemRemoved(bool)));
+    connect(pldock, SIGNAL(visibilityChanged(bool)),
+            this, SLOT(playlistVisibleChanged(bool)));
+    connect(pldock, SIGNAL(slideshow_stop()),
+            this, SLOT(playlistSlideshowStop()));
+    connect(pldock, SIGNAL(slideshow_change(QStringList)),
+            this, SLOT(playlistSlideshowChange(QStringList)));
 
-    connect(imgView, SIGNAL(rightClicked()),              this, SLOT(viewerRightClicked()));
-    connect(imgView, SIGNAL(leftClicked()),               this, SLOT(viewerLeftClicked()));
-    connect(imgView, SIGNAL(dropItems(QStringList,bool)), this, SLOT(viewerDropItems(QStringList,bool)));
-    connect(imgView, SIGNAL(setNewImage()),               this, SLOT(viewerSetNewImage()));
+    connect(imgView, SIGNAL(rightClicked()),
+            this, SLOT(viewerRightClicked()));
+    connect(imgView, SIGNAL(leftClicked()),
+            this, SLOT(viewerLeftClicked()));
+    connect(imgView, SIGNAL(dropItems(QStringList,bool)),
+            this, SLOT(viewerDropItems(QStringList,bool)));
+    connect(imgView, SIGNAL(setNewImage()),
+            this, SLOT(viewerSetNewImage()));
 
-    connect(histdialog, SIGNAL(closeDialog()), this, SLOT(closeHistgramDialog()));
+    connect(histdialog, SIGNAL(closeDialog()),
+            this, SLOT(closeHistgramDialog()));
 
     createMenus();
 
@@ -323,10 +339,7 @@ MainWindow::playlistSlideshowChange(QStringList name)
 void
 MainWindow::viewerRightClicked()
 {
-    if (pldock->empty())
-    {
-        return;
-    }
+    if (pldock->empty()) return;
     imgView->showImage(pldock->previousFilePath());
     updateWindowText();
 }
@@ -334,10 +347,7 @@ MainWindow::viewerRightClicked()
 void
 MainWindow::viewerLeftClicked()
 {
-    if (pldock->empty())
-    {
-        return;
-    }
+    if (pldock->empty()) return;
     imgView->showImage(pldock->nextFilePath());
     updateWindowText();
 }
@@ -346,11 +356,7 @@ void
 MainWindow::viewerDropItems(QStringList list, bool copy)
 {
     const bool isempty = pldock->empty();
-    if (!copy)
-    {
-        pldock->clear();
-    }
-
+    if (!copy) pldock->clear();
     pldock->append(list, AppSettings::main_open_dir_level);
 
     if (!copy || isempty)
@@ -422,10 +428,14 @@ MainWindow::createMenus()
     menu_file->addAction(menu_file_settings);
     menu_file->addSeparator();
     menu_file->addAction(menu_file_exit);
-    connect(menu_file_open, SIGNAL(triggered()), this, SLOT(menu_file_open_triggered()));
-    connect(menu_file_fopen, SIGNAL(triggered()), this, SLOT(menu_file_fopen_triggered()));
-    connect(menu_file_settings, SIGNAL(triggered()), this, SLOT(menu_file_settings_triggered()));
-    connect(menu_file_exit, SIGNAL(triggered()), this, SLOT(menu_file_exit_triggered()));
+    connect(menu_file_open, SIGNAL(triggered()),
+            this, SLOT(menu_file_open_triggered()));
+    connect(menu_file_fopen, SIGNAL(triggered()),
+            this, SLOT(menu_file_fopen_triggered()));
+    connect(menu_file_settings, SIGNAL(triggered()),
+            this, SLOT(menu_file_settings_triggered()));
+    connect(menu_file_exit, SIGNAL(triggered()),
+            this, SLOT(menu_file_exit_triggered()));
     menuBar()->addMenu(menu_file);
 
     menu_view = new QMenu(this);
@@ -455,12 +465,18 @@ MainWindow::createMenus()
     menu_view->addAction(menu_view_fullscreen);
     menu_view->addSeparator();
     menu_view->addAction(menu_view_filter);
-    connect(menu_view_fullsize, SIGNAL(triggered()), this, SLOT(menu_view_fullsize_triggered()));
-    connect(menu_view_fitwindow, SIGNAL(triggered()), this, SLOT(menu_view_fitwindow_triggered()));
-    connect(menu_view_fitimage, SIGNAL(triggered()), this, SLOT(menu_view_fitimage_triggered()));
-    connect(menu_view_setscale, SIGNAL(triggered()), this, SLOT(menu_view_setscale_triggered()));
-    connect(menu_view_slideshow, SIGNAL(triggered()), this, SLOT(menu_view_slideshow_triggered()));
-    connect(menu_view_fullscreen, SIGNAL(triggered()), this, SLOT(menu_view_fullscreen_triggered()));
+    connect(menu_view_fullsize, SIGNAL(triggered()),
+            this, SLOT(menu_view_fullsize_triggered()));
+    connect(menu_view_fitwindow, SIGNAL(triggered()),
+            this, SLOT(menu_view_fitwindow_triggered()));
+    connect(menu_view_fitimage, SIGNAL(triggered()),
+            this, SLOT(menu_view_fitimage_triggered()));
+    connect(menu_view_setscale, SIGNAL(triggered()),
+            this, SLOT(menu_view_setscale_triggered()));
+    connect(menu_view_slideshow, SIGNAL(triggered()),
+            this, SLOT(menu_view_slideshow_triggered()));
+    connect(menu_view_fullscreen, SIGNAL(triggered()),
+            this, SLOT(menu_view_fullscreen_triggered()));
     menuBar()->addMenu(menu_view);
 
     menu_window = new QMenu(this);
@@ -475,9 +491,12 @@ MainWindow::createMenus()
     menu_window->addSeparator();
     menu_window->addAction(menu_window_playlist);
     menu_window->addAction(menu_window_histgram);
-    connect(menu_window_hide, SIGNAL(triggered()), this, SLOT(menu_window_hide_triggered()));
-    connect(menu_window_playlist, SIGNAL(triggered()), this, SLOT(menu_window_playlist_triggered()));
-    connect(menu_window_histgram, SIGNAL(triggered()), this, SLOT(menu_window_histgram_triggered()));
+    connect(menu_window_hide, SIGNAL(triggered()),
+            this, SLOT(menu_window_hide_triggered()));
+    connect(menu_window_playlist, SIGNAL(triggered()),
+            this, SLOT(menu_window_playlist_triggered()));
+    connect(menu_window_histgram, SIGNAL(triggered()),
+            this, SLOT(menu_window_histgram_triggered()));
     menuBar()->addMenu(menu_window);
 
     menu_help = new QMenu(this);
@@ -486,13 +505,16 @@ MainWindow::createMenus()
     menu_help_version = new QAction(tr("バージョン"), this);
     menu_help->addAction(menu_help_aboutqt);
     menu_help->addAction(menu_help_version);
-    connect(menu_help_aboutqt, SIGNAL(triggered()), this, SLOT(menu_help_aboutqt_triggered()));
-    connect(menu_help_version, SIGNAL(triggered()), this, SLOT(menu_help_version_triggered()));
+    connect(menu_help_aboutqt, SIGNAL(triggered()),
+            this, SLOT(menu_help_aboutqt_triggered()));
+    connect(menu_help_version, SIGNAL(triggered()),
+            this, SLOT(menu_help_version_triggered()));
     menuBar()->addMenu(menu_help);
 }
 
 void
-MainWindow::changeCheckedScaleMenu(QAction *act, const ImageViewer::ViewMode m, const qreal s)
+MainWindow::changeCheckedScaleMenu(QAction *act,
+        const ImageViewer::ViewMode m, const qreal s)
 {
     menu_view_fullsize->setChecked(false);
     menu_view_fitwindow->setChecked(false);
@@ -521,20 +543,22 @@ MainWindow::applySettings()
     ImageViewer::ViewMode mode = ImageViewer::ViewMode(AppSettings::viewer_scaling_mode);
     switch (mode)
     {
-    case ImageViewer::FULLSIZE:
-        changeCheckedScaleMenu(menu_view_fullsize, mode);
-        break;
-    case ImageViewer::FIT_WINDOW:
-        changeCheckedScaleMenu(menu_view_fitwindow, mode);
-        break;
-    case ImageViewer::FIT_IMAGE:
-        changeCheckedScaleMenu(menu_view_fitimage, mode);
-        break;
-    case ImageViewer::CUSTOM_SCALE:
-        changeCheckedScaleMenu(menu_view_setscale, mode, AppSettings::viewer_scaling_times);
-        break;
+        case ImageViewer::FULLSIZE:
+            changeCheckedScaleMenu(menu_view_fullsize, mode);
+            break;
+        case ImageViewer::FIT_WINDOW:
+            changeCheckedScaleMenu(menu_view_fitwindow, mode);
+            break;
+        case ImageViewer::FIT_IMAGE:
+            changeCheckedScaleMenu(menu_view_fitimage, mode);
+            break;
+        case ImageViewer::CUSTOM_SCALE:
+            changeCheckedScaleMenu(menu_view_setscale, mode,
+                    AppSettings::viewer_scaling_times);
+            break;
     }
-    imgView->setInterpolationMode(ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
+    imgView->setInterpolationMode(
+            ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
     pldock->setNumOfImages(AppSettings::viewer_image_count);
     pldock->setVisible(AppSettings::playlist_visible);
     menu_window_playlist->setChecked(pldock->isVisible());

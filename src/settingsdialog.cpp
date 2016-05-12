@@ -1,4 +1,6 @@
 #include "settingsdialog.hpp"
+#include "appsettings.hpp"
+#include "imageviewer.hpp"
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent,
@@ -55,8 +57,10 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     layout->addWidget(group_Slideshow);
     layout->addWidget(buttonbox);
 
-    connect(buttonbox, SIGNAL(accepted()), this, SLOT(button_save()));
-    connect(buttonbox, SIGNAL(rejected()), this, SLOT(button_cancel()));
+    connect(buttonbox, SIGNAL(accepted()),
+            this, SLOT(button_save()));
+    connect(buttonbox, SIGNAL(rejected()),
+            this, SLOT(button_cancel()));
 
     loadSettings();
 }

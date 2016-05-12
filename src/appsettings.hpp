@@ -1,12 +1,9 @@
 #ifndef APPSETTINGS_H
 #define APPSETTINGS_H
 
-#include <QSettings>
 #include <QSize>
 #include <QPoint>
 #include <QString>
-
-#include "applicationinfo.hpp"
 
 class AppSettings
 {

@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cassert>
 #include "histgramdialog.hpp"
 
 HistgramDialog::HistgramDialog(QWidget *parent)
@@ -34,30 +36,27 @@ HistgramDialog::~HistgramDialog()
 void
 HistgramDialog::setHistgram(const QVector<int> &data)
 {
+    assert(data.size() == 256*3);
+
     view->setPixmap(QPixmap());
 
-    if (data.size() == 256*3)
-    {
-        // 左に15pixel, 右に5pixel
-        // 上に5pixel, 下に5pixelの余裕を持たせたサイズ
-        QPixmap img(graph_w, graph_h*3);
+    // 左に15pixel, 右に5pixel
+    // 上に5pixel, 下に5pixelの余裕を持たせたサイズ
+    QPixmap img(graph_w, graph_h*3);
 
-        int max = 0;
-        for (int i = 0; i < 256*3; ++i)
-        {
-            if (max < data[i])
-            {
-                max = data[i];
-            }
-        }
-        const qreal s = max / qreal(graph_h-margin_top-margin_bottom-1);
+    int max = 0;
+    for (int i = 0; i < 256*3; ++i) max = std::max(max, data[i]);
 
-        paintHistgram(0, graph_h*0, graph_w, graph_h, img, QColor(Qt::red),   data, 256*0, s);
-        paintHistgram(0, graph_h*1, graph_w, graph_h, img, QColor(Qt::green), data, 256*1, s);
-        paintHistgram(0, graph_h*2, graph_w, graph_h, img, QColor(Qt::blue),  data, 256*2, s);
+    const qreal s = max / qreal(graph_h-margin_top-margin_bottom-1);
 
-        view->setPixmap(img);
-    }
+    paintHistgram(0, graph_h*0, graph_w, graph_h,
+            img, QColor(Qt::red),   data, 256*0, s);
+    paintHistgram(0, graph_h*1, graph_w, graph_h,
+            img, QColor(Qt::green), data, 256*1, s);
+    paintHistgram(0, graph_h*2, graph_w, graph_h,
+            img, QColor(Qt::blue),  data, 256*2, s);
+
+    view->setPixmap(img);
 
     show();
 }
@@ -105,9 +104,11 @@ HistgramDialog::paintHistgram(const int x, const int y,
         // グラフ枠の描画
         painter.setPen(blackpen);
         // X軸
-        painter.drawLine(x+margin_left, y+margin_top, x+margin_left, y+h-margin_bottom);
+        painter.drawLine(x+margin_left, y+margin_top,
+                x+margin_left, y+h-margin_bottom);
         // Y軸
-        painter.drawLine(x+margin_left, y+h-margin_bottom, x+w-margin_right, y+h-margin_bottom);
+        painter.drawLine(x+margin_left, y+h-margin_bottom,
+                x+w-margin_right, y+h-margin_bottom);
 
         // グラフの中身の描画
         painter.setPen(graphpen);

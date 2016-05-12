@@ -1,16 +1,11 @@
 #ifndef IMAGEMANAGER_H
 #define IMAGEMANAGER_H
 
-#include <cmath>
-#include <algorithm>
-
 #include <QGraphicsView>
 #include <QGraphicsPixmapItem>
 #include <QDragEnterEvent>
 #include <QDragLeaveEvent>
 #include <QDragMoveEvent>
-#include <QMimeData>
-#include <QScrollBar>
 #include <QFileInfo>
 #include <QVector>
 
@@ -48,7 +43,6 @@ public:
 
     int imageCount() const;
 
-    QStringList getReadableExtension() const;
     QSize getOriginalImageSize(int idx) const;
     QSize getCombinedImageSize() const;
     qreal getScale() const;
@@ -57,12 +51,11 @@ public:
 
     QVector<int> histgram() const;
 
-    ImageViewer& setScale(const ViewMode m, const qreal s);
-    ImageViewer& setScale(const ViewMode m);
-    ImageViewer& setInterpolationMode(const InterpolationMode mode);
+    void setScale(const ViewMode m, const qreal s);
+    void setScale(const ViewMode m);
+    void setInterpolationMode(const InterpolationMode mode);
 
     bool empty() const;
-    bool isReadable(const QString &path) const;
 
 signals:
     void rightClicked();
@@ -80,10 +73,6 @@ protected:
     virtual void mousePressEvent(QMouseEvent *event);
 
 private:
-    // 対応している拡張子
-    static const QString extList[];
-    static const int extListLen;
-
     QGraphicsScene *view_scene;
     QGraphicsPixmapItem *view_item;
     // 同時に表示する画像数
@@ -101,15 +90,7 @@ private:
     void setGraphicsPixmapItem(const QImage& img);
     void imageScale(const QImage& img);
     void imageCombine(QImage& img, const QVector<QImage>& imgs) const;
-
     bool isCopyDrop(const Qt::KeyboardModifiers km);
-
-    /***************** 画素補完 *******************/
-    static QImage nearest_neighbor(const QImage img, const qreal s);
-    static QImage bilinear(const QImage img, const qreal s);
-    static QImage bicubic(const QImage img, const qreal s);
-    static qreal bicubic_h(const qreal t);
-    static int bicubic_matmul(const qreal d1[4], const int d2[4][4], const qreal d3[4]);
 };
 
 #endif // IMAGEMANAGER_H
