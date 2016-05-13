@@ -249,39 +249,49 @@ MainWindow::updateWindowText()
     }
     else
     {
-        QString str1;
         if (pldock->getNumOfImages() == 1)
         {
-            str1 = tr("[%1/%2]")
+            title = tr("[%1/%2]")
                 .arg(pldock->currentIndex(0)+1)
                 .arg(pldock->count());
         }
         else
         {
-            str1 = tr("[%1-%2/%3]")
+            title = tr("[%1-%2/%3]")
                 .arg(pldock->currentIndex(0)+1)
                 .arg(pldock->currentIndex(pldock->getNumOfImages()-1)+1)
                 .arg(pldock->count());
         }
 
-        QSize s = imgView->getOriginalImageSize(0);
-        QString str2 = tr("%1 [%2, %3]")
+        QSize s;
+        s = imgView->getOriginalImageSize(0);
+        QString img1title = tr("%1 [%2, %3]")
             .arg(pldock->currentFileName(0))
             .arg(s.width())
             .arg(s.height());
-        for (int i = 1; i < pldock->getNumOfImages(); ++i)
+
+        if (imgView->imageCount() == 2)
         {
-            s = imgView->getOriginalImageSize(i);
-            str2 = tr("%1 / %2 [%3, %4]")
-                .arg(str2)
-                .arg(pldock->currentFileName(i))
+            s = imgView->getOriginalImageSize(1);
+            QString img2title = tr("%1 [%2, %3]")
+                .arg(pldock->currentFileName(1))
                 .arg(s.width())
                 .arg(s.height());
+
+            title = (imgView->getRightbindingMode() ? tr("%1 %3 | %2") : tr("%1 %2 | %3"))
+                .arg(title)
+                .arg(img1title)
+                .arg(img2title);
+        }
+        else
+        {
+            title = tr("%1 %2")
+                .arg(title)
+                .arg(img1title);
         }
 
-        title = tr("%1 %2 倍率:%3%")
-            .arg(str1)
-            .arg(str2)
+        title = tr("%1 倍率:%3%")
+            .arg(title)
             .arg(QString::number(imgView->getScale() * 100.0, 'g', 4));
 
         if (pldock->isPlayingSlideshow())
