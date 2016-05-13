@@ -33,6 +33,7 @@ private slots:
     void menu_view_fitimage_triggered();
     void menu_view_setscale_triggered();
     void menu_view_spread_triggered();
+    void menu_view_rightbinding_triggered();
     void menu_view_slideshow_triggered();
     void menu_view_fullscreen_triggered();
 
@@ -43,7 +44,6 @@ private slots:
 
     /******************* help *******************/
     void menu_help_aboutqt_triggered();
-    void menu_help_version_triggered();
 
     /******************* util *******************/
     void updateWindowText();
@@ -83,6 +83,7 @@ private:
     QAction *menu_view_fitimage;
     QAction *menu_view_setscale;
     QAction *menu_view_spread;
+    QAction *menu_view_rightbinding;
     QAction *menu_view_slideshow;
     QAction *menu_view_fullscreen;
     QAction *menu_view_filter;
@@ -92,7 +93,6 @@ private:
     QAction *menu_window_histgram;
     QMenu *menu_help;
     QAction *menu_help_aboutqt;
-    QAction *menu_help_version;
 
     HistgramDialog *histdialog;
 

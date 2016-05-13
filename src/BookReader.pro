@@ -8,7 +8,6 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     settingscaledialog.cpp \
-    versiondialog.cpp \
     imageviewer.cpp \
     settingsdialog.cpp \
     playlistdock.cpp \
@@ -18,14 +17,13 @@ SOURCES += main.cpp\
 
 HEADERS  += \
     nullptr.hpp \
-    applicationinfo.hpp \
+    appinfo.hpp \
     histgramdialog.hpp \
     imageviewer.hpp \
     mainwindow.hpp \
     playlistdock.hpp \
     settingscaledialog.hpp \
     settingsdialog.hpp \
-    versiondialog.hpp \
     appsettings.hpp \
     image.hpp
 

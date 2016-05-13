@@ -1,8 +1,7 @@
 #include <QDir>
 #include "mainwindow.hpp"
-#include "versiondialog.hpp"
 #include "settingscaledialog.hpp"
-#include "applicationinfo.hpp"
+#include "appinfo.hpp"
 #include "appsettings.hpp"
 #include "settingsdialog.hpp"
 
@@ -62,6 +61,7 @@ MainWindow::~MainWindow()
     delete menu_view_fitimage;
     delete menu_view_setscale;
     delete menu_view_spread;
+    delete menu_view_rightbinding;
     delete menu_view_slideshow;
     delete menu_view_fullscreen;
     delete menu_view_filter;
@@ -73,7 +73,6 @@ MainWindow::~MainWindow()
 
     delete menu_help;
     delete menu_help_aboutqt;
-    delete menu_help_version;
 }
 
 /******************* file *******************/
@@ -170,6 +169,13 @@ MainWindow::menu_view_spread_triggered()
 }
 
 void
+MainWindow::menu_view_rightbinding_triggered()
+{
+    imgView->setRightbindingMode(menu_view_rightbinding->isChecked());
+    updateWindowText();
+}
+
+void
 MainWindow::menu_view_slideshow_triggered()
 {
     if (pldock->isPlayingSlideshow())
@@ -230,20 +236,16 @@ MainWindow::menu_help_aboutqt_triggered()
     QApplication::aboutQt();
 }
 
-void
-MainWindow::menu_help_version_triggered()
-{
-    VersionDialog *dialog = new VersionDialog(this);
-    dialog->show();
-}
-
 /******************* util *******************/
 void
 MainWindow::updateWindowText()
 {
+    QString title;
     if (pldock->count() == 0)
     {
-        setWindowTitle(BookReader::SOFTWARE_NAME);
+        title = tr("%1 %2")
+            .arg(BookReader::SOFTWARE_NAME)
+            .arg(BookReader::SOFTWARE_VERSION);
     }
     else
     {
@@ -277,7 +279,7 @@ MainWindow::updateWindowText()
                 .arg(s.height());
         }
 
-        QString title = tr("%1 %2 倍率:%3%")
+        title = tr("%1 %2 倍率:%3%")
             .arg(str1)
             .arg(str2)
             .arg(QString::number(imgView->getScale() * 100.0, 'g', 4));
@@ -287,8 +289,8 @@ MainWindow::updateWindowText()
             title = tr("%1 [スライドショー]")
                 .arg(title);
         }
-        setWindowTitle(title);
     }
+    setWindowTitle(title);
 }
 
 /******************* playlist event *******************/
@@ -458,6 +460,8 @@ MainWindow::createMenus()
     menu_view_setscale->setCheckable(true);
     menu_view_spread = new QAction(tr("見開き表示"), this);
     menu_view_spread->setCheckable(true);
+    menu_view_rightbinding = new QAction(tr("右綴じ表示"), this);
+    menu_view_rightbinding->setCheckable(true);
     menu_view_slideshow = new QAction(tr("スライドショー"), this);
     menu_view_slideshow->setShortcut(tr("Ctrl+Shift+F"));
     menu_view_slideshow->setCheckable(true);
@@ -471,6 +475,7 @@ MainWindow::createMenus()
     menu_view->addAction(menu_view_setscale);
     menu_view->addSeparator();
     menu_view->addAction(menu_view_spread);
+    menu_view->addAction(menu_view_rightbinding);
     menu_view->addSeparator();
     menu_view->addAction(menu_view_slideshow);
     menu_view->addSeparator();
@@ -487,6 +492,8 @@ MainWindow::createMenus()
             this, SLOT(menu_view_setscale_triggered()));
     connect(menu_view_spread, SIGNAL(triggered()),
             this, SLOT(menu_view_spread_triggered()));
+    connect(menu_view_rightbinding, SIGNAL(triggered()),
+            this, SLOT(menu_view_rightbinding_triggered()));
     connect(menu_view_slideshow, SIGNAL(triggered()),
             this, SLOT(menu_view_slideshow_triggered()));
     connect(menu_view_fullscreen, SIGNAL(triggered()),
@@ -516,13 +523,9 @@ MainWindow::createMenus()
     menu_help = new QMenu(this);
     menu_help->setTitle(tr("ヘルプ"));
     menu_help_aboutqt = new QAction(tr("Qtについて"), this);
-    menu_help_version = new QAction(tr("バージョン"), this);
     menu_help->addAction(menu_help_aboutqt);
-    menu_help->addAction(menu_help_version);
     connect(menu_help_aboutqt, SIGNAL(triggered()),
             this, SLOT(menu_help_aboutqt_triggered()));
-    connect(menu_help_version, SIGNAL(triggered()),
-            this, SLOT(menu_help_version_triggered()));
     menuBar()->addMenu(menu_help);
 }
 
@@ -576,6 +579,8 @@ MainWindow::applySettings()
             ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
     pldock->setNumOfImages(AppSettings::viewer_spread ? 2 : 1);
     menu_view_spread->setChecked(AppSettings::viewer_spread);
+    menu_view_rightbinding->setChecked(AppSettings::viewer_rightbinding);
+    imgView->setRightbindingMode(AppSettings::viewer_rightbinding);
     pldock->setVisible(AppSettings::playlist_visible);
     menu_window_playlist->setChecked(pldock->isVisible());
 }
@@ -590,6 +595,7 @@ MainWindow::storeSettings()
     AppSettings::viewer_scaling_times = imgView->getScale();
     AppSettings::viewer_ipixmode = int(imgView->getInterpolationMode());
     AppSettings::viewer_spread = menu_view_spread->isChecked();
+    AppSettings::viewer_rightbinding = menu_view_rightbinding->isChecked();
 
     AppSettings::playlist_visible = pldock->isVisible();
 }

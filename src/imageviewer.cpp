@@ -15,6 +15,7 @@ ImageViewer::ImageViewer(QWidget *parent)
     , scale_value(1.0)
     , vmode(FULLSIZE)
     , imode(Bilinear)
+    , rightbinding(false)
 {
     setScene(view_scene);
     view_scene->addItem(view_item);
@@ -43,18 +44,18 @@ ImageViewer::showImage(const QStringList& paths)
 void
 ImageViewer::showImage(const QVector<QImage> &imgs)
 {
-    QImage temp;
     int max_height = 0;
     int width_sum = 0;
 
     img_count = 0;
     img_orgs.clear();
     if (imgs.isEmpty()) return;
+
     for (QVector<QImage>::const_iterator i = imgs.constBegin();
             i != imgs.constEnd(); ++i)
     {
         img_count++;
-        temp = *i;
+        QImage temp = *i;
         max_height = std::max(max_height, temp.height());
         width_sum += temp.width();
 
@@ -131,6 +132,12 @@ ImageViewer::getInterpolationMode() const
     return imode;
 }
 
+bool
+ImageViewer::getRightbindingMode() const
+{
+    return rightbinding;
+}
+
 QVector<int>
 ImageViewer::histgram() const
 {
@@ -177,7 +184,17 @@ ImageViewer::setScale(const ViewMode m)
 void
 ImageViewer::setInterpolationMode(const InterpolationMode mode)
 {
+    bool c = mode != imode;
     imode = mode;
+    if (c) refresh();
+}
+
+void
+ImageViewer::setRightbindingMode(bool b)
+{
+    bool c = rightbinding != b;
+    rightbinding = b;
+    if (c) refresh();
 }
 
 bool
@@ -261,6 +278,23 @@ ImageViewer::mousePressEvent(QMouseEvent *event)
     if (event->buttons() & Qt::RightButton) emit rightClicked();
 }
 
+QVector<QImage>
+ImageViewer::imgvec_clone(const QVector<QImage> &src) const
+{
+    QVector<QImage> vec;
+    const int len = src.count();
+    for (int i = 0; i < len; ++i) vec << src[i];
+    return vec;
+}
+
+void
+ImageViewer::refresh()
+{
+    QVector<QImage> vec = imgvec_clone(img_orgs);
+    showImage(vec);
+    vec.clear();
+}
+
 void
 ImageViewer::setGraphicsPixmapItem(const QImage& img)
 {
@@ -316,15 +350,27 @@ ImageViewer::imageScale(const QImage& img)
 }
 
 void
-ImageViewer::imageCombine(QImage& img, const QVector<QImage>& imgs) const
+ImageViewer::imageCombine(QImage& img, QVector<QImage>& imgs) const
 {
+    QVector<QImage> vec = imgvec_clone(imgs);
     int sum_width = 0;
     QRgb *dst_bits = (QRgb*)img.bits();
     const int ww = img.width();
     const int hh = img.height();
 
-    for (QVector<QImage>::const_iterator i = imgs.constBegin();
-            i != imgs.constEnd(); ++i)
+    if (getRightbindingMode())
+    {
+        // reverse vector
+        const int len = vec.count();
+        for (int i = 0; i < len; ++i)
+        {
+            vec.append(vec[len-i-1]);
+        }
+        vec.remove(0, len);
+    }
+
+    for (QVector<QImage>::const_iterator i = vec.constBegin();
+            i != vec.constEnd(); ++i)
     {
         const QImage *vimg = i;
         const int w = vimg->width();
@@ -355,6 +401,7 @@ ImageViewer::imageCombine(QImage& img, const QVector<QImage>& imgs) const
         }
         sum_width += w;
     }
+    vec.clear();
 }
 
 bool

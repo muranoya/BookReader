@@ -5,7 +5,7 @@
 
 namespace BookReader
 {
-    static const QString SOFTWARE_ORGANIZATION("Daisuke MURAOKA");
+    static const QString SOFTWARE_ORGANIZATION("muranoya.net");
     static const QString SOFTWARE_NAME("BookReader");
     static const QString SOFTWARE_VERSION("0.0.1");
 }

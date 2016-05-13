@@ -1,6 +1,6 @@
 #include <QSettings>
 #include "appsettings.hpp"
-#include "applicationinfo.hpp"
+#include "appinfo.hpp"
 
 QSize AppSettings::mainwindow_size;
 QPoint AppSettings::mainwindow_pos;
@@ -13,6 +13,7 @@ int AppSettings::viewer_scaling_mode;
 qreal AppSettings::viewer_scaling_times;
 int AppSettings::viewer_ipixmode;
 bool AppSettings::viewer_spread;
+bool AppSettings::viewer_rightbinding;
 
 bool AppSettings::playlist_visible;
 int AppSettings::playlist_slideshow_interval;
@@ -39,6 +40,7 @@ AppSettings::SaveSettings()
     settings.setValue("scaling_times", viewer_scaling_times);
     settings.setValue("ipix_mode", viewer_ipixmode);
     settings.setValue("image_spread", viewer_spread);
+    settings.setValue("rightbinding", viewer_rightbinding);
     settings.endGroup();
 
     settings.beginGroup("Playlist");
@@ -69,6 +71,7 @@ AppSettings::LoadSettings()
     viewer_scaling_times = settings.value("scaling_times", 1.0).toReal();
     viewer_ipixmode = settings.value("ipix_mode", 0).toInt();
     viewer_spread = settings.value("image_spread", false).toBool();
+    viewer_rightbinding = settings.value("rightbinding", false).toBool();
     settings.endGroup();
 
     settings.beginGroup("Playlist");
@@ -76,3 +79,4 @@ AppSettings::LoadSettings()
     playlist_slideshow_interval = settings.value("slideshow_interval", 3000).toInt();
     settings.endGroup();
 }
+

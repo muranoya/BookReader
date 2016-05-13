@@ -48,12 +48,14 @@ public:
     qreal getScale() const;
     ViewMode getScaleMode() const;
     InterpolationMode getInterpolationMode() const;
+    bool getRightbindingMode() const;
 
     QVector<int> histgram() const;
 
     void setScale(const ViewMode m, const qreal s);
     void setScale(const ViewMode m);
     void setInterpolationMode(const InterpolationMode mode);
+    void setRightbindingMode(bool b);
 
     bool empty() const;
 
@@ -86,10 +88,13 @@ private:
     qreal scale_value;
     ViewMode vmode;
     InterpolationMode imode;
+    bool rightbinding;
 
+    QVector<QImage> imgvec_clone(const QVector<QImage> &src) const;
+    void refresh();
     void setGraphicsPixmapItem(const QImage& img);
     void imageScale(const QImage& img);
-    void imageCombine(QImage& img, const QVector<QImage>& imgs) const;
+    void imageCombine(QImage& img, QVector<QImage>& imgs) const;
     bool isCopyDrop(const Qt::KeyboardModifiers km);
 };
 

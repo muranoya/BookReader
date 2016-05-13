@@ -125,3 +125,4 @@ HistgramDialog::paintHistgram(const int x, const int y,
     }
     painter.end();
 }
+
