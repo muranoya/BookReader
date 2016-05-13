@@ -31,12 +31,10 @@ ImageViewer::showImage(const QStringList& paths)
 {
     QVector<QImage> imgs;
 
-    img_count = 0;
     for (QStringList::const_iterator i = paths.constBegin();
             i != paths.constEnd(); ++i)
     {
         imgs << QImage(*i);
-        img_count++;
     }
     showImage(imgs);
     imgs.clear();
@@ -49,10 +47,13 @@ ImageViewer::showImage(const QVector<QImage> &imgs)
     int max_height = 0;
     int width_sum = 0;
 
+    img_count = 0;
     img_orgs.clear();
+    if (imgs.isEmpty()) return;
     for (QVector<QImage>::const_iterator i = imgs.constBegin();
             i != imgs.constEnd(); ++i)
     {
+        img_count++;
         temp = *i;
         max_height = std::max(max_height, temp.height());
         width_sum += temp.width();
@@ -133,10 +134,7 @@ ImageViewer::getInterpolationMode() const
 QVector<int>
 ImageViewer::histgram() const
 {
-    if (img_combined.isNull())
-    {
-        return QVector<int>();
-    }
+    if (img_combined.isNull()) return QVector<int>();
 
     QVector<int> vec;
     int array[256*3];
@@ -259,15 +257,8 @@ void
 ImageViewer::mousePressEvent(QMouseEvent *event)
 {
     QGraphicsView::mousePressEvent(event);
-
-    if (event->buttons() & Qt::LeftButton)
-    {
-        emit leftClicked();
-    }
-    if (event->buttons() & Qt::RightButton)
-    {
-        emit rightClicked();
-    }
+    if (event->buttons() & Qt::LeftButton)  emit leftClicked();
+    if (event->buttons() & Qt::RightButton) emit rightClicked();
 }
 
 void
@@ -327,40 +318,37 @@ ImageViewer::imageScale(const QImage& img)
 void
 ImageViewer::imageCombine(QImage& img, const QVector<QImage>& imgs) const
 {
-    int x, y;
-    int w, h, h2, sum_width = 0;
+    int sum_width = 0;
+    QRgb *dst_bits = (QRgb*)img.bits();
     const int ww = img.width();
     const int hh = img.height();
-    const QImage *vimg;
-    QRgb *dst_bits = (QRgb*)img.bits();
-    const QRgb *src_bits;
 
     for (QVector<QImage>::const_iterator i = imgs.constBegin();
             i != imgs.constEnd(); ++i)
     {
-        vimg = i;
-        w = vimg->width();
-        h = vimg->height();
-        src_bits = (QRgb*)vimg->constBits();
+        const QImage *vimg = i;
+        const int w = vimg->width();
+        const int h = vimg->height();
+        const int h2 = (hh - h) / 2;
+        const QRgb *src_bits = (QRgb*)vimg->constBits();
 
-        h2 = (hh - h) / 2;
-        for (y = 0; y < h2; ++y)
+        for (int y = 0; y < h2; ++y)
         {
-            for (x = 0; x < w; ++x)
+            for (int x = 0; x < w; ++x)
             {
                 *(dst_bits+x+sum_width+y*ww) = qRgba(255, 255, 255, 255);
             }
         }
-        for (y = 0 ; y < h; ++y)
+        for (int y = 0 ; y < h; ++y)
         {
-            for (x = 0; x < w; ++x)
+            for (int x = 0; x < w; ++x)
             {
                 *(dst_bits+x+sum_width+(y+h2)*ww) = *(src_bits+x+y*w);
             }
         }
-        for (y = h+h2 ; y < hh; ++y)
+        for (int y = h+h2 ; y < hh; ++y)
         {
-            for (x = 0; x < w; ++x)
+            for (int x = 0; x < w; ++x)
             {
                 *(dst_bits+x+sum_width+y*ww) = qRgba(255, 255, 255, 255);
             }

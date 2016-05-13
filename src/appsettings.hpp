@@ -21,7 +21,7 @@ public:
     static int viewer_scaling_mode;
     static qreal viewer_scaling_times;
     static int viewer_ipixmode;
-    static int viewer_image_count;
+    static bool viewer_spread;
 
     // Group - Playlist
     static bool playlist_visible;

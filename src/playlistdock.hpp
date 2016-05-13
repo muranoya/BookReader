@@ -1,8 +1,6 @@
 #ifndef PLAYLISTDOCK_H
 #define PLAYLISTDOCK_H
 
-#include "nullptr.hpp"
-
 #include <QList>
 #include <QDockWidget>
 #include <QListWidget>
@@ -41,8 +39,9 @@ public:
     void stopSlideshow();
 
 signals:
-    // コンテキストメニューかリストアイテムのダブルクリックで開いた場合
+    // プレイリストのアイテムを開く処理を行った場合
     void itemOpen(QStringList paths);
+    // プレイリストからアイテムを削除した場合
     void itemRemoved(bool currentFile);
 
     void slideshow_stop();
@@ -77,6 +76,8 @@ private:
 
     bool validIndex(int idx) const;
     void remove(QList<QListWidgetItem*> items);
+    void clearHighlight();
+    QStringList setHighlight();
 };
 
 #endif // PLAYLISTDOCK_H

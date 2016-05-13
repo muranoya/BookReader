@@ -32,6 +32,7 @@ private slots:
     void menu_view_fitwindow_triggered();
     void menu_view_fitimage_triggered();
     void menu_view_setscale_triggered();
+    void menu_view_spread_triggered();
     void menu_view_slideshow_triggered();
     void menu_view_fullscreen_triggered();
 
@@ -81,6 +82,7 @@ private:
     QAction *menu_view_fitwindow;
     QAction *menu_view_fitimage;
     QAction *menu_view_setscale;
+    QAction *menu_view_spread;
     QAction *menu_view_slideshow;
     QAction *menu_view_fullscreen;
     QAction *menu_view_filter;

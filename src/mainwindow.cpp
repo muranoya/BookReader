@@ -61,6 +61,7 @@ MainWindow::~MainWindow()
     delete menu_view_fitwindow;
     delete menu_view_fitimage;
     delete menu_view_setscale;
+    delete menu_view_spread;
     delete menu_view_slideshow;
     delete menu_view_fullscreen;
     delete menu_view_filter;
@@ -118,7 +119,6 @@ MainWindow::menu_file_settings_triggered()
     dialog.exec();
 
     imgView->setInterpolationMode(ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
-    pldock->setNumOfImages(AppSettings::viewer_image_count);
 }
 
 void
@@ -159,6 +159,14 @@ MainWindow::menu_view_setscale_triggered()
     {
         menu_view_setscale->setChecked(false);
     }
+}
+
+void
+MainWindow::menu_view_spread_triggered()
+{
+    pldock->setNumOfImages(menu_view_spread->isChecked() ? 2 : 1);
+    imgView->showImage(pldock->currentFilePaths());
+    updateWindowText();
 }
 
 void
@@ -448,6 +456,8 @@ MainWindow::createMenus()
     menu_view_fitimage->setCheckable(true);
     menu_view_setscale = new QAction(tr("倍率を指定して表示する"), this);
     menu_view_setscale->setCheckable(true);
+    menu_view_spread = new QAction(tr("見開き表示"), this);
+    menu_view_spread->setCheckable(true);
     menu_view_slideshow = new QAction(tr("スライドショー"), this);
     menu_view_slideshow->setShortcut(tr("Ctrl+Shift+F"));
     menu_view_slideshow->setCheckable(true);
@@ -459,6 +469,8 @@ MainWindow::createMenus()
     menu_view->addAction(menu_view_fitwindow);
     menu_view->addAction(menu_view_fitimage);
     menu_view->addAction(menu_view_setscale);
+    menu_view->addSeparator();
+    menu_view->addAction(menu_view_spread);
     menu_view->addSeparator();
     menu_view->addAction(menu_view_slideshow);
     menu_view->addSeparator();
@@ -473,6 +485,8 @@ MainWindow::createMenus()
             this, SLOT(menu_view_fitimage_triggered()));
     connect(menu_view_setscale, SIGNAL(triggered()),
             this, SLOT(menu_view_setscale_triggered()));
+    connect(menu_view_spread, SIGNAL(triggered()),
+            this, SLOT(menu_view_spread_triggered()));
     connect(menu_view_slideshow, SIGNAL(triggered()),
             this, SLOT(menu_view_slideshow_triggered()));
     connect(menu_view_fullscreen, SIGNAL(triggered()),
@@ -557,9 +571,11 @@ MainWindow::applySettings()
                     AppSettings::viewer_scaling_times);
             break;
     }
+    
     imgView->setInterpolationMode(
             ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
-    pldock->setNumOfImages(AppSettings::viewer_image_count);
+    pldock->setNumOfImages(AppSettings::viewer_spread ? 2 : 1);
+    menu_view_spread->setChecked(AppSettings::viewer_spread);
     pldock->setVisible(AppSettings::playlist_visible);
     menu_window_playlist->setChecked(pldock->isVisible());
 }
@@ -573,7 +589,8 @@ MainWindow::storeSettings()
     AppSettings::viewer_scaling_mode = int(imgView->getScaleMode());
     AppSettings::viewer_scaling_times = imgView->getScale();
     AppSettings::viewer_ipixmode = int(imgView->getInterpolationMode());
-    AppSettings::viewer_image_count = int(pldock->getNumOfImages());
+    AppSettings::viewer_spread = menu_view_spread->isChecked();
 
     AppSettings::playlist_visible = pldock->isVisible();
 }
+

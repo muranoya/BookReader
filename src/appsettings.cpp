@@ -12,7 +12,7 @@ int AppSettings::main_open_dir_level;
 int AppSettings::viewer_scaling_mode;
 qreal AppSettings::viewer_scaling_times;
 int AppSettings::viewer_ipixmode;
-int AppSettings::viewer_image_count;
+bool AppSettings::viewer_spread;
 
 bool AppSettings::playlist_visible;
 int AppSettings::playlist_slideshow_interval;
@@ -38,7 +38,7 @@ AppSettings::SaveSettings()
     settings.setValue("scaling_mode", viewer_scaling_mode);
     settings.setValue("scaling_times", viewer_scaling_times);
     settings.setValue("ipix_mode", viewer_ipixmode);
-    settings.setValue("image_count", viewer_image_count);
+    settings.setValue("image_spread", viewer_spread);
     settings.endGroup();
 
     settings.beginGroup("Playlist");
@@ -68,7 +68,7 @@ AppSettings::LoadSettings()
     viewer_scaling_mode = settings.value("scaling_mode", 0).toInt();
     viewer_scaling_times = settings.value("scaling_times", 1.0).toReal();
     viewer_ipixmode = settings.value("ipix_mode", 0).toInt();
-    viewer_image_count = settings.value("image_count", 1).toInt();
+    viewer_spread = settings.value("image_spread", false).toBool();
     settings.endGroup();
 
     settings.beginGroup("Playlist");

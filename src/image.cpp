@@ -1,7 +1,6 @@
 #include "image.hpp"
 #include <cmath>
 
-/* Nearest Neighbor */
 QImage
 nn(const QImage src, const qreal s)
 {
@@ -29,7 +28,6 @@ nn(const QImage src, const qreal s)
     return nimg;
 }
 
-/* Bilinear */
 QImage
 bl(const QImage src, const qreal s)
 {
@@ -39,9 +37,6 @@ bl(const QImage src, const qreal s)
     const int nh = h*s;
     const int w1 = w-1;
     const int h1 = h-1;
-
-    //struct timeval tp[2];
-    //gettimeofday(tp, NULL);
 
     QImage nimg(nw, nh, src.format());
     QRgb *nbits = (QRgb*)nimg.bits();
@@ -96,8 +91,6 @@ bl(const QImage src, const qreal s)
         }
         nbits += nw;
     }
-    //gettimeofday(tp+1, NULL);
-    //fprintf(stderr, "bilinear: %f\n", elapsed_time(tp));
 
     return nimg;
 }
@@ -138,7 +131,7 @@ bicubic_matmul(const qreal d1[4], const int d2[4][4], const qreal d3[4])
               +temp[2]*d3[2]
               +temp[3]*d3[3]);
 }
-/* Bicubic */
+
 QImage
 bc(const QImage src, const qreal s)
 {
@@ -152,9 +145,6 @@ bc(const QImage src, const qreal s)
     QImage nimg(nw, nh, src.format());
     QRgb *nbits = (QRgb*)nimg.bits();
     const QRgb *bits = (QRgb*)src.bits();
-
-    //struct timeval tv[2];
-    //gettimeofday(tv, NULL);
 
     qreal d1[4];
     int dr[4][4], dg[4][4], db[4][4], da[4][4];
@@ -204,8 +194,6 @@ bc(const QImage src, const qreal s)
         }
         nbits += nw;
     }
-    //gettimeofday(tv+1, NULL);
-    //fprintf(stderr, "bicubic: %f\n", elapsed_time(tv));
 
     return nimg;
 }
