@@ -26,12 +26,6 @@ private:
     QVBoxLayout *layout;
     QDialogButtonBox *buttonbox;
 
-    QGroupBox *group_InterpolatingPixel;
-    QVBoxLayout *ipix_layout;
-    QRadioButton *ipix_nearest;
-    QRadioButton *ipix_bilinear;
-    QRadioButton *ipix_bicubic;
-
     QGroupBox *group_OpenDir;
     QGridLayout *open_rec_layout;
     QLabel *open_rec_dir_level_text;

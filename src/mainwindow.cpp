@@ -51,6 +51,11 @@ MainWindow::~MainWindow()
     delete menu_view_fullscreen;
     delete menu_view_filter;
 
+    delete menu_imgproc;
+    delete menu_imgproc_nn;
+    delete menu_imgproc_bi;
+    delete menu_imgproc_bc;
+
     delete menu_window;
     delete menu_window_hide;
     delete menu_window_playlist;
@@ -99,9 +104,6 @@ MainWindow::menu_file_settings_triggered()
 {
     SettingsDialog dialog(this);
     dialog.exec();
-
-    imgview->setInterpolationMode(
-            ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
 }
 
 void
@@ -182,6 +184,61 @@ MainWindow::menu_view_fullscreen_triggered()
     else
     {
         showNormal();
+    }
+}
+
+/******************* image processing *******************/
+void
+MainWindow::menu_imgproc_nn_triggered()
+{
+    if (menu_imgproc_nn->isChecked())
+    {
+        menu_imgproc_bi->setChecked(false);
+        menu_imgproc_bc->setChecked(false);
+        imgview->setInterpolationMode(ImageViewer::NearestNeighbor);
+    }
+    else
+    {
+        menu_imgproc_nn->setChecked(true);
+        menu_imgproc_bi->setChecked(false);
+        menu_imgproc_bc->setChecked(false);
+        imgview->setInterpolationMode(ImageViewer::NearestNeighbor);
+    }
+}
+
+void
+MainWindow::menu_imgproc_bi_triggered()
+{
+    if (menu_imgproc_bi->isChecked())
+    {
+        menu_imgproc_nn->setChecked(false);
+        menu_imgproc_bc->setChecked(false);
+        imgview->setInterpolationMode(ImageViewer::Bilinear);
+    }
+    else
+    {
+        menu_imgproc_nn->setChecked(false);
+        menu_imgproc_bi->setChecked(true);
+        menu_imgproc_bc->setChecked(false);
+        imgview->setInterpolationMode(ImageViewer::Bilinear);
+    }
+}
+
+void
+MainWindow::menu_imgproc_bc_triggered()
+{
+    if (menu_imgproc_bc->isChecked())
+    {
+        menu_imgproc_nn->setChecked(false);
+        menu_imgproc_bi->setChecked(false);
+        imgview->setInterpolationMode(ImageViewer::Bicubic);
+    }
+    else
+    {
+        menu_imgproc_nn->setChecked(false);
+        menu_imgproc_bi->setChecked(false);
+        menu_imgproc_bc->setChecked(true);
+        imgview->setInterpolationMode(ImageViewer::Bicubic);
     }
 }
 
@@ -425,6 +482,25 @@ MainWindow::createMenus()
             this, SLOT(menu_view_fullscreen_triggered()));
     menuBar()->addMenu(menu_view);
 
+    menu_imgproc = new QMenu(this);
+    menu_imgproc->setTitle(tr("画像処理"));
+    menu_imgproc_nn = new QAction(tr("Nearest Neighbor"), this);
+    menu_imgproc_nn->setCheckable(true);
+    menu_imgproc_bi = new QAction(tr("Bilinear"), this);
+    menu_imgproc_bi->setCheckable(true);
+    menu_imgproc_bc = new QAction(tr("Bicubic"), this);
+    menu_imgproc_bc->setCheckable(true);
+    menu_imgproc->addAction(menu_imgproc_nn);
+    menu_imgproc->addAction(menu_imgproc_bi);
+    menu_imgproc->addAction(menu_imgproc_bc);
+    connect(menu_imgproc_nn, SIGNAL(triggered()),
+            this, SLOT(menu_imgproc_nn_triggered()));
+    connect(menu_imgproc_bi, SIGNAL(triggered()),
+            this, SLOT(menu_imgproc_bi_triggered()));
+    connect(menu_imgproc_bc, SIGNAL(triggered()),
+            this, SLOT(menu_imgproc_bc_triggered()));
+    menuBar()->addMenu(menu_imgproc);
+
     menu_window = new QMenu(this);
     menu_window->setTitle(tr("ウィンドウ"));
     menu_window_hide = new QAction(tr("最小化"), this);
@@ -503,6 +579,19 @@ MainWindow::applySettings()
     
     imgview->setInterpolationMode(
             ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
+    switch (imgview->getInterpolationMode())
+    {
+        case ImageViewer::NearestNeighbor:
+            menu_imgproc_nn->setChecked(true);
+            break;
+        case ImageViewer::Bilinear:
+            menu_imgproc_bi->setChecked(true);
+            break;
+        case ImageViewer::Bicubic:
+            menu_imgproc_bc->setChecked(true);
+            break;
+    }
+
     imgview->setSpreadMode(AppSettings::viewer_spread);
     menu_view_spread->setChecked(AppSettings::viewer_spread);
     menu_view_rightbinding->setChecked(AppSettings::viewer_rightbinding);

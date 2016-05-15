@@ -9,11 +9,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
             Qt::WindowCloseButtonHint)
     , layout(new QVBoxLayout())
     , buttonbox(new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel))
-    , group_InterpolatingPixel(new QGroupBox(tr("画素の補間方法"), this))
-    , ipix_layout(new QVBoxLayout())
-    , ipix_nearest(new QRadioButton(tr("Nearest Neighbor")))
-    , ipix_bilinear(new QRadioButton(tr("Bilinear")))
-    , ipix_bicubic(new QRadioButton(tr("Bicubic")))
     , group_OpenDir(new QGroupBox(tr("ディレクトリを開く方法")))
     , open_rec_layout(new QGridLayout())
     , open_rec_dir_level_text(new QLabel(tr("サブディレクトリの深さ")))
@@ -26,11 +21,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     setWindowTitle(tr("設定"));
     setLayout(layout);
 
-    group_InterpolatingPixel->setLayout(ipix_layout);
-    ipix_layout->addWidget(ipix_nearest);
-    ipix_layout->addWidget(ipix_bilinear);
-    ipix_layout->addWidget(ipix_bicubic);
-
     group_OpenDir->setLayout(open_rec_layout);
     open_rec_dir_level->setRange(0, 999);
     open_rec_layout->addWidget(open_rec_dir_level_text, 0, 0, 1, 1);
@@ -42,7 +32,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     slideshow_layout->addWidget(slideshow_interval_text, 0, 0, 1, 1);
     slideshow_layout->addWidget(slideshow_interval_value, 0, 1, 1, 1);
 
-    layout->addWidget(group_InterpolatingPixel);
     layout->addWidget(group_OpenDir);
     layout->addWidget(group_Slideshow);
     layout->addWidget(buttonbox);
@@ -57,12 +46,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
 SettingsDialog::~SettingsDialog()
 {
-    delete ipix_nearest;
-    delete ipix_bilinear;
-    delete ipix_bicubic;
-    delete ipix_layout;
-    delete group_InterpolatingPixel;
-
     delete open_rec_dir_level_text;
     delete open_rec_dir_level;
     delete open_rec_layout;
@@ -93,19 +76,6 @@ SettingsDialog::button_cancel()
 void
 SettingsDialog::loadSettings()
 {
-    switch (AppSettings::viewer_ipixmode)
-    {
-    case ImageViewer::NearestNeighbor:
-        ipix_nearest->setChecked(true);
-        break;
-    case ImageViewer::Bilinear:
-        ipix_bilinear->setChecked(true);
-        break;
-    case ImageViewer::Bicubic:
-        ipix_bicubic->setChecked(true);
-        break;
-    }
-
     open_rec_dir_level->setValue(AppSettings::main_open_dir_level);
 
     slideshow_interval_value->setValue(AppSettings::playlist_slideshow_interval);
@@ -114,19 +84,6 @@ SettingsDialog::loadSettings()
 void
 SettingsDialog::saveSettings()
 {
-    if (ipix_nearest->isChecked())
-    {
-        AppSettings::viewer_ipixmode = int(ImageViewer::NearestNeighbor);
-    }
-    else if (ipix_bilinear->isChecked())
-    {
-        AppSettings::viewer_ipixmode = int(ImageViewer::Bilinear);
-    }
-    else if (ipix_bicubic->isChecked())
-    {
-        AppSettings::viewer_ipixmode = int(ImageViewer::Bicubic);
-    }
-
     AppSettings::main_open_dir_level = open_rec_dir_level->value();
 
     AppSettings::playlist_slideshow_interval = slideshow_interval_value->value();

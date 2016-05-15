@@ -36,6 +36,11 @@ private slots:
     void menu_view_slideshow_triggered();
     void menu_view_fullscreen_triggered();
 
+    /******************* image processing *******************/
+    void menu_imgproc_nn_triggered();
+    void menu_imgproc_bi_triggered();
+    void menu_imgproc_bc_triggered();
+
     /******************* window *******************/
     void menu_window_hide_triggered();
     void menu_window_playlist_triggered();
@@ -77,6 +82,10 @@ private:
     QAction *menu_view_slideshow;
     QAction *menu_view_fullscreen;
     QAction *menu_view_filter;
+    QMenu *menu_imgproc;
+    QAction *menu_imgproc_nn;
+    QAction *menu_imgproc_bi;
+    QAction *menu_imgproc_bc;
     QMenu *menu_window;
     QAction *menu_window_hide;
     QAction *menu_window_playlist;
