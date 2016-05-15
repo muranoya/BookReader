@@ -87,16 +87,6 @@ PlaylistDock::append(const QStringList &list, const int level)
 void
 PlaylistDock::clear()
 {
-    const bool contain = !empty();
-    while (listwidget->count() > 0)
-    {
-        QListWidgetItem *item = listwidget->item(0);
-        listwidget->removeItemWidget(item);
-        delete item;
-    }
-    index = -1;
-
-    itemRemoved(contain);
 }
 
 int

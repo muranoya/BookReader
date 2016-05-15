@@ -7,32 +7,18 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , imgView(new ImageViewer(this))
-    , pldock(new PlaylistDock(this))
+    , imgview(new ImageViewer(this))
     , histdialog(new HistgramDialog())
 {
-    addDockWidget(Qt::LeftDockWidgetArea, pldock);
-    setCentralWidget(imgView);
+    addDockWidget(Qt::LeftDockWidgetArea, imgview->playlistDock());
+    setCentralWidget(imgview);
 
-    connect(pldock, SIGNAL(itemOpen(QStringList)),
-            this, SLOT(playlistItemOpened(QStringList)));
-    connect(pldock, SIGNAL(itemRemoved(bool)),
-            this, SLOT(playlistItemRemoved(bool)));
-    connect(pldock, SIGNAL(visibilityChanged(bool)),
-            this, SLOT(playlistVisibleChanged(bool)));
-    connect(pldock, SIGNAL(slideshow_stop()),
-            this, SLOT(playlistSlideshowStop()));
-    connect(pldock, SIGNAL(slideshow_change(QStringList)),
-            this, SLOT(playlistSlideshowChange(QStringList)));
-
-    connect(imgView, SIGNAL(rightClicked()),
-            this, SLOT(viewerRightClicked()));
-    connect(imgView, SIGNAL(leftClicked()),
-            this, SLOT(viewerLeftClicked()));
-    connect(imgView, SIGNAL(dropItems(QStringList,bool)),
-            this, SLOT(viewerDropItems(QStringList,bool)));
-    connect(imgView, SIGNAL(setNewImage()),
-            this, SLOT(viewerSetNewImage()));
+    connect(imgview->playlistDock(), SIGNAL(visibilityChanged(bool)),
+            this, SLOT(imgview_playlistVisibleChanged(bool)));
+    connect(imgview, SIGNAL(stoppedSlideshow()),
+            this, SLOT(imgview_stoppedSlideshow()));
+    connect(imgview, SIGNAL(changeImage()),
+            this, SLOT(imgview_changeImage()));
 
     connect(histdialog, SIGNAL(closeDialog()),
             this, SLOT(closeHistgramDialog()));
@@ -46,8 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    delete imgView;
-    delete pldock;
+    delete imgview;
 
     delete menu_file;
     delete menu_file_open;
@@ -88,9 +73,8 @@ MainWindow::menu_file_open_triggered()
         const QFileInfo info(files.at(0));
         const QDir dir = info.absoluteDir();
         AppSettings::main_dialog_file = dir.absolutePath();
-        pldock->clear();
-        pldock->append(files);
-        imgView->showImage(pldock->currentFilePaths());
+        imgview->clearPlaylist();
+        imgview->openImages(files);
         updateWindowText();
     }
 }
@@ -104,9 +88,8 @@ MainWindow::menu_file_fopen_triggered()
     if (!dirname.isEmpty())
     {
         AppSettings::main_dialog_dir = dirname;
-        pldock->clear();
-        pldock->append(QStringList(dirname), AppSettings::main_open_dir_level);
-        imgView->showImage(pldock->currentFilePaths());
+        imgview->clearPlaylist();
+        imgview->openImages(QStringList(dirname));
         updateWindowText();
     }
 }
@@ -117,7 +100,8 @@ MainWindow::menu_file_settings_triggered()
     SettingsDialog dialog(this);
     dialog.exec();
 
-    imgView->setInterpolationMode(ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
+    imgview->setInterpolationMode(
+            ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
 }
 
 void
@@ -149,7 +133,7 @@ void
 MainWindow::menu_view_setscale_triggered()
 {
     SettingScaleDialog dialog(this);
-    if (dialog.getScale(imgView->getCombinedImageSize(), imgView->getScale()))
+    if (dialog.getScale(imgview->combinedImageSize(), imgview->getScale()))
     {
         changeCheckedScaleMenu(menu_view_setscale, ImageViewer::CUSTOM_SCALE,
                                dialog.getValue());
@@ -163,31 +147,29 @@ MainWindow::menu_view_setscale_triggered()
 void
 MainWindow::menu_view_spread_triggered()
 {
-    pldock->setNumOfImages(menu_view_spread->isChecked() ? 2 : 1);
-    imgView->showImage(pldock->currentFilePaths());
-    updateWindowText();
+    imgview->setSpreadMode(menu_view_spread->isChecked());
 }
 
 void
 MainWindow::menu_view_rightbinding_triggered()
 {
-    imgView->setRightbindingMode(menu_view_rightbinding->isChecked());
-    updateWindowText();
+    imgview->setRightbindingMode(menu_view_rightbinding->isChecked());
 }
 
 void
 MainWindow::menu_view_slideshow_triggered()
 {
-    if (pldock->isPlayingSlideshow())
+    if (imgview->isPlayingSlideshow())
     {
-        pldock->stopSlideshow();
+        imgview->stopSlideshow();
     }
     else
     {
-        pldock->setSlideshowInterval(int(AppSettings::playlist_slideshow_interval));
-        pldock->startSlideshow();
+        imgview->setSlideshowInterval(
+                int(AppSettings::playlist_slideshow_interval));
+        imgview->startSlideshow();
+        updateWindowText();
     }
-    updateWindowText();
 }
 
 void
@@ -213,7 +195,7 @@ MainWindow::menu_window_hide_triggered()
 void
 MainWindow::menu_window_playlist_triggered()
 {
-    pldock->setVisible(!pldock->isVisible());
+    imgview->playlistDock()->setVisible(menu_window_playlist->isChecked());
 }
 
 void
@@ -221,7 +203,7 @@ MainWindow::menu_window_histgram_triggered()
 {
     if (menu_window_histgram->isChecked())
     {
-        histdialog->setHistgram(imgView->histgram());
+        histdialog->setHistgram(imgview->histgram());
     }
     else
     {
@@ -241,7 +223,7 @@ void
 MainWindow::updateWindowText()
 {
     QString title;
-    if (pldock->count() == 0)
+    if (imgview->empty())
     {
         title = tr("%1 %2")
             .arg(BookReader::SOFTWARE_NAME)
@@ -249,36 +231,37 @@ MainWindow::updateWindowText()
     }
     else
     {
-        if (pldock->getNumOfImages() == 1)
+        if (imgview->countShowImages() == 1)
         {
             title = tr("[%1/%2]")
-                .arg(pldock->currentIndex(0)+1)
-                .arg(pldock->count());
+                .arg(imgview->currentIndex(0)+1)
+                .arg(imgview->count());
         }
         else
         {
             title = tr("[%1-%2/%3]")
-                .arg(pldock->currentIndex(0)+1)
-                .arg(pldock->currentIndex(pldock->getNumOfImages()-1)+1)
-                .arg(pldock->count());
+                .arg(imgview->currentIndex(0)+1)
+                .arg(imgview->currentIndex(1)+1)
+                .arg(imgview->count());
         }
 
         QSize s;
-        s = imgView->getOriginalImageSize(0);
+        s = imgview->orgImageSize(0);
         QString img1title = tr("%1 [%2, %3]")
-            .arg(pldock->currentFileName(0))
+            .arg(imgview->currentFileName(0))
             .arg(s.width())
             .arg(s.height());
 
-        if (imgView->imageCount() == 2)
+        if (imgview->countShowImages() == 2)
         {
-            s = imgView->getOriginalImageSize(1);
+            s = imgview->orgImageSize(1);
             QString img2title = tr("%1 [%2, %3]")
-                .arg(pldock->currentFileName(1))
+                .arg(imgview->currentFileName(1))
                 .arg(s.width())
                 .arg(s.height());
 
-            title = (imgView->getRightbindingMode() ? tr("%1 %3 | %2") : tr("%1 %2 | %3"))
+            title = (imgview->isRightbindingMode() ? tr("%1 %3 | %2")
+                                                   : tr("%1 %2 | %3"))
                 .arg(title)
                 .arg(img1title)
                 .arg(img2title);
@@ -292,9 +275,9 @@ MainWindow::updateWindowText()
 
         title = tr("%1 倍率:%3%")
             .arg(title)
-            .arg(QString::number(imgView->getScale() * 100.0, 'g', 4));
+            .arg(QString::number(imgview->getScale() * 100.0, 'g', 4));
 
-        if (pldock->isPlayingSlideshow())
+        if (imgview->isPlayingSlideshow())
         {
             title = tr("%1 [スライドショー]")
                 .arg(title);
@@ -303,100 +286,32 @@ MainWindow::updateWindowText()
     setWindowTitle(title);
 }
 
-/******************* playlist event *******************/
+/******************* image viewer event *******************/
 void
-MainWindow::playlistVisibleChanged(bool visible)
+MainWindow::imgview_playlistVisibleChanged(bool visible)
 {
     menu_window_playlist->setChecked(visible);
 }
 
 void
-MainWindow::playlistItemRemoved(bool currentFile)
+MainWindow::imgview_stoppedSlideshow()
 {
-    if (pldock->empty())
-    {
-        imgView->releaseImage();
-    }
-    else if (currentFile && !pldock->empty())
-    {
-        imgView->showImage(pldock->currentFilePaths());
-    }
-
-    if (currentFile && histdialog->isVisible())
-    {
-        histdialog->releaseHistgram();
-
-        if (!pldock->empty())
-        {
-            histdialog->setHistgram(imgView->histgram());
-        }
-    }
-    updateWindowText();
-}
-
-void
-MainWindow::playlistItemOpened(QStringList path)
-{
-    imgView->showImage(path);
-    updateWindowText();
-}
-
-void
-MainWindow::playlistSlideshowStop()
-{
-    updateWindowText();
     menu_view_slideshow->setChecked(false);
-}
-
-void
-MainWindow::playlistSlideshowChange(QStringList name)
-{
-    imgView->showImage(name);
-    updateWindowText();
-}
-
-/******************* image viewer event *******************/
-void
-MainWindow::viewerRightClicked()
-{
-    if (pldock->empty()) return;
-    imgView->showImage(pldock->previousFilePath());
     updateWindowText();
 }
 
 void
-MainWindow::viewerLeftClicked()
-{
-    if (pldock->empty()) return;
-    imgView->showImage(pldock->nextFilePath());
-    updateWindowText();
-}
-
-void
-MainWindow::viewerDropItems(QStringList list, bool copy)
-{
-    const bool isempty = pldock->empty();
-    if (!copy) pldock->clear();
-    pldock->append(list, AppSettings::main_open_dir_level);
-
-    if (!copy || isempty)
-    {
-        imgView->showImage(pldock->currentFilePaths());
-    }
-    updateWindowText();
-}
-
-void
-MainWindow::viewerSetNewImage()
+MainWindow::imgview_changeImage()
 {
     if (histdialog->isVisible())
     {
         histdialog->releaseHistgram();
-        if (!imgView->empty())
+        if (!imgview->empty())
         {
-            histdialog->setHistgram(imgView->histgram());
+            histdialog->setHistgram(imgview->histgram());
         }
     }
+    updateWindowText();
 }
 
 void
@@ -552,11 +467,11 @@ MainWindow::changeCheckedScaleMenu(QAction *act,
 
     if (m == ImageViewer::CUSTOM_SCALE)
     {
-        imgView->setScale(m, s);
+        imgview->setScale(m, s);
     }
     else
     {
-        imgView->setScale(m);
+        imgview->setScale(m);
     }
     updateWindowText();
 }
@@ -567,7 +482,8 @@ MainWindow::applySettings()
     resize(AppSettings::mainwindow_size);
     move(AppSettings::mainwindow_pos);
 
-    ImageViewer::ViewMode mode = ImageViewer::ViewMode(AppSettings::viewer_scaling_mode);
+    ImageViewer::ViewMode mode = 
+        ImageViewer::ViewMode(AppSettings::viewer_scaling_mode);
     switch (mode)
     {
         case ImageViewer::FULLSIZE:
@@ -585,14 +501,14 @@ MainWindow::applySettings()
             break;
     }
     
-    imgView->setInterpolationMode(
+    imgview->setInterpolationMode(
             ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
-    pldock->setNumOfImages(AppSettings::viewer_spread ? 2 : 1);
+    imgview->setSpreadMode(AppSettings::viewer_spread);
     menu_view_spread->setChecked(AppSettings::viewer_spread);
     menu_view_rightbinding->setChecked(AppSettings::viewer_rightbinding);
-    imgView->setRightbindingMode(AppSettings::viewer_rightbinding);
-    pldock->setVisible(AppSettings::playlist_visible);
-    menu_window_playlist->setChecked(pldock->isVisible());
+    imgview->setRightbindingMode(AppSettings::viewer_rightbinding);
+    imgview->playlistDock()->setVisible(AppSettings::playlist_visible);
+    menu_window_playlist->setChecked(imgview->playlistDock()->isVisible());
 }
 
 void
@@ -601,12 +517,12 @@ MainWindow::storeSettings()
     AppSettings::mainwindow_size = size();
     AppSettings::mainwindow_pos = pos();
 
-    AppSettings::viewer_scaling_mode = int(imgView->getScaleMode());
-    AppSettings::viewer_scaling_times = imgView->getScale();
-    AppSettings::viewer_ipixmode = int(imgView->getInterpolationMode());
+    AppSettings::viewer_scaling_mode = int(imgview->getScaleMode());
+    AppSettings::viewer_scaling_times = imgview->getScale();
+    AppSettings::viewer_ipixmode = int(imgview->getInterpolationMode());
     AppSettings::viewer_spread = menu_view_spread->isChecked();
     AppSettings::viewer_rightbinding = menu_view_rightbinding->isChecked();
 
-    AppSettings::playlist_visible = pldock->isVisible();
+    AppSettings::playlist_visible = imgview->playlistDock()->isVisible();
 }
 

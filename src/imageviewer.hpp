@@ -3,11 +3,15 @@
 
 #include <QGraphicsView>
 #include <QGraphicsPixmapItem>
+#include <QDockWidget>
+#include <QListWidget>
+#include <QAction>
 #include <QDragEnterEvent>
 #include <QDragLeaveEvent>
 #include <QDragMoveEvent>
 #include <QFileInfo>
 #include <QVector>
+#include <QTimer>
 
 /*
  * QImage::bits,QImage::scanLineは、それぞれ横方向の画素が
@@ -34,36 +38,61 @@ public:
         Bicubic,
     };
 
-    explicit ImageViewer(QWidget *parent = 0);
+    explicit ImageViewer(QWidget *parent = 0, Qt::WindowFlags flags = 0);
     ~ImageViewer();
 
-    void showImage(const QStringList& paths);
-    void showImage(const QVector<QImage>& imgs);
-    void releaseImage();
-
-    int imageCount() const;
-
-    QSize getOriginalImageSize(int idx) const;
-    QSize getCombinedImageSize() const;
-    qreal getScale() const;
-    ViewMode getScaleMode() const;
-    InterpolationMode getInterpolationMode() const;
-    bool getRightbindingMode() const;
+    void openImages(const QStringList &path);
+    void clearPlaylist();
 
     QVector<int> histgram() const;
 
-    void setScale(const ViewMode m, const qreal s);
-    void setScale(const ViewMode m);
-    void setInterpolationMode(const InterpolationMode mode);
-    void setRightbindingMode(bool b);
+    void startSlideshow();
+    void stopSlideshow();
+    bool isPlayingSlideshow() const;
 
+    void setSlideshowInterval(int msec);
+    int getSlideshowInterval() const;
+
+    void setSpreadMode(bool m);
+    bool isSpreadMode() const;
+
+    void setRightbindingMode(bool m);
+    bool isRightbindingMode() const;
+
+    void setScale(ViewMode m, qreal s);
+    void setScale(ViewMode m);
+    qreal getScale() const;
+    ViewMode getScaleMode() const;
+
+    void setInterpolationMode(InterpolationMode mode);
+    InterpolationMode getInterpolationMode() const;
+
+    QSize orgImageSize(int i) const;
+    QSize combinedImageSize() const;
+
+    int countShowImages() const;
+    int count() const;
     bool empty() const;
 
+    int currentIndex(int i) const;
+    QString currentFileName(int i) const;
+    QStringList currentFileNames() const;
+    QString currentFilePath(int i) const;
+    QStringList currentFilePaths() const;
+
+    QDockWidget *playlistDock() const;
+
 signals:
-    void rightClicked();
-    void leftClicked();
-    void dropItems(QStringList list, bool copy);
-    void setNewImage();
+    void stoppedSlideshow();
+    void changeImage();
+
+private slots:
+    void menu_open_triggered();
+    void menu_remove_triggered();
+    void menu_clear_triggered();
+    void playlistItemDoubleClicked(QListWidgetItem *item);
+
+    void slideshow_loop();
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event);
@@ -75,26 +104,47 @@ protected:
     virtual void mousePressEvent(QMouseEvent *event);
 
 private:
+    // viewer
     QGraphicsScene *view_scene;
     QGraphicsPixmapItem *view_item;
-    // 同時に表示する画像数
-    int img_count;
-    // 個々の画像
-    QVector<QImage> img_orgs;
-    // 全ての画像を1枚の画像に連結したもの
-    QImage img_combined;
-    // 拡縮後の画像
-    QImage img_scaled;
-    qreal scale_value;
-    ViewMode vmode;
-    InterpolationMode imode;
-    bool rightbinding;
+    QVector<QImage> img_orgs; // 個々の画像
+    QImage img_combined;      // 全ての画像を1枚の画像に連結したもの
+    QImage img_scaled;        // 拡縮後の画像
+    qreal scale_value;        // 表示倍率
+    int img_count;            // 同時に表示している画像数
+    ViewMode vmode;           // 表示モード
+    InterpolationMode imode;  // 画素補完モード
+    bool rightbinding;        // 見開き表示時に右綴じで表示するか
 
-    QVector<QImage> imgvec_clone(const QVector<QImage> &src) const;
+    void releaseImages();
+    void showImages();
     void refresh();
-    void setGraphicsPixmapItem(const QImage& img);
-    void imageScale(const QImage& img);
-    void imageCombine(QImage& img, QVector<QImage>& imgs) const;
+    void setGraphicsPixmapItem(const QImage &img);
+    void imageScale();
+    void imageCombine(const QVector<QImage> &imgs);
+
+    // playlist
+    QDockWidget *playlistdock;
+    QListWidget *playlist;
+    QAction *menu_open;
+    QAction *menu_sep1;
+    QAction *menu_remove;
+    QAction *menu_clear;
+    QBrush normalBC;
+    QBrush selectedBC;
+    int index;
+    bool spread_view;
+    QTimer slideshow_timer;
+    int slideshow_interval;
+
+    void createPlaylistMenus();
+    void playlistItemRemove(QList<QListWidgetItem*> items);
+    void openFilesAndDirs(const QStringList &paths, int level);
+    void setHighlight();
+    void clearHighlight();
+    void nextImages();
+    void previousImages();
+    bool validIndex(int i) const;
     bool isCopyDrop(const Qt::KeyboardModifiers km);
 };
 

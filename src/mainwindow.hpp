@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include "imageviewer.hpp"
-#include "playlistdock.hpp"
 #include "histgramdialog.hpp"
 
 #include <QMenuBar>
@@ -48,18 +47,10 @@ private slots:
     /******************* util *******************/
     void updateWindowText();
 
-    /******************* playlist event *******************/
-    void playlistVisibleChanged(bool visible);
-    void playlistItemRemoved(bool currentFile);
-    void playlistItemOpened(QStringList path);
-    void playlistSlideshowStop();
-    void playlistSlideshowChange(QStringList name);
-
     /******************* image viewer event *******************/
-    void viewerRightClicked();
-    void viewerLeftClicked();
-    void viewerDropItems(QStringList list, bool copy);
-    void viewerSetNewImage();
+    void imgview_playlistVisibleChanged(bool visible);
+    void imgview_stoppedSlideshow();
+    void imgview_changeImage();
 
     void closeHistgramDialog();
 
@@ -69,8 +60,7 @@ protected:
     virtual void resizeEvent(QResizeEvent *event);
 
 private:
-    ImageViewer *imgView;
-    PlaylistDock *pldock;
+    ImageViewer *imgview;
 
     QMenu *menu_file;
     QAction *menu_file_open;

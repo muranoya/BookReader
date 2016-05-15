@@ -1,117 +1,202 @@
 #include "imageviewer.hpp"
 #include "image.hpp"
+#include "nullptr.hpp"
 #include <algorithm>
 #include <QScrollBar>
 #include <QMimeData>
+#include <QDir>
+#include <cassert>
 
-ImageViewer::ImageViewer(QWidget *parent)
+ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
     : QGraphicsView(parent)
     , view_scene(new QGraphicsScene())
     , view_item(new QGraphicsPixmapItem())
-    , img_count(0)
     , img_orgs()
     , img_combined()
     , img_scaled()
     , scale_value(1.0)
+    , img_count(0)
     , vmode(FULLSIZE)
     , imode(Bilinear)
     , rightbinding(false)
+    /* playlist */
+    , playlistdock(new QDockWidget(tr("プレイリスト"), parent, flags))
+    , playlist(new QListWidget())
+    , menu_open(nullptr)
+    , menu_sep1(nullptr)
+    , menu_remove(nullptr)
+    , menu_clear(nullptr)
+    , normalBC(Qt::transparent)
+    , selectedBC(Qt::lightGray)
+    , index(-1)
+    , spread_view(false)
+    , slideshow_timer()
+    , slideshow_interval(3000)
 {
     setScene(view_scene);
     view_scene->addItem(view_item);
+    playlistdock->setWidget(playlist);
+
+    createPlaylistMenus();
+
+    connect(playlist, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
+            this, SLOT(playlistItemDoubleClicked(QListWidgetItem*)));
+    connect(&slideshow_timer, SIGNAL(timeout()),
+            this, SLOT(slideshow_loop()));
+    playlist->setDefaultDropAction(Qt::MoveAction);
+    playlist->setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
 
 ImageViewer::~ImageViewer()
 {
     delete view_item;
     delete view_scene;
+
+    delete menu_open;
+    delete menu_sep1;
+    delete menu_remove;
+    delete menu_clear;
+    delete playlist;
+    delete playlistdock;
 }
 
 void
-ImageViewer::showImage(const QStringList& paths)
+ImageViewer::openImages(const QStringList &path)
 {
-    QVector<QImage> imgs;
+    bool req_refresh =
+        countShowImages() == 0 ||
+        (isRightbindingMode() && countShowImages() != 2);
 
-    for (QStringList::const_iterator i = paths.constBegin();
-            i != paths.constEnd(); ++i)
+    clearHighlight();
+    openFilesAndDirs(path, 20);
+    setHighlight();
+
+    if (req_refresh && countShowImages() > 0)
     {
-        imgs << QImage(*i);
+        index = 0;
+        showImages();
     }
-    showImage(imgs);
-    imgs.clear();
 }
 
 void
-ImageViewer::showImage(const QVector<QImage> &imgs)
+ImageViewer::clearPlaylist()
 {
-    int max_height = 0;
-    int width_sum = 0;
-
-    img_count = 0;
-    img_orgs.clear();
-    if (imgs.isEmpty()) return;
-
-    for (QVector<QImage>::const_iterator i = imgs.constBegin();
-            i != imgs.constEnd(); ++i)
+    bool c = countShowImages() > 0;
+    while (playlist->count() > 0)
     {
-        img_count++;
-        QImage temp = *i;
-        max_height = std::max(max_height, temp.height());
-        width_sum += temp.width();
-
-        img_orgs << (temp.format() == QImage::Format_ARGB32 ? temp
-                : temp.convertToFormat(QImage::Format_ARGB32));
+        QListWidgetItem *item = playlist->item(0);
+        playlist->removeItemWidget(item);
+        delete item;
     }
+    releaseImages();
+    if (c) emit changeImage();
+}
 
-    img_combined = QImage(width_sum, max_height, QImage::Format_ARGB32);
-    imageCombine(img_combined, img_orgs);
-    imageScale(img_combined);
+QVector<int>
+ImageViewer::histgram() const
+{
+    if (img_combined.isNull()) return QVector<int>();
+    QVector<int> vec(256*3);
 
-    setGraphicsPixmapItem(img_scaled);
+    int *array = vec.data();
+    for (int i = 0; i < 256*3; ++i) array[i] = 0;
 
-    verticalScrollBar()->setSliderPosition(0);
-
-    emit setNewImage();
+    const QRgb *bits = (QRgb*)img_combined.bits();
+    const int len = img_combined.height() * img_combined.width();
+    for (int i = 0; i < len; ++i)
+    {
+        const QRgb rgb = *(bits+i);
+        array[qRed(rgb)  +256*0]++;
+        array[qGreen(rgb)+256*1]++;
+        array[qBlue(rgb) +256*2]++;
+    }
+    return vec;
 }
 
 void
-ImageViewer::releaseImage()
+ImageViewer::startSlideshow()
 {
-    view_item->setPixmap(QPixmap());
-    view_scene->setSceneRect(0.0, 0.0, 0.0, 0.0);
+    if (!isPlayingSlideshow())
+    {
+        slideshow_timer.start(slideshow_interval);
+    }
+}
 
-    img_count = 0;
-    img_orgs.clear();
-    img_combined = QImage();
-    img_scaled = QImage();
+void
+ImageViewer::stopSlideshow()
+{
+    if (isPlayingSlideshow())
+    {
+        slideshow_timer.stop();
+        emit stoppedSlideshow();
+    }
+}
 
-    emit setNewImage();
+bool
+ImageViewer::isPlayingSlideshow() const
+{
+    return slideshow_timer.isActive();
+}
+
+void
+ImageViewer::setSlideshowInterval(int msec)
+{
+    slideshow_interval = msec;
 }
 
 int
-ImageViewer::imageCount() const
+ImageViewer::getSlideshowInterval() const
 {
-    return img_count;
+    return slideshow_interval;
 }
 
-QSize
-ImageViewer::getOriginalImageSize(int idx) const
+void
+ImageViewer::setSpreadMode(bool m)
 {
-    if (0 <= idx && idx < imageCount())
+    if (m != spread_view)
     {
-        return img_orgs[idx].isNull() ? QSize()
-                                      : img_orgs[idx].size();
-    }
-    else
-    {
-        return QSize();
+        clearHighlight();
+        spread_view = m;
+        setHighlight();
+        showImages();
     }
 }
 
-QSize
-ImageViewer::getCombinedImageSize() const
+bool
+ImageViewer::isSpreadMode() const
 {
-    return img_combined.isNull() ? QSize() : img_combined.size();
+    return spread_view;
+}
+
+void
+ImageViewer::setRightbindingMode(bool m)
+{
+    if (m != rightbinding)
+    {
+        rightbinding = m;
+        if (!empty()) showImages();
+    }
+}
+
+bool
+ImageViewer::isRightbindingMode() const
+{
+    return rightbinding;
+}
+
+void
+ImageViewer::setScale(ViewMode m, qreal s)
+{
+    bool c = m != vmode || s != scale_value;
+    vmode = m;
+    scale_value = s;
+    if (c) refresh();
+}
+
+void
+ImageViewer::setScale(ViewMode m)
+{
+    setScale(m, scale_value);
 }
 
 qreal
@@ -126,108 +211,194 @@ ImageViewer::getScaleMode() const
     return vmode;
 }
 
+void
+ImageViewer::setInterpolationMode(InterpolationMode m)
+{
+    bool c = m != imode;
+    imode = m;
+    if (c) refresh();
+}
+
 ImageViewer::InterpolationMode
 ImageViewer::getInterpolationMode() const
 {
     return imode;
 }
 
-bool
-ImageViewer::getRightbindingMode() const
+QSize
+ImageViewer::orgImageSize(int i) const
 {
-    return rightbinding;
-}
-
-QVector<int>
-ImageViewer::histgram() const
-{
-    if (img_combined.isNull()) return QVector<int>();
-
-    QVector<int> vec;
-    int array[256*3];
-
-    for (int i = 0; i < 256*3; ++i) array[i] = 0;
-
-    const QRgb *bits = (QRgb*)img_combined.bits();
-    const int len = img_combined.height() * img_combined.width();
-    for (int i = 0; i < len; ++i)
+    if (0 <= i && i < countShowImages() && !img_orgs[i].isNull())
     {
-        const QRgb rgb = *(bits+i);
-        array[qRed(rgb)  +256*0]++;
-        array[qGreen(rgb)+256*1]++;
-        array[qBlue(rgb) +256*2]++;
+        return img_orgs[i].size();
     }
-
-    for (int i = 0; i < 256*3; ++i) vec << array[i];
-
-    return vec;
+    return QSize();
 }
 
-void
-ImageViewer::setScale(const ViewMode m, const qreal s)
+QSize
+ImageViewer::combinedImageSize() const
 {
-    scale_value = s;
-    setScale(m);
+    return img_combined.isNull() ? QSize()
+                                 : img_combined.size();
 }
 
-void
-ImageViewer::setScale(const ViewMode m)
+int
+ImageViewer::countShowImages() const
 {
-    vmode = m;
-    if (!img_combined.isNull())
-    {
-        imageScale(img_combined);
-        setGraphicsPixmapItem(img_scaled);
-    }
+    int c = spread_view ? 2 : 1;
+    return std::min(c, count());
 }
 
-void
-ImageViewer::setInterpolationMode(const InterpolationMode mode)
+int
+ImageViewer::count() const
 {
-    bool c = mode != imode;
-    imode = mode;
-    if (c) refresh();
-}
-
-void
-ImageViewer::setRightbindingMode(bool b)
-{
-    bool c = rightbinding != b;
-    rightbinding = b;
-    if (c) refresh();
+    return img_count;
 }
 
 bool
 ImageViewer::empty() const
 {
-    return img_combined.isNull();
+    return count() == 0;
+}
+
+int
+ImageViewer::currentIndex(int i) const
+{
+    if (0 <= i && i < countShowImages())
+    {
+        return (index + i) % count();
+    }
+    return -1;
+}
+
+QString
+ImageViewer::currentFileName(int i) const
+{
+    assert(i >= 0);
+    const int ti = currentIndex(i);
+    if (validIndex(ti))
+    {
+        return QFileInfo(currentFilePath(i)).fileName();
+    }
+    return QString();
+}
+
+QStringList
+ImageViewer::currentFileNames() const
+{
+    QStringList list;
+    const int len = std::min(count(), countShowImages());
+    for (int i = 0; i < len; ++i)
+    {
+        QString str = currentFileName(i);
+        if (str.isEmpty())
+        {
+            break;
+        }
+        else
+        {
+            list << str;
+        }
+    }
+    return list;
+}
+
+QString
+ImageViewer::currentFilePath(int i) const
+{
+    assert(i >= 0);
+    const int ti = currentIndex(i);
+    if (validIndex(ti))
+    {
+        return playlist->item(ti)->data(Qt::ToolTipRole).toString();
+    }
+    return QString();
+}
+
+QStringList
+ImageViewer::currentFilePaths() const
+{
+    QStringList list;
+    const int len = std::min(count(), countShowImages());
+    for (int i = 0; i < len; ++i)
+    {
+        QString str = currentFilePath(i);
+        if (str.isEmpty())
+        {
+            break;
+        }
+        else
+        {
+            list << str;
+        }
+    }
+    return list;
+}
+
+QDockWidget *
+ImageViewer::playlistDock() const
+{
+    return playlistdock;
+}
+
+void
+ImageViewer::menu_open_triggered()
+{
+    QList<QListWidgetItem*> litem = playlist->selectedItems();
+    if (litem.empty()) return;
+
+    clearHighlight();
+    index = playlist->row(litem.at(0));
+    showImages();
+    setHighlight();
+}
+
+void
+ImageViewer::menu_remove_triggered()
+{
+    QList<QListWidgetItem*> list = playlist->selectedItems();
+    if (!list.empty()) playlistItemRemove(list);
+}
+
+void
+ImageViewer::menu_clear_triggered()
+{
+    clearPlaylist();
+}
+
+void
+ImageViewer::playlistItemDoubleClicked(QListWidgetItem *item)
+{
+    Q_UNUSED(item);
+    menu_open_triggered();
+}
+
+void
+ImageViewer::slideshow_loop()
+{
+    if (empty())
+    {
+        stopSlideshow();
+    }
+    else
+    {
+        nextImages();
+    }
 }
 
 void
 ImageViewer::keyPressEvent(QKeyEvent *event)
 {
     QGraphicsView::keyPressEvent(event);
-
-    if (event->key() == Qt::Key_Left)
-    {
-        emit rightClicked();
-    }
-    else if (event->key() == Qt::Key_Right)
-    {
-        emit leftClicked();
-    }
+    if (event->key() == Qt::Key_Left)  previousImages();
+    if (event->key() == Qt::Key_Right) nextImages();
 }
 
 void
 ImageViewer::resizeEvent(QResizeEvent *event)
 {
     QGraphicsView::resizeEvent(event);
-
-    if (!img_combined.isNull())
-    {
-        imageScale(img_combined);
-        setGraphicsPixmapItem(img_scaled);
-    }
+    refresh();
 }
 
 void
@@ -263,49 +434,75 @@ ImageViewer::dropEvent(QDropEvent *event)
             i != urls.constEnd(); ++i)
     {
         const QString path = i->toLocalFile();
-        const QFileInfo info(path);
-        if (info.exists()) list << path;
+        if (QFileInfo(path).exists()) list << path;
     }
 
-    emit dropItems(list, isCopyDrop(event->keyboardModifiers()));
+    if (!isCopyDrop(event->keyboardModifiers())) clearPlaylist();
+    openImages(list);
 }
 
 void
 ImageViewer::mousePressEvent(QMouseEvent *event)
 {
     QGraphicsView::mousePressEvent(event);
-    if (event->buttons() & Qt::LeftButton)  emit leftClicked();
-    if (event->buttons() & Qt::RightButton) emit rightClicked();
+    if (event->buttons() & Qt::LeftButton)  nextImages();
+    if (event->buttons() & Qt::RightButton) previousImages();
 }
 
-QVector<QImage>
-ImageViewer::imgvec_clone(const QVector<QImage> &src) const
+void
+ImageViewer::releaseImages()
 {
-    QVector<QImage> vec;
-    const int len = src.count();
-    for (int i = 0; i < len; ++i) vec << src[i];
-    return vec;
+    img_orgs.clear();
+    img_combined = QImage();
+    img_scaled = QImage();
+    img_count = 0;
+    index = -1;
+    setGraphicsPixmapItem(QImage());
+}
+
+void
+ImageViewer::showImages()
+{
+    img_orgs.clear();
+    QStringList list = currentFilePaths();
+    for (QStringList::const_iterator i = list.constBegin();
+            i != list.constEnd(); ++i)
+    {
+        QImage temp(*i);
+        img_orgs << (temp.format() == QImage::Format_ARGB32 ? temp
+                : temp.convertToFormat(QImage::Format_ARGB32));
+    }
+
+    imageCombine(img_orgs);
+    imageScale();
+    setGraphicsPixmapItem(img_scaled);
+    verticalScrollBar()->setSliderPosition(0);
+    emit changeImage();
 }
 
 void
 ImageViewer::refresh()
 {
-    QVector<QImage> vec = imgvec_clone(img_orgs);
-    showImage(vec);
-    vec.clear();
+    if (!empty())
+    {
+        imageScale();
+        setGraphicsPixmapItem(img_scaled);
+    }
 }
 
 void
-ImageViewer::setGraphicsPixmapItem(const QImage& img)
+ImageViewer::setGraphicsPixmapItem(const QImage &img)
 {
     view_item->setPixmap(QPixmap::fromImage(img));
     view_scene->setSceneRect(0.0, 0.0, img.width(), img.height());
 }
 
 void
-ImageViewer::imageScale(const QImage& img)
+ImageViewer::imageScale()
 {
     qreal scale = 1.0;
+
+    if (empty()) return;
 
     if (vmode == ImageViewer::CUSTOM_SCALE)
     {
@@ -318,14 +515,14 @@ ImageViewer::imageScale(const QImage& img)
     else
     {
         qreal ws = 1.0, hs = 1.0;
-        if (width() < img.width())
+        if (width() < img_combined.width())
         {
-            ws = ((qreal)width()) / ((qreal)img.width());
+            ws = ((qreal)width()) / ((qreal)img_combined.width());
         }
 
-        if (height() < img.height())
+        if (height() < img_combined.height())
         {
-            hs = ((qreal)height()) / ((qreal)img.height());
+            hs = ((qreal)height()) / ((qreal)img_combined.height());
         }
 
         if (vmode == ImageViewer::FIT_WINDOW)
@@ -341,67 +538,241 @@ ImageViewer::imageScale(const QImage& img)
 
     if (qFuzzyCompare(scale_value, 1.0))
     {
-        img_scaled = img;
+        img_scaled = img_combined;
     }
     else
     {
-        img_scaled = (QImage (*[])(const QImage, const qreal)){nn, bl, bc}[imode](img, scale);
+        img_scaled = (QImage (*[])(const QImage, const qreal)){nn, bl, bc}
+                        [imode](img_combined, scale_value);
     }
 }
 
 void
-ImageViewer::imageCombine(QImage& img, QVector<QImage>& imgs) const
+ImageViewer::imageCombine(const QVector<QImage> &imgs)
 {
-    QVector<QImage> vec = imgvec_clone(imgs);
-    int sum_width = 0;
-    QRgb *dst_bits = (QRgb*)img.bits();
-    const int ww = img.width();
-    const int hh = img.height();
+    int cw = 0;
+    int ch = 0;
+    QVector<QImage> vec;
+    const int len = imgs.count();
+    for (int i = 0; i < len; ++i)
+    {
+        QImage temp = imgs[i];
+        cw += temp.width();
+        ch = std::max(ch, temp.height());
+        vec << temp;
+    }
 
-    if (getRightbindingMode())
+    img_combined = QImage(cw, ch, QImage::Format_ARGB32);
+
+    if (isRightbindingMode())
     {
         // reverse vector
-        const int len = vec.count();
-        for (int i = 0; i < len; ++i)
-        {
-            vec.append(vec[len-i-1]);
-        }
+        for (int i = 0; i < len; ++i) vec.append(vec[len-i-1]);
         vec.remove(0, len);
     }
 
+    int sw = 0;
+    QRgb *dst_bits = (QRgb*)img_combined.bits();
     for (QVector<QImage>::const_iterator i = vec.constBegin();
             i != vec.constEnd(); ++i)
     {
-        const QImage *vimg = i;
-        const int w = vimg->width();
-        const int h = vimg->height();
-        const int h2 = (hh - h) / 2;
-        const QRgb *src_bits = (QRgb*)vimg->constBits();
+        const QImage *temp = i;
+        const int tw = temp->width();
+        const int th = temp->height();
+        const int h2 = (ch - th) / 2;
+        const QRgb *src_bits = (QRgb*)temp->constBits();
 
         for (int y = 0; y < h2; ++y)
         {
-            for (int x = 0; x < w; ++x)
+            for (int x = 0; x < tw; ++x)
             {
-                *(dst_bits+x+sum_width+y*ww) = qRgba(255, 255, 255, 255);
+                *(dst_bits+x+sw+y*cw) = qRgba(255, 255, 255, 255);
             }
         }
-        for (int y = 0 ; y < h; ++y)
+        for (int y = 0 ; y < th; ++y)
         {
-            for (int x = 0; x < w; ++x)
+            for (int x = 0; x < tw; ++x)
             {
-                *(dst_bits+x+sum_width+(y+h2)*ww) = *(src_bits+x+y*w);
+                *(dst_bits+x+sw+(y+h2)*cw) = *(src_bits+x+y*tw);
             }
         }
-        for (int y = h+h2 ; y < hh; ++y)
+        for (int y = th+h2 ; y < ch; ++y)
         {
-            for (int x = 0; x < w; ++x)
+            for (int x = 0; x < tw; ++x)
             {
-                *(dst_bits+x+sum_width+y*ww) = qRgba(255, 255, 255, 255);
+                *(dst_bits+x+sw+y*cw) = qRgba(255, 255, 255, 255);
             }
         }
-        sum_width += w;
+        sw += tw;
     }
     vec.clear();
+}
+
+void
+ImageViewer::createPlaylistMenus()
+{
+    playlistdock->setContextMenuPolicy(Qt::ActionsContextMenu);
+
+    menu_open = new QAction(tr("開く"), playlist);
+    menu_sep1 = new QAction(playlist);
+    menu_sep1->setSeparator(true);
+    menu_remove = new QAction(tr("削除する"), playlist);
+    menu_clear = new QAction(tr("全て削除する"), playlist);
+
+    playlistdock->addAction(menu_open);
+    playlistdock->addAction(menu_sep1);
+    playlistdock->addAction(menu_remove);
+    playlistdock->addAction(menu_clear);
+
+    connect(menu_open,      SIGNAL(triggered()),
+            this, SLOT(menu_open_triggered()));
+    connect(menu_remove,    SIGNAL(triggered()),
+            this, SLOT(menu_remove_triggered()));
+    connect(menu_clear,     SIGNAL(triggered()),
+            this, SLOT(menu_clear_triggered()));
+}
+
+void
+ImageViewer::playlistItemRemove(QList<QListWidgetItem*> items)
+{
+    if (items.empty()) return;
+
+    bool contains = false;
+    QListWidgetItem *current = validIndex(index) ? playlist->item(index)
+                                                 : nullptr;
+    QList<QListWidgetItem*> cs;
+    const int len = std::min(count(), countShowImages());
+    for (int i = 0; i < len; ++i)
+    {
+        const int ti = (index+i)%count();
+        cs << playlist->item(ti);
+    }
+
+    clearHighlight();
+    for (QList<QListWidgetItem*>::const_iterator i = items.constBegin();
+            i != items.constEnd(); ++i)
+    {
+        if (cs.contains(*i))
+        {
+            if (current == *i)
+            {
+                index = std::max(index-1, 0);
+            }
+            contains = true;
+        }
+        else
+        {
+            const int r = playlist->row(*i);
+            if (r < index) index--;
+        }
+        playlist->removeItemWidget(*i);
+        delete *i;
+        img_count--;
+    }
+
+    if (empty())
+    {
+        releaseImages();
+        emit changeImage();
+    }
+    else
+    {
+        setHighlight();
+        if (contains) showImages();
+    }
+}
+
+void
+ImageViewer::openFilesAndDirs(const QStringList &paths, int level)
+{
+    if (paths.empty()) return;
+
+    for (QStringList::const_iterator i = paths.constBegin();
+            i != paths.constEnd(); ++i)
+    {
+        const QFileInfo info(*i);
+        if (info.isFile())
+        {
+            QListWidgetItem *newitem =
+                new QListWidgetItem(info.fileName(), playlist);
+            newitem->setData(Qt::ToolTipRole, *i);
+            playlist->addItem(newitem);
+            img_count++;
+        }
+        else if (level > 0)
+        {
+            QStringList newlist;
+            const QFileInfoList entrylist = QDir(*i).entryInfoList();
+            const int canonical_len = info.canonicalPath().length();
+            for (QFileInfoList::const_iterator j = entrylist.constBegin();
+                    j != entrylist.constEnd(); ++j)
+            {
+                if (canonical_len < j->canonicalPath().length())
+                {
+                    newlist << j->filePath();
+                }
+            }
+            openFilesAndDirs(newlist, level-1);
+        }
+    }
+
+    if (!validIndex(index) && validIndex(0))
+    {
+        index = 0;
+    }
+}
+
+void
+ImageViewer::setHighlight()
+{
+    const int len = std::min(count(), countShowImages());
+    for (int i = 0; i < len; ++i)
+    {
+        playlist->item(currentIndex(i))->setBackground(selectedBC);
+    }
+}
+
+void
+ImageViewer::clearHighlight()
+{
+    const int len = std::min(count(), countShowImages());
+    for (int i = 0; i < len; ++i)
+    {
+        const int ti = currentIndex(i);
+        if (validIndex(ti))
+        {
+            playlist->item(ti)->setBackground(normalBC);
+        }
+    }
+}
+
+void
+ImageViewer::nextImages()
+{
+    if (empty()) return;
+
+    clearHighlight();
+    index = (index + countShowImages()) % count();
+    showImages();
+    setHighlight();
+}
+
+void
+ImageViewer::previousImages()
+{
+    if (empty()) return;
+
+    clearHighlight();
+    index = (index - countShowImages()) % count();
+    if (index < 0) index += count();
+    showImages();
+    setHighlight();
+}
+
+bool
+ImageViewer::validIndex(int i) const
+{
+     return (0 <= i && i < count());
 }
 
 bool

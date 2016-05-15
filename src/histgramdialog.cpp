@@ -36,28 +36,29 @@ HistgramDialog::~HistgramDialog()
 void
 HistgramDialog::setHistgram(const QVector<int> &data)
 {
-    assert(data.size() == 256*3);
-
     view->setPixmap(QPixmap());
 
-    // 左に15pixel, 右に5pixel
-    // 上に5pixel, 下に5pixelの余裕を持たせたサイズ
-    QPixmap img(graph_w, graph_h*3);
+    if (data.count() == 256*3)
+    {
+        // 左に15pixel, 右に5pixel
+        // 上に5pixel, 下に5pixelの余裕を持たせたサイズ
+        QPixmap img(graph_w, graph_h*3);
 
-    int max = 0;
-    for (int i = 0; i < 256*3; ++i) max = std::max(max, data[i]);
+        int max = 0;
+        const int *d = data.data();
+        for (int i = 0; i < 256*3; ++i) max = std::max(max, d[i]);
 
-    const qreal s = max / qreal(graph_h-margin_top-margin_bottom-1);
+        const qreal s = max / qreal(graph_h-margin_top-margin_bottom-1);
 
-    paintHistgram(0, graph_h*0, graph_w, graph_h,
-            img, QColor(Qt::red),   data, 256*0, s);
-    paintHistgram(0, graph_h*1, graph_w, graph_h,
-            img, QColor(Qt::green), data, 256*1, s);
-    paintHistgram(0, graph_h*2, graph_w, graph_h,
-            img, QColor(Qt::blue),  data, 256*2, s);
+        paintHistgram(0, graph_h*0, graph_w, graph_h,
+                img, QColor(Qt::red),   data, 256*0, s);
+        paintHistgram(0, graph_h*1, graph_w, graph_h,
+                img, QColor(Qt::green), data, 256*1, s);
+        paintHistgram(0, graph_h*2, graph_w, graph_h,
+                img, QColor(Qt::blue),  data, 256*2, s);
 
-    view->setPixmap(img);
-
+        view->setPixmap(img);
+    }
     show();
 }
 
