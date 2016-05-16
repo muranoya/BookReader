@@ -76,7 +76,7 @@ SettingsDialog::button_cancel()
 void
 SettingsDialog::loadSettings()
 {
-    open_rec_dir_level->setValue(AppSettings::main_open_dir_level);
+    open_rec_dir_level->setValue(AppSettings::viewer_open_dir_level);
 
     slideshow_interval_value->setValue(AppSettings::playlist_slideshow_interval);
 }
@@ -84,7 +84,7 @@ SettingsDialog::loadSettings()
 void
 SettingsDialog::saveSettings()
 {
-    AppSettings::main_open_dir_level = open_rec_dir_level->value();
+    AppSettings::viewer_open_dir_level = open_rec_dir_level->value();
 
     AppSettings::playlist_slideshow_interval = slideshow_interval_value->value();
 }

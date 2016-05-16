@@ -15,7 +15,6 @@ public:
     // Group - Main
     static QString main_dialog_file;
     static QString main_dialog_dir;
-    static int main_open_dir_level;
 
     // Group - Viewer
     static int viewer_scaling_mode;
@@ -23,6 +22,7 @@ public:
     static int viewer_ipixmode;
     static bool viewer_spread;
     static bool viewer_rightbinding;
+    static int viewer_open_dir_level;
 
     // Group - Playlist
     static bool playlist_visible;

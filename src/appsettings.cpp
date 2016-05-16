@@ -7,13 +7,13 @@ QPoint AppSettings::mainwindow_pos;
 
 QString AppSettings::main_dialog_file;
 QString AppSettings::main_dialog_dir;
-int AppSettings::main_open_dir_level;
 
 int AppSettings::viewer_scaling_mode;
 qreal AppSettings::viewer_scaling_times;
 int AppSettings::viewer_ipixmode;
 bool AppSettings::viewer_spread;
 bool AppSettings::viewer_rightbinding;
+int AppSettings::viewer_open_dir_level;
 
 bool AppSettings::playlist_visible;
 int AppSettings::playlist_slideshow_interval;
@@ -32,7 +32,6 @@ AppSettings::SaveSettings()
     settings.beginGroup("Main");
     settings.setValue("dialog_file", main_dialog_file);
     settings.setValue("dialog_directory", main_dialog_dir);
-    settings.setValue("open_dir_level", main_open_dir_level);
     settings.endGroup();
 
     settings.beginGroup("Viewer");
@@ -41,6 +40,7 @@ AppSettings::SaveSettings()
     settings.setValue("ipix_mode", viewer_ipixmode);
     settings.setValue("image_spread", viewer_spread);
     settings.setValue("rightbinding", viewer_rightbinding);
+    settings.setValue("open_dir_level", viewer_open_dir_level);
     settings.endGroup();
 
     settings.beginGroup("Playlist");
@@ -63,7 +63,6 @@ AppSettings::LoadSettings()
     settings.beginGroup("Main");
     main_dialog_file = settings.value("dialog_file", QString()).toString();
     main_dialog_dir = settings.value("location", QString()).toString();
-    main_open_dir_level = settings.value("open_dir_level", 999).toInt();
     settings.endGroup();
 
     settings.beginGroup("Viewer");
@@ -72,6 +71,7 @@ AppSettings::LoadSettings()
     viewer_ipixmode = settings.value("ipix_mode", 0).toInt();
     viewer_spread = settings.value("image_spread", false).toBool();
     viewer_rightbinding = settings.value("rightbinding", false).toBool();
+    viewer_open_dir_level = settings.value("open_dir_level", 999).toInt();
     settings.endGroup();
 
     settings.beginGroup("Playlist");

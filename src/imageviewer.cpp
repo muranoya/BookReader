@@ -32,6 +32,7 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
     , spread_view(false)
     , slideshow_timer()
     , slideshow_interval(3000)
+    , opendirlevel(30)
 {
     setScene(view_scene);
     view_scene->addItem(view_item);
@@ -68,7 +69,7 @@ ImageViewer::openImages(const QStringList &path)
         (isRightbindingMode() && countShowImages() != 2);
 
     clearHighlight();
-    openFilesAndDirs(path, 20);
+    openFilesAndDirs(path, getOpenDirLevel());
     setHighlight();
 
     if (req_refresh && countShowImages() > 0)
@@ -223,6 +224,19 @@ ImageViewer::InterpolationMode
 ImageViewer::getInterpolationMode() const
 {
     return imode;
+}
+
+void
+ImageViewer::setOpenDirLevel(int n)
+{
+    assert(n >= 0);
+    opendirlevel = n;
+}
+
+int
+ImageViewer::getOpenDirLevel() const
+{
+    return opendirlevel;
 }
 
 QSize

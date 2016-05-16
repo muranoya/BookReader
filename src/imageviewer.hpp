@@ -67,6 +67,9 @@ public:
     void setInterpolationMode(InterpolationMode mode);
     InterpolationMode getInterpolationMode() const;
 
+    void setOpenDirLevel(int n);
+    int getOpenDirLevel() const;
+
     QSize orgImageSize(int i) const;
     QSize combinedImageSize() const;
 
@@ -136,6 +139,7 @@ private:
     bool spread_view;
     QTimer slideshow_timer;
     int slideshow_interval;
+    int opendirlevel;
 
     void createPlaylistMenus();
     void playlistItemRemove(QList<QListWidgetItem*> items);

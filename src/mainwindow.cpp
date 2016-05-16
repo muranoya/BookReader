@@ -104,6 +104,9 @@ MainWindow::menu_file_settings_triggered()
 {
     SettingsDialog dialog(this);
     dialog.exec();
+
+    imgview->setOpenDirLevel(AppSettings::viewer_open_dir_level);
+    imgview->setSlideshowInterval(AppSettings::playlist_slideshow_interval);
 }
 
 void
@@ -167,8 +170,6 @@ MainWindow::menu_view_slideshow_triggered()
     }
     else
     {
-        imgview->setSlideshowInterval(
-                int(AppSettings::playlist_slideshow_interval));
         imgview->startSlideshow();
         updateWindowText();
     }
@@ -594,10 +595,16 @@ MainWindow::applySettings()
 
     imgview->setSpreadMode(AppSettings::viewer_spread);
     menu_view_spread->setChecked(AppSettings::viewer_spread);
-    menu_view_rightbinding->setChecked(AppSettings::viewer_rightbinding);
+
     imgview->setRightbindingMode(AppSettings::viewer_rightbinding);
+    menu_view_rightbinding->setChecked(AppSettings::viewer_rightbinding);
+    
+    imgview->setOpenDirLevel(AppSettings::viewer_open_dir_level);
+
     imgview->playlistDock()->setVisible(AppSettings::playlist_visible);
     menu_window_playlist->setChecked(imgview->playlistDock()->isVisible());
+
+    imgview->setSlideshowInterval(AppSettings::playlist_slideshow_interval);
 }
 
 void
@@ -611,7 +618,9 @@ MainWindow::storeSettings()
     AppSettings::viewer_ipixmode = int(imgview->getInterpolationMode());
     AppSettings::viewer_spread = menu_view_spread->isChecked();
     AppSettings::viewer_rightbinding = menu_view_rightbinding->isChecked();
+    AppSettings::viewer_open_dir_level = imgview->getOpenDirLevel();
 
     AppSettings::playlist_visible = imgview->playlistDock()->isVisible();
+    AppSettings::playlist_slideshow_interval = imgview->getSlideshowInterval();
 }
 
