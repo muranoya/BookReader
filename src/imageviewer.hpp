@@ -67,6 +67,7 @@ public:
     void clearPlaylist();
 
     QVector<int> histgram() const;
+    QList<QString> prefetchList();
 
     void startSlideshow();
     void stopSlideshow();
@@ -113,14 +114,16 @@ public:
 signals:
     void stoppedSlideshow();
     void changeImage();
+    void prefetchDone();
 
 private slots:
     void menu_open_triggered();
     void menu_remove_triggered();
     void menu_clear_triggered();
-    void playlistItemDoubleClicked(QListWidgetItem *item);
 
+    void playlistItemDoubleClicked(QListWidgetItem *item);
     void slideshow_loop();
+    void prefetcher_finished();
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event);

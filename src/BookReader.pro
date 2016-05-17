@@ -11,6 +11,7 @@ settingscaledialog.cpp \
 imageviewer.cpp \
 settingsdialog.cpp \
 histgramdialog.cpp \
+cacheview.cpp \
 appsettings.cpp \
 image.cpp
 
@@ -18,6 +19,7 @@ HEADERS += \
 nullptr.hpp \
 appinfo.hpp \
 histgramdialog.hpp \
+cacheview.hpp \
 imageviewer.hpp \
 mainwindow.hpp \
 settingscaledialog.hpp \

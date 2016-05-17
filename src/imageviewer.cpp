@@ -48,6 +48,9 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
             this, SLOT(playlistItemDoubleClicked(QListWidgetItem*)));
     connect(&slideshow_timer, SIGNAL(timeout()),
             this, SLOT(slideshow_loop()));
+    connect(&prefetcher, SIGNAL(finished()),
+            this, SLOT(prefetcher_finished()));
+
     playlist->setDefaultDropAction(Qt::MoveAction);
     playlist->setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
@@ -116,6 +119,15 @@ ImageViewer::histgram() const
         array[qBlue(rgb) +256*2]++;
     }
     return vec;
+}
+
+QList<QString>
+ImageViewer::prefetchList()
+{
+    prefetch_mutex.lock();
+    QList<QString> list = cache.keys();
+    prefetch_mutex.unlock();
+    return list;
 }
 
 void
@@ -417,6 +429,12 @@ ImageViewer::slideshow_loop()
     {
         nextImages();
     }
+}
+
+void
+ImageViewer::prefetcher_finished()
+{
+    emit prefetchDone();
 }
 
 void
@@ -836,13 +854,13 @@ ImageViewer::prefetch()
     {
         QStringList list;
         int c = count();
-        int plen = std::min(getImageCacheSize(), count());
+        int plen = std::min(getImageCacheSize(), c);
         int l = plen/2;
         int r = plen/2+plen%2;
         for (int i = -l; i < r; i++)
         {
-            int ti = (index + i) % count();
-            if (ti < 0) ti += count();
+            int ti = (index + i) % c;
+            if (ti < 0) ti += c;
             list << getFilePath(ti);
         }
 
