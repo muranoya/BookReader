@@ -520,7 +520,9 @@ ImageViewer::showImages()
             i != list.constEnd(); ++i)
     {
         QImage temp;
-        temp.loadFromData(*readImageData(*i));
+        QByteArray *data = readImageData(*i);
+        temp.loadFromData(*data);
+        free(data);
         img_orgs << (temp.format() == QImage::Format_ARGB32 ? temp
                 : temp.convertToFormat(QImage::Format_ARGB32));
     }
@@ -879,8 +881,9 @@ ImageViewer::readImageData(const QString &path)
     {
         prefetch_mutex.lock();
         QByteArray *data = cache[path];
+        QByteArray *ret = new QByteArray(*data);
         prefetch_mutex.unlock();
-        return data;
+        return ret;
     }
     else
     {
@@ -888,10 +891,11 @@ ImageViewer::readImageData(const QString &path)
         if (file.open(QIODevice::ReadOnly))
         {
             QByteArray *data = new QByteArray(file.readAll());
+            QByteArray *ret = new QByteArray(*data);
             prefetch_mutex.lock();
             if (cache.maxCost() > 0) cache.insert(path, data);
             prefetch_mutex.unlock();
-            return data;
+            return ret;
         }
         else
         {
