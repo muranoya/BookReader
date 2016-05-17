@@ -36,6 +36,11 @@ private:
     QLabel *slideshow_interval_text;
     QSpinBox *slideshow_interval_value;
 
+    QGroupBox *group_Prefetch;
+    QGridLayout *prefetch_layout;
+    QLabel *prefetch_text;
+    QSpinBox *prefetch_value;
+
     void loadSettings();
     void saveSettings();
 };

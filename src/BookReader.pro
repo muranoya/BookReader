@@ -27,6 +27,6 @@ image.hpp
 
 FORMS +=
 
-QMAKE_CXXFLAGS += -mfma -mavx2
-QMAKE_CFLAGS   += -mfma -mavx2
+QMAKE_CXXFLAGS += -mfma -mavx2 #-g -O0 -fno-inline
+QMAKE_CFLAGS   += -mfma -mavx2 #-g -O0 -fno-inline
 

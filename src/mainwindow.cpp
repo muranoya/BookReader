@@ -107,6 +107,7 @@ MainWindow::menu_file_settings_triggered()
 
     imgview->setOpenDirLevel(AppSettings::viewer_open_dir_level);
     imgview->setSlideshowInterval(AppSettings::playlist_slideshow_interval);
+    imgview->setImageCacheSize(AppSettings::playlist_prefetch);
 }
 
 void
@@ -412,7 +413,7 @@ MainWindow::createMenus()
     menu_file_open->setShortcut(tr("Ctrl+O"));
     menu_file_fopen = new QAction(tr("フォルダを開く"), this);
     menu_file_fopen->setShortcut(tr("Ctrl+D"));
-    menu_file_settings = new QAction(tr("設定画面を開く"), this);
+    menu_file_settings = new QAction(tr("設定"), this);
     menu_file_exit = new QAction(tr("終了"), this);
     menu_file_exit->setShortcut(tr("Ctrl+Q"));
     menu_file->addAction(menu_file_open);
@@ -605,6 +606,7 @@ MainWindow::applySettings()
     menu_window_playlist->setChecked(imgview->playlistDock()->isVisible());
 
     imgview->setSlideshowInterval(AppSettings::playlist_slideshow_interval);
+    imgview->setImageCacheSize(AppSettings::playlist_prefetch);
 }
 
 void
@@ -622,5 +624,6 @@ MainWindow::storeSettings()
 
     AppSettings::playlist_visible = imgview->playlistDock()->isVisible();
     AppSettings::playlist_slideshow_interval = imgview->getSlideshowInterval();
+    AppSettings::playlist_prefetch = imgview->getImageCacheSize();
 }
 

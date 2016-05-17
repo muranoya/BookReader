@@ -1,6 +1,7 @@
 #include "imageviewer.hpp"
 #include "image.hpp"
 #include "nullptr.hpp"
+
 #include <algorithm>
 #include <QScrollBar>
 #include <QMimeData>
@@ -33,6 +34,9 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
     , slideshow_timer()
     , slideshow_interval(3000)
     , opendirlevel(30)
+    , cache(10)
+    , prefetcher(&cache, &prefetch_mutex)
+    , prefetch_mutex()
 {
     setScene(view_scene);
     view_scene->addItem(view_item);
@@ -237,6 +241,21 @@ int
 ImageViewer::getOpenDirLevel() const
 {
     return opendirlevel;
+}
+
+void
+ImageViewer::setImageCacheSize(int cost)
+{
+    assert(cost >= 0);
+    prefetch_mutex.lock();
+    cache.setMaxCost(cost);
+    prefetch_mutex.unlock();
+}
+
+int
+ImageViewer::getImageCacheSize() const
+{
+    return cache.maxCost();
 }
 
 QSize
@@ -482,10 +501,13 @@ ImageViewer::showImages()
     for (QStringList::const_iterator i = list.constBegin();
             i != list.constEnd(); ++i)
     {
-        QImage temp(*i);
+        QImage temp;
+        temp.loadFromData(*readImageData(*i));
         img_orgs << (temp.format() == QImage::Format_ARGB32 ? temp
                 : temp.convertToFormat(QImage::Format_ARGB32));
     }
+
+    prefetch();
 
     imageCombine(img_orgs);
     imageScale();
@@ -797,5 +819,114 @@ ImageViewer::isCopyDrop(const Qt::KeyboardModifiers km)
 #else
     return (km & Qt::ControlModifier) == Qt::ControlModifier;
 #endif
+}
+
+QString
+ImageViewer::getFilePath(int i) const
+{
+    return validIndex(i) ?
+        playlist->item(i)->data(Qt::ToolTipRole).toString()
+        : QString();
+}
+
+void
+ImageViewer::prefetch()
+{
+    if (!prefetcher.isRunning())
+    {
+        QStringList list;
+        int c = count();
+        int plen = std::min(getImageCacheSize(), count());
+        int l = plen/2;
+        int r = plen/2+plen%2;
+        for (int i = -l; i < r; i++)
+        {
+            int ti = (index + i) % count();
+            if (ti < 0) ti += count();
+            list << getFilePath(ti);
+        }
+
+        prefetcher.setPrefetchImage(list);
+        prefetcher.start();
+    }
+}
+
+QByteArray*
+ImageViewer::readImageData(const QString &path)
+{
+    prefetch_mutex.lock();
+    bool c = cache.contains(path);
+    prefetch_mutex.unlock();
+    if (c)
+    {
+        prefetch_mutex.lock();
+        QByteArray *data = cache[path];
+        prefetch_mutex.unlock();
+        return data;
+    }
+    else
+    {
+        QFile file(path);
+        if (file.open(QIODevice::ReadOnly))
+        {
+            QByteArray *data = new QByteArray(file.readAll());
+            prefetch_mutex.lock();
+            if (cache.maxCost() > 0) cache.insert(path, data);
+            prefetch_mutex.unlock();
+            return data;
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+}
+
+Prefetcher::Prefetcher(QCache<QString, QByteArray> *ch, QMutex *m)
+    : QThread()
+    , cache(ch)
+    , mutex(m)
+{
+}
+
+Prefetcher::~Prefetcher()
+{
+}
+
+void
+Prefetcher::setPrefetchImage(QStringList &list)
+{
+    plist = QStringList(list);
+}
+
+void
+Prefetcher::run()
+{
+    for (QStringList::const_iterator i = plist.constBegin();
+            i != plist.constEnd(); ++i)
+    {
+        QString path = *i;
+        mutex->lock();
+        bool c = cache->contains(path);
+        mutex->unlock();
+        if (!c)
+        {
+            QFile file(path);
+            if (file.open(QIODevice::ReadOnly))
+            {
+                QByteArray *data = new QByteArray(file.readAll());
+                mutex->lock();
+                if (cache->maxCost() > 0)
+                {
+                    cache->insert(path, data, 1);
+                }
+                else
+                {
+                    return;
+                }
+                mutex->unlock();
+            }
+        }
+    }
 }
 

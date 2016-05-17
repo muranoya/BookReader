@@ -27,6 +27,7 @@ public:
     // Group - Playlist
     static bool playlist_visible;
     static int playlist_slideshow_interval;
+    static int playlist_prefetch;
 
     static void SaveSettings();
     static void LoadSettings();

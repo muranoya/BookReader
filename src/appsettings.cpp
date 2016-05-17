@@ -17,6 +17,7 @@ int AppSettings::viewer_open_dir_level;
 
 bool AppSettings::playlist_visible;
 int AppSettings::playlist_slideshow_interval;
+int AppSettings::playlist_prefetch;
 
 void
 AppSettings::SaveSettings()
@@ -46,6 +47,7 @@ AppSettings::SaveSettings()
     settings.beginGroup("Playlist");
     settings.setValue("visible", playlist_visible);
     settings.setValue("slideshow_interval", playlist_slideshow_interval);
+    settings.setValue("prefetch", playlist_prefetch);
     settings.endGroup();
 }
 
@@ -77,6 +79,7 @@ AppSettings::LoadSettings()
     settings.beginGroup("Playlist");
     playlist_visible = settings.value("visible", false).toBool();
     playlist_slideshow_interval = settings.value("slideshow_interval", 3000).toInt();
+    playlist_prefetch = settings.value("prefetch", 20).toInt();
     settings.endGroup();
 }
 

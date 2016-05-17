@@ -12,6 +12,28 @@
 #include <QFileInfo>
 #include <QVector>
 #include <QTimer>
+#include <QCache>
+#include <QByteArray>
+#include <QThread>
+#include <QMutex>
+
+class Prefetcher : public QThread
+{
+Q_OBJECT
+public:
+    Prefetcher(QCache<QString, QByteArray> *ch, QMutex *m);
+    ~Prefetcher();
+
+    void setPrefetchImage(QStringList &list);
+
+protected:
+    virtual void run();
+
+private:
+    QCache<QString, QByteArray> *cache;
+    QMutex *mutex;
+    QStringList plist;
+};
 
 /*
  * QImage::bits,QImage::scanLineは、それぞれ横方向の画素が
@@ -69,6 +91,9 @@ public:
 
     void setOpenDirLevel(int n);
     int getOpenDirLevel() const;
+
+    void setImageCacheSize(int cost);
+    int getImageCacheSize() const;
 
     QSize orgImageSize(int i) const;
     QSize combinedImageSize() const;
@@ -140,6 +165,10 @@ private:
     QTimer slideshow_timer;
     int slideshow_interval;
     int opendirlevel;
+    QCache<QString, QByteArray> cache;
+
+    Prefetcher prefetcher;
+    QMutex prefetch_mutex;
 
     void createPlaylistMenus();
     void playlistItemRemove(QList<QListWidgetItem*> items);
@@ -150,6 +179,10 @@ private:
     void previousImages();
     bool validIndex(int i) const;
     bool isCopyDrop(const Qt::KeyboardModifiers km);
+    QString getFilePath(int i) const;
+    void prefetch();
+    QByteArray *readImageData(const QString &path);
 };
+
 
 #endif // IMAGEMANAGER_H
