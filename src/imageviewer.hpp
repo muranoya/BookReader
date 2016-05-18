@@ -125,6 +125,7 @@ private slots:
     void playlistItemDoubleClicked(QListWidgetItem *item);
     void slideshow_loop();
     void prefetcher_prefetchFinished();
+    void drag_check();
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event);
@@ -134,6 +135,7 @@ protected:
     virtual void dragMoveEvent(QDragMoveEvent *event);
     virtual void dropEvent(QDropEvent *event);
     virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
 
 private:
     // viewer
@@ -147,6 +149,10 @@ private:
     ViewMode vmode;           // 表示モード
     InterpolationMode imode;  // 画素補完モード
     bool rightbinding;        // 見開き表示時に右綴じで表示するか
+    QTimer drag_timer;
+    bool is_drag_image;
+    QPoint click_pos;
+    QPoint move_pos;
 
     void releaseImages();
     void showImages();

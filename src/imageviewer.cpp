@@ -20,6 +20,10 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
     , vmode(FULLSIZE)
     , imode(Bilinear)
     , rightbinding(false)
+    , drag_timer()
+    , is_drag_image(false)
+    , click_pos()
+    , move_pos()
     /* playlist */
     , playlistdock(new QDockWidget(tr("プレイリスト"), parent, flags))
     , playlist(new QListWidget())
@@ -51,6 +55,8 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
             this, SLOT(playlistItemDoubleClicked(QListWidgetItem*)));
     connect(&slideshow_timer, SIGNAL(timeout()),
             this, SLOT(slideshow_loop()));
+    connect(&drag_timer, SIGNAL(timeout()),
+            this, SLOT(drag_check()));
     connect(&prefetcher, SIGNAL(prefetchFinished()),
             this, SLOT(prefetcher_prefetchFinished()),
             Qt::QueuedConnection);
@@ -202,6 +208,15 @@ ImageViewer::setScale(ViewMode m, qreal s)
     bool c = m != vmode || s != scale_value;
     vmode = m;
     scale_value = s;
+
+    if (vmode == FULLSIZE || vmode == CUSTOM_SCALE)
+    {
+        setDragMode(QGraphicsView::ScrollHandDrag);
+    }
+    else
+    {
+        setDragMode(QGraphicsView::NoDrag);
+    }
     if (c) refresh();
 }
 
@@ -444,6 +459,17 @@ ImageViewer::prefetcher_prefetchFinished()
 }
 
 void
+ImageViewer::drag_check()
+{
+    int d =
+        (click_pos.x() - move_pos.x()) * (click_pos.x() - move_pos.x()) +
+        (click_pos.y() - move_pos.y()) * (click_pos.y() - move_pos.y());
+    if (!is_drag_image && d <= 25) nextImages();
+    is_drag_image = false;
+    drag_timer.stop();
+}
+
+void
 ImageViewer::keyPressEvent(QKeyEvent *event)
 {
     QGraphicsView::keyPressEvent(event);
@@ -502,8 +528,33 @@ void
 ImageViewer::mousePressEvent(QMouseEvent *event)
 {
     QGraphicsView::mousePressEvent(event);
-    if (event->buttons() & Qt::LeftButton)  nextImages();
-    if (event->buttons() & Qt::RightButton) previousImages();
+    if (event->buttons() & Qt::RightButton)
+    {
+        previousImages();
+    }
+    else
+    {
+        if (vmode == FULLSIZE || vmode == CUSTOM_SCALE)
+        {
+            move_pos = click_pos = event->pos();
+            drag_timer.start(100);
+        }
+        else if (event->buttons() & Qt::LeftButton)
+        {
+            nextImages();
+        }
+    }
+}
+
+void
+ImageViewer::mouseMoveEvent(QMouseEvent *event)
+{
+    QGraphicsView::mouseMoveEvent(event);
+    if (vmode == FULLSIZE || vmode == CUSTOM_SCALE)
+    {
+        is_drag_image = true;
+        move_pos = event->pos();
+    }
 }
 
 void
