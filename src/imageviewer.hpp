@@ -25,6 +25,7 @@ public:
     ~Prefetcher();
 
     void setPrefetchImage(QStringList &list);
+    void sendTermSig();
 
 signals:
     void prefetchFinished();
@@ -36,6 +37,7 @@ private:
     QCache<QString, QByteArray> *cache;
     QMutex *mutex;
     QStringList plist;
+    bool termsig;
 };
 
 /*

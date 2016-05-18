@@ -100,6 +100,11 @@ void
 ImageViewer::clearPlaylist()
 {
     bool c = countShowImages() > 0;
+
+    prefetch_old.clear();
+    prefetch_now.clear();
+    prefetcher.sendTermSig();
+
     while (playlist->count() > 0)
     {
         QListWidgetItem *item = playlist->item(0);
@@ -778,6 +783,10 @@ ImageViewer::playlistItemRemove(QList<QListWidgetItem*> items)
             const int r = playlist->row(*i);
             if (r < index) index--;
         }
+        
+        prefetch_old.removeOne(*i); 
+        prefetch_now.removeOne(*i); 
+
         playlist->removeItemWidget(*i);
         delete *i;
         img_count--;
@@ -909,8 +918,8 @@ ImageViewer::startPrefetch()
         QStringList list;
         int c = count();
         int plen = std::min(getImageCacheSize(), c);
-        int l = plen/2;
-        int r = plen/2+plen%2;
+        int l = plen/2-1;
+        int r = plen/2+plen%2+1;
         for (int i = -l; i < r; i++)
         {
             int ti = (index + i) % c;
@@ -962,6 +971,7 @@ Prefetcher::Prefetcher(QCache<QString, QByteArray> *ch, QMutex *m)
     : QThread()
     , cache(ch)
     , mutex(m)
+    , termsig(false)
 {
 }
 
@@ -976,11 +986,19 @@ Prefetcher::setPrefetchImage(QStringList &list)
 }
 
 void
+Prefetcher::sendTermSig()
+{
+    termsig = true;
+}
+
+void
 Prefetcher::run()
 {
+    termsig = false;
     for (QStringList::const_iterator i = plist.constBegin();
             i != plist.constEnd(); ++i)
     {
+        if (termsig) return;
         QString path = *i;
         mutex->lock();
         bool c = cache->contains(path);
