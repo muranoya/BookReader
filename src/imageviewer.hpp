@@ -26,6 +26,9 @@ public:
 
     void setPrefetchImage(QStringList &list);
 
+signals:
+    void prefetchFinished();
+
 protected:
     virtual void run();
 
@@ -67,7 +70,6 @@ public:
     void clearPlaylist();
 
     QVector<int> histgram() const;
-    QList<QString> prefetchList();
 
     void startSlideshow();
     void stopSlideshow();
@@ -114,7 +116,6 @@ public:
 signals:
     void stoppedSlideshow();
     void changeImage();
-    void prefetchDone();
 
 private slots:
     void menu_open_triggered();
@@ -123,7 +124,7 @@ private slots:
 
     void playlistItemDoubleClicked(QListWidgetItem *item);
     void slideshow_loop();
-    void prefetcher_finished();
+    void prefetcher_prefetchFinished();
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event);
@@ -168,10 +169,14 @@ private:
     QTimer slideshow_timer;
     int slideshow_interval;
     int opendirlevel;
-    QCache<QString, QByteArray> cache;
 
+    // prefetch
+    QCache<QString, QByteArray> cache;
     Prefetcher prefetcher;
     QMutex prefetch_mutex;
+    QList<QListWidgetItem*> prefetch_old;
+    QList<QListWidgetItem*> prefetch_now;
+    const QIcon prefetched_icon;
 
     void createPlaylistMenus();
     void playlistItemRemove(QList<QListWidgetItem*> items);
@@ -182,8 +187,7 @@ private:
     void previousImages();
     bool validIndex(int i) const;
     bool isCopyDrop(const Qt::KeyboardModifiers km);
-    QString getFilePath(int i) const;
-    void prefetch();
+    void startPrefetch();
     QByteArray *readImageData(const QString &path);
 };
 

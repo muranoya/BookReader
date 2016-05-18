@@ -3,7 +3,6 @@
 
 #include "imageviewer.hpp"
 #include "histgramdialog.hpp"
-#include "cacheview.hpp"
 
 #include <QMenuBar>
 #include <QMenu>
@@ -46,7 +45,6 @@ private slots:
     void menu_window_hide_triggered();
     void menu_window_playlist_triggered();
     void menu_window_histgram_triggered();
-    void menu_window_cache_triggered();
 
     /******************* help *******************/
     void menu_help_aboutqt_triggered();
@@ -60,9 +58,6 @@ private slots:
     void imgview_changeImage();
 
     void closeHistgramDialog();
-    void closeCacheView();
-
-    void prefetch_done();
 
 protected:
     virtual void changeEvent(QEvent *event);
@@ -95,12 +90,10 @@ private:
     QAction *menu_window_hide;
     QAction *menu_window_playlist;
     QAction *menu_window_histgram;
-    QAction *menu_window_cache;
     QMenu *menu_help;
     QAction *menu_help_aboutqt;
 
     HistgramDialog *histdialog;
-    CacheView *cacheview;
 
     /******************* util *******************/
     void createMenus();

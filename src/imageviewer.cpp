@@ -37,6 +37,9 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
     , cache(10)
     , prefetcher(&cache, &prefetch_mutex)
     , prefetch_mutex()
+    , prefetch_old()
+    , prefetch_now()
+    , prefetched_icon(":/check.png")
 {
     setScene(view_scene);
     view_scene->addItem(view_item);
@@ -48,8 +51,9 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
             this, SLOT(playlistItemDoubleClicked(QListWidgetItem*)));
     connect(&slideshow_timer, SIGNAL(timeout()),
             this, SLOT(slideshow_loop()));
-    connect(&prefetcher, SIGNAL(finished()),
-            this, SLOT(prefetcher_finished()));
+    connect(&prefetcher, SIGNAL(prefetchFinished()),
+            this, SLOT(prefetcher_prefetchFinished()),
+            Qt::QueuedConnection);
 
     playlist->setDefaultDropAction(Qt::MoveAction);
     playlist->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -119,15 +123,6 @@ ImageViewer::histgram() const
         array[qBlue(rgb) +256*2]++;
     }
     return vec;
-}
-
-QList<QString>
-ImageViewer::prefetchList()
-{
-    prefetch_mutex.lock();
-    QList<QString> list = cache.keys();
-    prefetch_mutex.unlock();
-    return list;
 }
 
 void
@@ -262,6 +257,8 @@ ImageViewer::setImageCacheSize(int cost)
     prefetch_mutex.lock();
     cache.setMaxCost(cost);
     prefetch_mutex.unlock();
+    
+    startPrefetch();
 }
 
 int
@@ -432,9 +429,18 @@ ImageViewer::slideshow_loop()
 }
 
 void
-ImageViewer::prefetcher_finished()
+ImageViewer::prefetcher_prefetchFinished()
 {
-    emit prefetchDone();
+    for (QList<QListWidgetItem*>::iterator i = prefetch_old.begin();
+            i != prefetch_old.end(); ++i)
+    {
+        (*i)->setIcon(QIcon());
+    }
+    for (QList<QListWidgetItem*>::iterator i = prefetch_now.begin();
+            i != prefetch_now.end(); ++i)
+    {
+        (*i)->setIcon(prefetched_icon);
+    }
 }
 
 void
@@ -527,7 +533,7 @@ ImageViewer::showImages()
                 : temp.convertToFormat(QImage::Format_ARGB32));
     }
 
-    prefetch();
+    startPrefetch();
 
     imageCombine(img_orgs);
     imageScale();
@@ -841,19 +847,14 @@ ImageViewer::isCopyDrop(const Qt::KeyboardModifiers km)
 #endif
 }
 
-QString
-ImageViewer::getFilePath(int i) const
-{
-    return validIndex(i) ?
-        playlist->item(i)->data(Qt::ToolTipRole).toString()
-        : QString();
-}
-
 void
-ImageViewer::prefetch()
+ImageViewer::startPrefetch()
 {
-    if (!prefetcher.isRunning())
+    if (!prefetcher.isRunning() && !empty())
     {
+        prefetch_old = prefetch_now;
+        prefetch_now.clear();
+
         QStringList list;
         int c = count();
         int plen = std::min(getImageCacheSize(), c);
@@ -863,7 +864,9 @@ ImageViewer::prefetch()
         {
             int ti = (index + i) % c;
             if (ti < 0) ti += c;
-            list << getFilePath(ti);
+            QListWidgetItem *li = playlist->item(ti);
+            list << li->data(Qt::ToolTipRole).toString();
+            prefetch_now << li;
         }
 
         prefetcher.setPrefetchImage(list);
@@ -931,6 +934,7 @@ Prefetcher::run()
         mutex->lock();
         bool c = cache->contains(path);
         mutex->unlock();
+
         if (!c)
         {
             QFile file(path);
@@ -944,11 +948,14 @@ Prefetcher::run()
                 }
                 else
                 {
+                    mutex->unlock();
+                    emit prefetchFinished();
                     return;
                 }
                 mutex->unlock();
             }
         }
     }
+    emit prefetchFinished();
 }
 

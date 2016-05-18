@@ -9,7 +9,6 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , imgview(new ImageViewer(this))
     , histdialog(new HistgramDialog())
-    , cacheview(new CacheView(this))
 {
     addDockWidget(Qt::LeftDockWidgetArea, imgview->playlistDock());
     setCentralWidget(imgview);
@@ -20,13 +19,9 @@ MainWindow::MainWindow(QWidget *parent)
             this, SLOT(imgview_stoppedSlideshow()));
     connect(imgview, SIGNAL(changeImage()),
             this, SLOT(imgview_changeImage()));
-    connect(imgview, SIGNAL(prefetchDone()),
-            this, SLOT(prefetch_done()));
 
     connect(histdialog, SIGNAL(closeDialog()),
             this, SLOT(closeHistgramDialog()));
-    connect(cacheview,  SIGNAL(closeDialog()),
-            this, SLOT(closeCacheView()));
 
     createMenus();
 
@@ -65,7 +60,6 @@ MainWindow::~MainWindow()
     delete menu_window_hide;
     delete menu_window_playlist;
     delete menu_window_histgram;
-    delete menu_window_cache;
 
     delete menu_help;
     delete menu_help_aboutqt;
@@ -276,19 +270,6 @@ MainWindow::menu_window_histgram_triggered()
     }
 }
 
-void
-MainWindow::menu_window_cache_triggered()
-{
-    if (menu_window_cache->isChecked())
-    {
-        cacheview->showCache(imgview->prefetchList());
-    }
-    else
-    {
-        cacheview->close();
-    }
-}
-
 /******************* help *******************/
 void
 MainWindow::menu_help_aboutqt_triggered()
@@ -396,21 +377,6 @@ void
 MainWindow::closeHistgramDialog()
 {
     menu_window_histgram->setChecked(false);
-}
-
-void
-MainWindow::closeCacheView()
-{
-    menu_window_cache->setChecked(false);
-}
-
-void
-MainWindow::prefetch_done()
-{
-    if (menu_window_cache->isChecked())
-    {
-        cacheview->showCache(imgview->prefetchList());
-    }
 }
 
 void
@@ -545,21 +511,16 @@ MainWindow::createMenus()
     menu_window_playlist->setCheckable(true);
     menu_window_histgram = new QAction(tr("ヒストグラム"), this);
     menu_window_histgram->setCheckable(true);
-    menu_window_cache = new QAction(tr("キャッシュビュー"), this);
-    menu_window_cache->setCheckable(true);
     menu_window->addAction(menu_window_hide);
     menu_window->addSeparator();
     menu_window->addAction(menu_window_playlist);
     menu_window->addAction(menu_window_histgram);
-    menu_window->addAction(menu_window_cache);
     connect(menu_window_hide, SIGNAL(triggered()),
             this, SLOT(menu_window_hide_triggered()));
     connect(menu_window_playlist, SIGNAL(triggered()),
             this, SLOT(menu_window_playlist_triggered()));
     connect(menu_window_histgram, SIGNAL(triggered()),
             this, SLOT(menu_window_histgram_triggered()));
-    connect(menu_window_cache, SIGNAL(triggered()),
-            this, SLOT(menu_window_cache_triggered()));
     menuBar()->addMenu(menu_window);
 
     menu_help = new QMenu(this);
