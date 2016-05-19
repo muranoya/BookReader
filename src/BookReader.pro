@@ -9,6 +9,7 @@ SOURCES += main.cpp\
 mainwindow.cpp \
 settingscaledialog.cpp \
 imageviewer.cpp \
+prefetcher.cpp \
 settingsdialog.cpp \
 histgramdialog.cpp \
 appsettings.cpp \
@@ -19,6 +20,7 @@ nullptr.hpp \
 appinfo.hpp \
 histgramdialog.hpp \
 imageviewer.hpp \
+prefetcher.hpp \
 mainwindow.hpp \
 settingscaledialog.hpp \
 settingsdialog.hpp \
