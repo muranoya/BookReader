@@ -8,6 +8,19 @@
 #include <QDir>
 #include <cassert>
 
+static const QString readable_suffix[] = 
+{
+    "jpg", "jpeg",
+    "png",
+    "pbm", "ppm", "pgm", "pnm",
+    "bmp",
+    "gif",
+    "tiff",
+    "xbm",
+    "xpm",
+};
+static const QString readable_format("Images (*.jpg *.jpeg *.png *.pbm *.ppm *.pgm *.pnm *.bmp *.gif *.tiff *.xbm *.xpm)");
+
 ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
     : QGraphicsView(parent)
     , view_scene(new QGraphicsScene())
@@ -403,6 +416,12 @@ ImageViewer::playlistDock() const
     return playlistdock;
 }
 
+QString
+ImageViewer::readableExtFormat() const
+{
+    return readable_format;
+}
+
 void
 ImageViewer::menu_open_triggered()
 {
@@ -560,6 +579,17 @@ ImageViewer::mouseMoveEvent(QMouseEvent *event)
         is_drag_image = true;
         move_pos = event->pos();
     }
+}
+
+bool
+ImageViewer::isReadableImageFile(const QString &path) const
+{
+    QString suf = QFileInfo(path).suffix().toLower();
+    for (int i = 0; i < (int)(sizeof(readable_suffix)/sizeof(readable_suffix[0])); ++i)
+    {
+        if (suf.compare(readable_suffix[i]) == 0) return true;
+    }
+    return false;
 }
 
 void
@@ -726,6 +756,12 @@ ImageViewer::imageCombine(const QVector<QImage> &imgs)
     vec.clear();
 }
 
+bool
+ImageViewer::validIndex(int i) const
+{
+     return (0 <= i && i < count());
+}
+
 void
 ImageViewer::createPlaylistMenus()
 {
@@ -805,46 +841,6 @@ ImageViewer::playlistItemRemove(QList<QListWidgetItem*> items)
 }
 
 void
-ImageViewer::openFilesAndDirs(const QStringList &paths, int level)
-{
-    if (paths.empty()) return;
-
-    for (QStringList::const_iterator i = paths.constBegin();
-            i != paths.constEnd(); ++i)
-    {
-        const QFileInfo info(*i);
-        if (info.isFile())
-        {
-            QListWidgetItem *newitem =
-                new QListWidgetItem(info.fileName(), playlist);
-            newitem->setData(Qt::ToolTipRole, *i);
-            playlist->addItem(newitem);
-            img_count++;
-        }
-        else if (level > 0)
-        {
-            QStringList newlist;
-            const QFileInfoList entrylist = QDir(*i).entryInfoList();
-            const int canonical_len = info.canonicalPath().length();
-            for (QFileInfoList::const_iterator j = entrylist.constBegin();
-                    j != entrylist.constEnd(); ++j)
-            {
-                if (canonical_len < j->canonicalPath().length())
-                {
-                    newlist << j->filePath();
-                }
-            }
-            openFilesAndDirs(newlist, level-1);
-        }
-    }
-
-    if (!validIndex(index) && validIndex(0))
-    {
-        index = 0;
-    }
-}
-
-void
 ImageViewer::setHighlight()
 {
     const int len = std::min(count(), countShowImages());
@@ -891,46 +887,43 @@ ImageViewer::previousImages()
     setHighlight();
 }
 
-bool
-ImageViewer::validIndex(int i) const
-{
-     return (0 <= i && i < count());
-}
-
-bool
-ImageViewer::isCopyDrop(const Qt::KeyboardModifiers km)
-{
-#ifdef __APPLE__
-    return (km & Qt::AltModifier) == Qt::AltModifier;
-#else
-    return (km & Qt::ControlModifier) == Qt::ControlModifier;
-#endif
-}
-
 void
-ImageViewer::startPrefetch()
+ImageViewer::openFilesAndDirs(const QStringList &paths, int level)
 {
-    if (!prefetcher.isRunning() && !empty())
+    if (paths.empty()) return;
+
+    for (QStringList::const_iterator i = paths.constBegin();
+            i != paths.constEnd(); ++i)
     {
-        prefetch_old = prefetch_now;
-        prefetch_now.clear();
-
-        QStringList list;
-        int c = count();
-        int plen = std::min(getImageCacheSize(), c);
-        int l = plen/2-1;
-        int r = plen/2+plen%2+1;
-        for (int i = -l; i < r; i++)
+        const QFileInfo info(*i);
+        if (info.isFile() && isReadableImageFile(*i))
         {
-            int ti = (index + i) % c;
-            if (ti < 0) ti += c;
-            QListWidgetItem *li = playlist->item(ti);
-            list << li->data(Qt::ToolTipRole).toString();
-            prefetch_now << li;
+            QListWidgetItem *newitem =
+                new QListWidgetItem(info.fileName(), playlist);
+            newitem->setData(Qt::ToolTipRole, *i);
+            playlist->addItem(newitem);
+            img_count++;
         }
+        else if (level > 0)
+        {
+            QStringList newlist;
+            const QFileInfoList entrylist = QDir(*i).entryInfoList();
+            const int canonical_len = info.canonicalPath().length();
+            for (QFileInfoList::const_iterator j = entrylist.constBegin();
+                    j != entrylist.constEnd(); ++j)
+            {
+                if (canonical_len < j->canonicalPath().length())
+                {
+                    newlist << j->filePath();
+                }
+            }
+            openFilesAndDirs(newlist, level-1);
+        }
+    }
 
-        prefetcher.setPrefetchImage(list);
-        prefetcher.start();
+    if (!validIndex(index) && validIndex(0))
+    {
+        index = 0;
     }
 }
 
@@ -967,6 +960,33 @@ ImageViewer::readImageData(const QString &path)
     }
 }
 
+void
+ImageViewer::startPrefetch()
+{
+    if (!prefetcher.isRunning() && !empty())
+    {
+        prefetch_old = prefetch_now;
+        prefetch_now.clear();
+
+        QStringList list;
+        int c = count();
+        int plen = std::min(getImageCacheSize(), c);
+        int l = plen/2-1;
+        int r = plen/2+plen%2+1;
+        for (int i = -l; i < r; i++)
+        {
+            int ti = (index + i) % c;
+            if (ti < 0) ti += c;
+            QListWidgetItem *li = playlist->item(ti);
+            list << li->data(Qt::ToolTipRole).toString();
+            prefetch_now << li;
+        }
+
+        prefetcher.setPrefetchImage(list);
+        prefetcher.start();
+    }
+}
+
 Prefetcher::Prefetcher(QCache<QString, QByteArray> *ch, QMutex *m)
     : QThread()
     , cache(ch)
@@ -999,6 +1019,7 @@ Prefetcher::run()
             i != plist.constEnd(); ++i)
     {
         if (termsig) return;
+
         QString path = *i;
         mutex->lock();
         bool c = cache->contains(path);
@@ -1026,5 +1047,15 @@ Prefetcher::run()
         }
     }
     emit prefetchFinished();
+}
+
+bool
+ImageViewer::isCopyDrop(const Qt::KeyboardModifiers km) const
+{
+#ifdef __APPLE__
+    return (km & Qt::AltModifier) == Qt::AltModifier;
+#else
+    return (km & Qt::ControlModifier) == Qt::ControlModifier;
+#endif
 }
 

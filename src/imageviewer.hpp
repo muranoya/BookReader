@@ -114,6 +114,7 @@ public:
     QStringList currentFilePaths() const;
 
     QDockWidget *playlistDock() const;
+    QString readableExtFormat() const;
 
 signals:
     void stoppedSlideshow();
@@ -156,6 +157,7 @@ private:
     QPoint click_pos;
     QPoint move_pos;
 
+    bool isReadableImageFile(const QString &path) const;
     void releaseImages();
     void showImages();
     void refresh();
@@ -178,6 +180,16 @@ private:
     int slideshow_interval;
     int opendirlevel;
 
+    bool validIndex(int i) const;
+    void createPlaylistMenus();
+    void playlistItemRemove(QList<QListWidgetItem*> items);
+    void setHighlight();
+    void clearHighlight();
+    void nextImages();
+    void previousImages();
+    void openFilesAndDirs(const QStringList &paths, int level);
+    QByteArray *readImageData(const QString &path);
+
     // prefetch
     QCache<QString, QByteArray> cache;
     Prefetcher prefetcher;
@@ -186,17 +198,9 @@ private:
     QList<QListWidgetItem*> prefetch_now;
     const QIcon prefetched_icon;
 
-    void createPlaylistMenus();
-    void playlistItemRemove(QList<QListWidgetItem*> items);
-    void openFilesAndDirs(const QStringList &paths, int level);
-    void setHighlight();
-    void clearHighlight();
-    void nextImages();
-    void previousImages();
-    bool validIndex(int i) const;
-    bool isCopyDrop(const Qt::KeyboardModifiers km);
     void startPrefetch();
-    QByteArray *readImageData(const QString &path);
+
+    bool isCopyDrop(const Qt::KeyboardModifiers km) const;
 };
 
 

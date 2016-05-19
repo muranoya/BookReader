@@ -71,7 +71,7 @@ MainWindow::menu_file_open_triggered()
 {
     QStringList files = QFileDialog::getOpenFileNames(
                 this, tr("ファイルを開く"), AppSettings::main_dialog_file,
-                "Images (*.png *.jpg *.jpeg *.bmp *.gif)");
+                imgview->readableExtFormat());
 
     if (!files.isEmpty())
     {
@@ -438,7 +438,7 @@ MainWindow::createMenus()
     menu_view_fullsize->setCheckable(true);
     menu_view_fitwindow = new QAction(tr("ウィンドウに合わせて表示する"), this);
     menu_view_fitwindow->setCheckable(true);
-    menu_view_fitimage = new QAction(tr("画像に合わせて表示する"), this);
+    menu_view_fitimage = new QAction(tr("横幅に合わせて表示する"), this);
     menu_view_fitimage->setCheckable(true);
     menu_view_setscale = new QAction(tr("倍率を指定して表示する"), this);
     menu_view_setscale->setCheckable(true);
