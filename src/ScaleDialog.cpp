@@ -1,4 +1,4 @@
-#include "settingscaledialog.hpp"
+#include "ScaleDialog.hpp"
 
 SettingScaleDialog::SettingScaleDialog(QWidget *parent)
     : QDialog(parent,
@@ -13,9 +13,9 @@ SettingScaleDialog::SettingScaleDialog(QWidget *parent)
     , width_label(new QLabel())
     , desc_width_label(new QLabel())
     , buttonbox(new QDialogButtonBox(
-                    QDialogButtonBox::Ok |
-                    QDialogButtonBox::Cancel,
-                    Qt::Horizontal))
+                        QDialogButtonBox::Ok |
+                        QDialogButtonBox::Cancel,
+                        Qt::Horizontal))
 {
     setLayout(layout);
     setWindowTitle(tr("倍率の設定"));
@@ -67,9 +67,9 @@ SettingScaleDialog::~SettingScaleDialog()
 }
 
 bool
-SettingScaleDialog::getScale(const QSize size, const qreal ori)
+SettingScaleDialog::getScale(const QSize &size, const qreal ori)
 {
-    img_size = size;
+    img_size = QSize(size);
     width_label->setText(QString::number(size.width()));
     height_label->setText(QString::number(size.height()));
 
@@ -108,6 +108,7 @@ SettingScaleDialog::rejected_DialogButton()
 void
 SettingScaleDialog::spinbox_valueChanged(const double d)
 {
-    width_label->setText(QString::number(int(d*img_size.width())));
-    height_label->setText(QString::number(int(d*img_size.height())));
+    width_label->setText(QString::number(int(d * img_size.width())));
+    height_label->setText(QString::number(int(d * img_size.height())));
 }
+

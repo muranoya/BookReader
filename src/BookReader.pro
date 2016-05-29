@@ -7,24 +7,24 @@ TEMPLATE = app
 
 SOURCES += \
 main.cpp\
-mainwindow.cpp \
-appsettings.cpp \
-imageviewer.cpp \
+MainWindow.cpp \
+AppSettings.cpp \
+ImageViewer.cpp \
 image.cpp \
-settingscaledialog.cpp \
-settingsdialog.cpp \
-histgramdialog.cpp
+ScaleDialog.cpp \
+SettingDialog.cpp \
+HistgramDialog.cpp
 
 HEADERS += \
 nullptr.hpp \
 appinfo.hpp \
-mainwindow.hpp \
-appsettings.hpp \
-imageviewer.hpp \
+MainWindow.hpp \
+AppSettings.hpp \
+ImageViewer.hpp \
 image.hpp \
-settingscaledialog.hpp \
-settingsdialog.hpp \
-histgramdialog.hpp
+ScaleDialog.hpp \
+SettingDialog.hpp \
+HistgramDialog.hpp
 
 FORMS +=
 

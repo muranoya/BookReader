@@ -1,9 +1,9 @@
 #include <QDir>
-#include "mainwindow.hpp"
-#include "settingscaledialog.hpp"
+#include "MainWindow.hpp"
+#include "ScaleDialog.hpp"
 #include "appinfo.hpp"
-#include "appsettings.hpp"
-#include "settingsdialog.hpp"
+#include "AppSettings.hpp"
+#include "SettingDialog.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -75,8 +75,7 @@ MainWindow::menu_file_open_triggered()
 
     if (!files.isEmpty())
     {
-        const QFileInfo info(files.at(0));
-        const QDir dir = info.absoluteDir();
+        const QDir dir = QFileInfo(files.at(0)).absoluteDir();
         AppSettings::main_dialog_file = dir.absolutePath();
         imgview->clearPlaylist();
         imgview->openImages(files);

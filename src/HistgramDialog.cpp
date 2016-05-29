@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <cassert>
-#include "histgramdialog.hpp"
+#include "HistgramDialog.hpp"
 
 HistgramDialog::HistgramDialog(QWidget *parent)
     : QDialog(parent,

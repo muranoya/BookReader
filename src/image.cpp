@@ -2,7 +2,7 @@
 #include <cmath>
 
 QImage
-nn(const QImage src, const qreal s)
+nn(const QImage &src, const qreal s)
 {
     const int w = src.width();
     const int h = src.height();
@@ -29,7 +29,7 @@ nn(const QImage src, const qreal s)
 }
 
 QImage
-bl(const QImage src, const qreal s)
+bl(const QImage &src, const qreal s)
 {
     const int w = src.width();
     const int h = src.height();
@@ -133,7 +133,7 @@ bicubic_matmul(const qreal d1[4], const int d2[4][4], const qreal d3[4])
 }
 
 QImage
-bc(const QImage src, const qreal s)
+bc(const QImage &src, const qreal s)
 {
     const int w = src.width();
     const int h = src.height();

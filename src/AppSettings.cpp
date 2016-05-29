@@ -1,5 +1,5 @@
 #include <QSettings>
-#include "appsettings.hpp"
+#include "AppSettings.hpp"
 #include "appinfo.hpp"
 
 QSize AppSettings::mainwindow_size;
@@ -68,16 +68,16 @@ AppSettings::LoadSettings()
     settings.endGroup();
 
     settings.beginGroup("Viewer");
-    viewer_scaling_mode = settings.value("scaling_mode", 0).toInt();
+    viewer_scaling_mode = settings.value("scaling_mode", 1).toInt();
     viewer_scaling_times = settings.value("scaling_times", 1.0).toReal();
-    viewer_ipixmode = settings.value("ipix_mode", 0).toInt();
+    viewer_ipixmode = settings.value("ipix_mode", 1).toInt();
     viewer_spread = settings.value("image_spread", false).toBool();
     viewer_rightbinding = settings.value("rightbinding", false).toBool();
     viewer_open_dir_level = settings.value("open_dir_level", 999).toInt();
     settings.endGroup();
 
     settings.beginGroup("Playlist");
-    playlist_visible = settings.value("visible", false).toBool();
+    playlist_visible = settings.value("visible", true).toBool();
     playlist_slideshow_interval = settings.value("slideshow_interval", 3000).toInt();
     playlist_prefetch = settings.value("prefetch", 20).toInt();
     settings.endGroup();

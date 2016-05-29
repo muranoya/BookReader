@@ -1,6 +1,6 @@
-#include "settingsdialog.hpp"
-#include "appsettings.hpp"
-#include "imageviewer.hpp"
+#include "SettingDialog.hpp"
+#include "AppSettings.hpp"
+#include "ImageViewer.hpp"
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent,
@@ -80,13 +80,13 @@ void
 SettingsDialog::button_save()
 {
     saveSettings();
-    this->close();
+    close();
 }
 
 void
 SettingsDialog::button_cancel()
 {
-    this->close();
+    close();
 }
 
 void

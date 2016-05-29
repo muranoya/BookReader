@@ -82,7 +82,7 @@ public:
     QString currentFileName(int i) const;
 
     QDockWidget *playlistDock() const;
-    QString readableExtFormat() const;
+    const QString& readableExtFormat() const;
 
 signals:
     void stoppedSlideshow();
@@ -95,7 +95,7 @@ private slots:
 
     void playlistItemDoubleClicked(QListWidgetItem *item);
     void slideshow_loop();
-    void prefetcher_prefetchFinished();
+    void prefetcherFinished();
     void drag_check();
 
 protected:
@@ -130,7 +130,7 @@ private:
             QString logicalFilePath() const;
             QString logicalFileName() const;
 
-            QByteArray rawFilePath() const;
+            const QByteArray& rawFilePath() const;
 
             QString createKey() const;
 
@@ -148,7 +148,8 @@ private:
                     QListWidget *parent = 0);
             explicit PlayListItem(const QString &f, QListWidget *parent = 0);
             virtual ~PlayListItem();
-            File file() const;
+
+            const File& file() const;
         private:
             File f;
     };
@@ -211,7 +212,7 @@ private:
 
     bool validIndex(int i) const;
     void createPlaylistMenus();
-    void playlistItemRemove(QList<QListWidgetItem*> items);
+    void playlistItemRemove(const QList<QListWidgetItem*> &items);
     void setHighlight();
     void clearHighlight();
     File currentFile(int i) const;
@@ -226,11 +227,11 @@ private:
 
     // prefetch
     QCache<QString, QByteArray> cache;
-    Prefetcher prefetcher;
-    QMutex prefetch_mutex;
-    QList<QListWidgetItem*> prefetch_old;
-    QList<QListWidgetItem*> prefetch_now;
-    const QIcon prefetched_icon;
+    Prefetcher prfter;
+    QMutex prft_mutex;
+    QList<QListWidgetItem*> prft_old;
+    QList<QListWidgetItem*> prft_now;
+    const QIcon prft_icon;
 
     void startPrefetch();
 

@@ -1,8 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "imageviewer.hpp"
-#include "histgramdialog.hpp"
+#include "ImageViewer.hpp"
+#include "HistgramDialog.hpp"
 
 #include <QMenuBar>
 #include <QMenu>

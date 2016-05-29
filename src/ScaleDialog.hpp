@@ -14,7 +14,7 @@ public:
     explicit SettingScaleDialog(QWidget *parent = 0);
     ~SettingScaleDialog();
 
-    bool getScale(const QSize size, const qreal ori);
+    bool getScale(const QSize &size, const qreal ori);
     qreal getValue() const;
 
 private slots:
