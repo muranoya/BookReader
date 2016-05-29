@@ -3,10 +3,13 @@
 #include "nullptr.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <QScrollBar>
 #include <QMimeData>
 #include <QDir>
-#include <cassert>
+
+#include <archive.h>
+#include <archive_entry.h>
 
 static const QString readable_suffix[] = 
 {
@@ -80,7 +83,7 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
             this, SLOT(slideshow_loop()));
     connect(&drag_timer, SIGNAL(timeout()),
             this, SLOT(drag_check()));
-    connect(&prefetcher, SIGNAL(prefetchFinished()),
+    connect(&prefetcher, SIGNAL(finished()),
             this, SLOT(prefetcher_prefetchFinished()),
             Qt::QueuedConnection);
 
@@ -356,18 +359,6 @@ ImageViewer::currentIndex(int i) const
     return -1;
 }
 
-QString
-ImageViewer::currentFileName(int i) const
-{
-    assert(i >= 0);
-    const int ti = currentIndex(i);
-    if (validIndex(ti))
-    {
-        return QFileInfo(currentFilePath(i)).fileName();
-    }
-    return QString();
-}
-
 QStringList
 ImageViewer::currentFileNames() const
 {
@@ -375,49 +366,22 @@ ImageViewer::currentFileNames() const
     const int len = std::min(count(), countShowImages());
     for (int i = 0; i < len; ++i)
     {
-        QString str = currentFileName(i);
-        if (str.isEmpty())
-        {
-            break;
-        }
-        else
-        {
-            list << str;
-        }
+        list << currentFileName(i);
     }
     return list;
 }
 
 QString
-ImageViewer::currentFilePath(int i) const
+ImageViewer::currentFileName(int i) const
 {
     assert(i >= 0);
     const int ti = currentIndex(i);
     if (validIndex(ti))
     {
-        return playlist->item(ti)->data(Qt::ToolTipRole).toString();
+        PlayListItem *item = dynamic_cast<PlayListItem*>(playlist->item(ti));
+        return item->file().logicalFileName();
     }
     return QString();
-}
-
-QStringList
-ImageViewer::currentFilePaths() const
-{
-    QStringList list;
-    const int len = std::min(count(), countShowImages());
-    for (int i = 0; i < len; ++i)
-    {
-        QString str = currentFilePath(i);
-        if (str.isEmpty())
-        {
-            break;
-        }
-        else
-        {
-            list << str;
-        }
-    }
-    return list;
 }
 
 QDockWidget *
@@ -617,12 +581,12 @@ void
 ImageViewer::showImages()
 {
     img_orgs.clear();
-    QStringList list = currentFilePaths();
-    for (QStringList::const_iterator i = list.constBegin();
+    QList<File> list = currentFiles();
+    for (QList<File>::const_iterator i = list.constBegin();
             i != list.constEnd(); ++i)
     {
         QImage temp;
-        QByteArray *data = readImageData(*i);
+        QByteArray *data = readData(*i);
         temp.loadFromData(*data);
         free(data);
         img_orgs << (temp.format() == QImage::Format_ARGB32 ? temp
@@ -803,7 +767,7 @@ ImageViewer::playlistItemRemove(QList<QListWidgetItem*> items)
 
     bool contains = false;
     QListWidgetItem *current = validIndex(index) ? playlist->item(index)
-                                                 : nullptr;
+                                              : nullptr;
     QList<QListWidgetItem*> cs;
     const int len = std::min(count(), countShowImages());
     for (int i = 0; i < len; ++i)
@@ -874,6 +838,31 @@ ImageViewer::clearHighlight()
     }
 }
 
+ImageViewer::File
+ImageViewer::currentFile(int i) const
+{
+    assert(i >= 0);
+    const int ti = currentIndex(i);
+    if (validIndex(ti))
+    {
+        PlayListItem *item = dynamic_cast<PlayListItem*>(playlist->item(ti));
+        return item->file();
+    }
+    return ImageViewer::File();
+}
+
+QList<ImageViewer::File>
+ImageViewer::currentFiles() const
+{
+    QList<ImageViewer::File> list;
+    const int len = std::min(count(), countShowImages());
+    for (int i = 0; i < len; ++i)
+    {
+        list << currentFile(i);
+    }
+    return list;
+}
+
 void
 ImageViewer::nextImages()
 {
@@ -898,6 +887,43 @@ ImageViewer::previousImages()
 }
 
 void
+ImageViewer::openArchiveFile(const QString &path)
+{
+    struct archive *a;
+    struct archive_entry *entry;
+    int r;
+
+    a = archive_read_new();
+    archive_read_support_filter_all(a);
+    archive_read_support_format_all(a);
+    r = archive_read_open_filename(a, path.toUtf8().constData(), 1024*128);
+    if (r != ARCHIVE_OK)
+    {
+        fprintf(stderr, "%s\n", archive_error_string(a));
+        return;
+    }
+    while (archive_read_next_header(a, &entry) == ARCHIVE_OK)
+    {
+        QByteArray rawEntry(archive_entry_pathname(entry));
+        QString fname(rawEntry);
+        if (isReadableImageFile(fname))
+        {
+            archive_read_data_skip(a);
+            PlayListItem *newitem = 
+                new PlayListItem(path, rawEntry, playlist);
+            playlist->addItem(newitem);
+            img_count++;
+        }
+    }
+    r = archive_read_free(a);
+    if (r != ARCHIVE_OK)
+    {
+        fprintf(stderr, "%s\n", archive_error_string(a));
+        return;
+    }
+}
+
+void
 ImageViewer::openFilesAndDirs(const QStringList &paths, int level)
 {
     if (paths.empty()) return;
@@ -906,13 +932,19 @@ ImageViewer::openFilesAndDirs(const QStringList &paths, int level)
             i != paths.constEnd(); ++i)
     {
         const QFileInfo info(*i);
-        if (info.isFile() && isReadableImageFile(*i))
+        if (info.isFile())
         {
-            QListWidgetItem *newitem =
-                new QListWidgetItem(info.fileName(), playlist);
-            newitem->setData(Qt::ToolTipRole, *i);
-            playlist->addItem(newitem);
-            img_count++;
+            if (isReadableImageFile(*i))
+            {
+                PlayListItem *newitem =
+                    new PlayListItem(*i, playlist);
+                playlist->addItem(newitem);
+                img_count++;
+            }
+            else
+            {
+                openArchiveFile(*i);
+            }
         }
         else if (level > 0)
         {
@@ -938,36 +970,91 @@ ImageViewer::openFilesAndDirs(const QStringList &paths, int level)
 }
 
 QByteArray*
-ImageViewer::readImageData(const QString &path)
+ImageViewer::readImageData(const File &f)
 {
-    prefetch_mutex.lock();
-    bool c = cache.contains(path);
-    prefetch_mutex.unlock();
-    if (c)
+    QFile file(f.physicalFilePath());
+    return file.open(QIODevice::ReadOnly)
+        ? new QByteArray(file.readAll())
+        : nullptr;
+}
+
+QByteArray*
+ImageViewer::readArchiveData(const File &f)
+{
+    struct archive *a;
+    struct archive_entry *entry;
+    int r;
+
+    a = archive_read_new();
+    archive_read_support_filter_all(a);
+    archive_read_support_format_all(a);
+    r = archive_read_open_filename(a, f.physicalFilePath().toUtf8().constData(), 1024*128);
+    if (r != ARCHIVE_OK)
     {
-        prefetch_mutex.lock();
-        QByteArray *data = cache[path];
-        QByteArray *ret = new QByteArray(*data);
-        prefetch_mutex.unlock();
-        return ret;
+        fprintf(stderr, "%s\n", archive_error_string(a));
+        return nullptr;
     }
-    else
+
+    while (archive_read_next_header(a, &entry) == ARCHIVE_OK)
     {
-        QFile file(path);
-        if (file.open(QIODevice::ReadOnly))
+        QByteArray efile(archive_entry_pathname(entry));
+        if (f.rawFilePath() == efile)
         {
-            QByteArray *data = new QByteArray(file.readAll());
-            QByteArray *ret = new QByteArray(*data);
-            prefetch_mutex.lock();
-            if (cache.maxCost() > 0) cache.insert(path, data);
-            prefetch_mutex.unlock();
-            return ret;
+            QByteArray *data = new QByteArray();
+            const void *buf;
+            size_t len;
+            off_t offset;
+
+            while (archive_read_data_block(a, &buf, &len, &offset) == ARCHIVE_OK)
+            {
+                data->append((const char *)buf, len);
+            }
+            return data;
         }
         else
         {
-            return nullptr;
+            archive_read_data_skip(a);
         }
     }
+    return nullptr;
+}
+
+QByteArray*
+ImageViewer::readData(const File &f)
+{
+    QString key = f.createKey();
+    QByteArray *data, *ret;
+
+    prefetch_mutex.lock();
+    bool c = cache.contains(key);
+    prefetch_mutex.unlock();
+
+    if (c)
+    {
+        prefetch_mutex.lock();
+        data = cache[key];
+        ret = new QByteArray(*data);
+        prefetch_mutex.unlock();
+        return ret;
+    }
+
+    switch (f.fileType())
+    {
+        case File::RAW:
+            data = readImageData(f);
+            break;
+        case File::ARCHIVE:
+            data = readArchiveData(f);
+            break;
+        default:
+            return nullptr;
+    }
+
+    ret = new QByteArray(*data);
+    prefetch_mutex.lock();
+    if (cache.maxCost() > 0) cache.insert(key, data);
+    prefetch_mutex.unlock();
+    return ret;
 }
 
 void
@@ -978,7 +1065,7 @@ ImageViewer::startPrefetch()
         prefetch_old = prefetch_now;
         prefetch_now.clear();
 
-        QStringList list;
+        QList<File> list;
         int c = count();
         int plen = std::min(getImageCacheSize(), c);
         int l = plen/2-1;
@@ -988,7 +1075,7 @@ ImageViewer::startPrefetch()
             int ti = (index + i) % c;
             if (ti < 0) ti += c;
             QListWidgetItem *li = playlist->item(ti);
-            list << li->data(Qt::ToolTipRole).toString();
+            list << dynamic_cast<PlayListItem*>(li)->file();
             prefetch_now << li;
         }
 
@@ -1005,5 +1092,179 @@ ImageViewer::isCopyDrop(const Qt::KeyboardModifiers km) const
 #else
     return (km & Qt::ControlModifier) == Qt::ControlModifier;
 #endif
+}
+
+ImageViewer::PlayListItem::PlayListItem(const QString &p, const QByteArray &f,
+        QListWidget *parent)
+    : QListWidgetItem(QString(f), parent)
+    , f(p, f)
+{
+    setData(Qt::ToolTipRole, QString(f));
+}
+
+ImageViewer::PlayListItem::PlayListItem(const QString &f, QListWidget *parent)
+    : QListWidgetItem(f, parent)
+    , f(f)
+{
+    setData(Qt::ToolTipRole, f);
+}
+
+ImageViewer::PlayListItem::~PlayListItem() {}
+
+ImageViewer::File
+ImageViewer::PlayListItem::file() const
+{
+    return f;
+}
+
+ImageViewer::File::File(const QString &archivePath, const QByteArray &rfilepath)
+    : ft(ARCHIVE)
+    , archive_path(archivePath)
+    , file_path(rfilepath)
+    , raw_file_path(rfilepath) {}
+
+ImageViewer::File::File(const QString &filePath)
+    : ft(RAW)
+    , archive_path()
+    , file_path(filePath)
+    , raw_file_path() {}
+
+ImageViewer::File::File()
+    : ft(INVALID)
+    , archive_path()
+    , file_path()
+    , raw_file_path() {}
+
+ImageViewer::File::~File() {}
+
+ImageViewer::File::FileType
+ImageViewer::File::fileType() const
+{
+    return ft;
+}
+
+QString
+ImageViewer::File::physicalFilePath() const
+{
+    assert(ft != INVALID);
+    switch (ft)
+    {
+        case ARCHIVE: return archive_path;
+        case RAW:     return file_path;
+        default:      return QString();
+    }
+}
+
+QString
+ImageViewer::File::physicalFileName() const
+{
+    QFileInfo info(physicalFilePath());
+    return info.fileName();
+}
+
+QString
+ImageViewer::File::logicalFilePath() const
+{
+    assert(ft != INVALID);
+    switch (ft)
+    {
+        case ARCHIVE: return QString(rawFilePath());
+        case RAW:     return file_path;
+        default:      return QString();
+    }
+}
+
+QString
+ImageViewer::File::logicalFileName() const
+{
+    QFileInfo info(logicalFilePath());
+    return info.fileName();
+}
+
+QByteArray
+ImageViewer::File::rawFilePath() const
+{
+    if (ft == ARCHIVE)
+    {
+        return raw_file_path;
+    }
+    return QByteArray();
+}
+
+QString
+ImageViewer::File::createKey() const
+{
+    if (ft == ARCHIVE)
+    {
+        QString ret;
+        ret.append(archive_path).append("/").append(file_path);
+        return ret;
+    }
+    else if (ft == RAW)
+    {
+        return file_path;
+    }
+    else
+    {
+        return QString();
+    }
+}
+
+ImageViewer::Prefetcher::Prefetcher(QCache<QString, QByteArray> *ch, QMutex *m)
+    : QThread()
+    , cache(ch)
+    , mutex(m)
+    , termsig(false)
+{
+}
+
+void
+ImageViewer::Prefetcher::setPrefetchImage(const QList<File> &list)
+{
+    plist = QList<File>(list);
+}
+
+void
+ImageViewer::Prefetcher::sendTermSig()
+{
+    termsig = true;
+}
+
+void
+ImageViewer::Prefetcher::run()
+{
+    termsig = false;
+    mutex->lock();
+    if (cache->maxCost() == 0) return;
+    mutex->unlock();
+    
+    for (QList<File>::const_iterator i = plist.constBegin();
+            i != plist.constEnd(); ++i)
+    {
+        if (termsig) return;
+
+        const File f = *i;
+        QString key = f.createKey();
+
+        mutex->lock();
+        bool c = cache->contains(key);
+        mutex->unlock();
+
+        if (!c)
+        {
+            QByteArray *data;
+            if (f.fileType() == ImageViewer::File::ARCHIVE)
+            {
+                data = ImageViewer::readArchiveData(f);
+            }
+            else
+            {
+                data = ImageViewer::readImageData(f);
+            }
+            mutex->lock();
+            cache->insert(key, data, 1);
+            mutex->unlock();
+        }
+    }
 }
 

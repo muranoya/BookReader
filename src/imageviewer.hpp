@@ -14,15 +14,9 @@
 #include <QTimer>
 #include <QCache>
 #include <QByteArray>
-#include "prefetcher.hpp"
+#include <QThread>
+#include <QMutex>
 
-/*
- * QImage::bits,QImage::scanLineは、それぞれ横方向の画素が
- * 入っており左上が原点、
- * 右がX軸正方向、下がY軸正方向と仮定している。
- * つまり、scanLine(0)は、1番上の画素の1行を指すポインタと解釈する。
- * bitsは同様に、1番上の1行の次は2行目と続く。
- */
 class ImageViewer : public QGraphicsView
 {
     Q_OBJECT
@@ -84,10 +78,8 @@ public:
     bool empty() const;
 
     int currentIndex(int i) const;
-    QString currentFileName(int i) const;
     QStringList currentFileNames() const;
-    QString currentFilePath(int i) const;
-    QStringList currentFilePaths() const;
+    QString currentFileName(int i) const;
 
     QDockWidget *playlistDock() const;
     QString readableExtFormat() const;
@@ -117,6 +109,67 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent *event);
 
 private:
+    class File
+    {
+        public:
+            enum FileType
+            {
+                INVALID,
+                RAW,
+                ARCHIVE,
+            };
+
+            explicit File(const QString &p, const QByteArray &rfilepath);
+            explicit File(const QString &p);
+            explicit File();
+            virtual ~File();
+
+            FileType fileType() const;
+            QString physicalFilePath() const;
+            QString physicalFileName() const;
+            QString logicalFilePath() const;
+            QString logicalFileName() const;
+
+            QByteArray rawFilePath() const;
+
+            QString createKey() const;
+
+        private:
+            FileType ft;
+            QString archive_path;
+            QString file_path;
+            QByteArray raw_file_path;
+    };
+
+    class PlayListItem : public QListWidgetItem
+    {
+        public:
+            explicit PlayListItem(const QString &p, const QByteArray &f,
+                    QListWidget *parent = 0);
+            explicit PlayListItem(const QString &f, QListWidget *parent = 0);
+            virtual ~PlayListItem();
+            File file() const;
+        private:
+            File f;
+    };
+
+    class Prefetcher : public QThread
+    {
+        public:
+            Prefetcher(QCache<QString, QByteArray> *ch, QMutex *m);
+            void setPrefetchImage(const QList<File> &list);
+            void sendTermSig();
+
+        protected:
+            virtual void run();
+
+        private:
+            QCache<QString, QByteArray> *cache;
+            QMutex *mutex;
+            QList<File> plist;
+            bool termsig;
+    };
+
     // viewer
     QGraphicsScene *view_scene;
     QGraphicsPixmapItem *view_item;
@@ -161,10 +214,15 @@ private:
     void playlistItemRemove(QList<QListWidgetItem*> items);
     void setHighlight();
     void clearHighlight();
+    File currentFile(int i) const;
+    QList<File> currentFiles() const;
     void nextImages();
     void previousImages();
+    void openArchiveFile(const QString &path);
     void openFilesAndDirs(const QStringList &paths, int level);
-    QByteArray *readImageData(const QString &path);
+    static QByteArray *readImageData(const File &f);
+    static QByteArray *readArchiveData(const File &f);
+    QByteArray *readData(const File &f);
 
     // prefetch
     QCache<QString, QByteArray> cache;
@@ -176,8 +234,8 @@ private:
 
     void startPrefetch();
 
+    // drag-and-drop
     bool isCopyDrop(const Qt::KeyboardModifiers km) const;
 };
-
 
 #endif // IMAGEMANAGER_H
