@@ -1,6 +1,9 @@
 BookReader
 ==========
 
+### Requirement
+* libarchive >= 3.2.0
+
 ### Compile
   1. src ディレクトリで qmake する．
   1. Makefile が生成されるので make する．
