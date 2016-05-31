@@ -1,6 +1,5 @@
 #include "ImageViewer.hpp"
 #include "image.hpp"
-#include "nullptr.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -890,7 +889,7 @@ ImageViewer::openArchiveFile(const QString &path)
     a = archive_read_new();
     archive_read_support_filter_all(a);
     archive_read_support_format_all(a);
-    r = archive_read_open_filename(a, path.toUtf8().constData(), 1024*128);
+    r = archive_read_open_filename(a, path.toLocal8Bit().constData(), 1024*128);
     if (r != ARCHIVE_OK)
     {
         fprintf(stderr, "%s\n", archive_error_string(a));
@@ -982,7 +981,7 @@ ImageViewer::readArchiveData(const File &f)
     archive_read_support_filter_all(a);
     archive_read_support_format_all(a);
     r = archive_read_open_filename(a,
-            f.physicalFilePath().toUtf8().constData(),
+            f.physicalFilePath().toLocal8Bit().constData(),
             1024*128);
     if (r != ARCHIVE_OK)
     {

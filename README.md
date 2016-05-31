@@ -4,6 +4,7 @@ BookReader
 ## Requirement
 * libarchive >= 3.2.0
 * Qt >= 5.6
+* C++11に対応しているC++コンパイラ
 
 ## Build
 #### On Linux
@@ -16,7 +17,9 @@ BookReader
   1. libarchive をビルド
    * Note: zip などを扱うには別途 zlib などのインストールが必要
    * Note: MSVCでのビルドのほうが容易
-  1. src ディレクトリの .pro を Qt Creator で開きビルド
+  1. src ディレクトリの BookReader.pro を開きINCLUDEPATHとLIBSにそれぞれ
+  libarchive の include と lib ディレクトリのパスを追加
+  1. src ディレクトリの BookReader.pro を Qt Creator で開きビルド
    * MSVC版よりもMinGW版Qtのほうが容易にビルド可能
   1. 実行ファイルが生成される
   1. windeployqt.exeを使うとデプロイが簡単
@@ -47,3 +50,4 @@ BookReader
 * 画像ファイルのプリフェッチ (済み 2016/5/18)
 * 背景色指定
 * apngなどアニメーション対応
+

@@ -16,7 +16,6 @@ SettingDialog.cpp \
 HistgramDialog.cpp
 
 HEADERS += \
-nullptr.hpp \
 appinfo.hpp \
 MainWindow.hpp \
 AppSettings.hpp \
@@ -30,8 +29,9 @@ FORMS +=
 
 RESOURCES = rc/icon.qrc
 
+INCLUDEPATH += 
 LIBS += -larchive
 
-QMAKE_CXXFLAGS += -mfma -mavx2
-QMAKE_CFLAGS   += -mfma -mavx2
+QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CFLAGS   += 
 
