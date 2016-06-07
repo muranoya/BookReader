@@ -1,4 +1,5 @@
 #include "ImageViewer.hpp"
+#include "TEncodingDialog.hpp"
 #include "image.hpp"
 
 #include <algorithm>
@@ -56,6 +57,8 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
     , menu_sep1(nullptr)
     , menu_remove(nullptr)
     , menu_clear(nullptr)
+    , menu_sep2(nullptr)
+    , menu_enc(nullptr)
     , normalBC(Qt::transparent)
     , selectedBC(Qt::lightGray)
     , index(-1)
@@ -100,6 +103,8 @@ ImageViewer::~ImageViewer()
     delete menu_sep1;
     delete menu_remove;
     delete menu_clear;
+    delete menu_sep2;
+    delete menu_enc;
     delete playlist;
     delete playlistdock;
 }
@@ -378,7 +383,7 @@ ImageViewer::currentFileName(int i) const
     const int ti = currentIndex(i);
     if (validIndex(ti))
     {
-        PlayListItem *item = dynamic_cast<PlayListItem*>(playlist->item(ti));
+        PlayListItem *item = static_cast<PlayListItem*>(playlist->item(ti));
         return item->file().logicalFileName();
     }
     return QString();
@@ -419,6 +424,32 @@ void
 ImageViewer::menu_clear_triggered()
 {
     clearPlaylist();
+}
+
+void
+ImageViewer::menu_enc_triggered()
+{
+    QList<QListWidgetItem*> items = playlist->selectedItems();
+    if (items.empty()) return;
+
+    PlayListItem *x = static_cast<PlayListItem*>(items.first());
+    if (x->file().fileType() != ImageViewer::File::ARCHIVE) return;
+
+    TEncodingDialog dlg;
+    QTextCodec *c = dlg.selectTextCodec(x->file().rawFilePath());
+    if (c == nullptr) return;
+
+    QString apath = x->file().physicalFilePath();
+    int len = playlist->count();
+    for (int i = 0; i < len; ++i)
+    {
+        PlayListItem *item = static_cast<PlayListItem*>(playlist->item(i));
+        if (apath.compare(item->file().physicalFilePath()) == 0)
+        {
+            item->file().changeTextEnc(c);
+            item->refreshText();
+        }
+    }
 }
 
 void
@@ -703,7 +734,7 @@ ImageViewer::imageCombine(const QVector<QImage> &imgs)
         {
             for (int x = 0; x < tw; ++x)
             {
-                *(dst_bits+x+sw+y*cw) = qRgba(255, 255, 255, 255);
+                *(dst_bits+x+sw+y*cw) = qRgba(0, 255, 255, 255);
             }
         }
         for (int y = 0 ; y < th; ++y)
@@ -717,7 +748,7 @@ ImageViewer::imageCombine(const QVector<QImage> &imgs)
         {
             for (int x = 0; x < tw; ++x)
             {
-                *(dst_bits+x+sw+y*cw) = qRgba(255, 255, 255, 255);
+                *(dst_bits+x+sw+y*cw) = qRgba(0, 255, 255, 255);
             }
         }
         sw += tw;
@@ -736,16 +767,21 @@ ImageViewer::createPlaylistMenus()
 {
     playlistdock->setContextMenuPolicy(Qt::ActionsContextMenu);
 
-    menu_open = new QAction(tr("開く"), playlist);
-    menu_sep1 = new QAction(playlist);
+    menu_open   = new QAction(tr("開く"), playlist);
+    menu_sep1   = new QAction(playlist);
     menu_sep1->setSeparator(true);
     menu_remove = new QAction(tr("削除する"), playlist);
-    menu_clear = new QAction(tr("全て削除する"), playlist);
+    menu_clear  = new QAction(tr("全て削除する"), playlist);
+    menu_sep2   = new QAction(playlist);
+    menu_sep2->setSeparator(true);
+    menu_enc    = new QAction(tr("文字コードの設定"), playlist);
 
     playlistdock->addAction(menu_open);
     playlistdock->addAction(menu_sep1);
     playlistdock->addAction(menu_remove);
     playlistdock->addAction(menu_clear);
+    playlistdock->addAction(menu_sep2);
+    playlistdock->addAction(menu_enc);
 
     connect(menu_open,      SIGNAL(triggered()),
             this, SLOT(menu_open_triggered()));
@@ -753,6 +789,8 @@ ImageViewer::createPlaylistMenus()
             this, SLOT(menu_remove_triggered()));
     connect(menu_clear,     SIGNAL(triggered()),
             this, SLOT(menu_clear_triggered()));
+    connect(menu_enc,       SIGNAL(triggered()),
+            this, SLOT(menu_enc_triggered()));
 }
 
 void
@@ -838,7 +876,7 @@ ImageViewer::currentFile(int i) const
     const int ti = currentIndex(i);
     if (validIndex(ti))
     {
-        PlayListItem *item = dynamic_cast<PlayListItem*>(playlist->item(ti));
+        PlayListItem *item = static_cast<PlayListItem*>(playlist->item(ti));
         return item->file();
     }
     return ImageViewer::File();
@@ -889,7 +927,8 @@ ImageViewer::openArchiveFile(const QString &path)
     a = archive_read_new();
     archive_read_support_filter_all(a);
     archive_read_support_format_all(a);
-    r = archive_read_open_filename(a, path.toLocal8Bit().constData(), 1024*128);
+    r = archive_read_open_filename(a,
+            path.toLocal8Bit().constData(), 1024*128);
     if (r != ARCHIVE_OK)
     {
         fprintf(stderr, "%s\n", archive_error_string(a));
@@ -981,8 +1020,7 @@ ImageViewer::readArchiveData(const File &f)
     archive_read_support_filter_all(a);
     archive_read_support_format_all(a);
     r = archive_read_open_filename(a,
-            f.physicalFilePath().toLocal8Bit().constData(),
-            1024*128);
+            f.physicalFilePath().toLocal8Bit().constData(), 1024*128);
     if (r != ARCHIVE_OK)
     {
         fprintf(stderr, "%s\n", archive_error_string(a));
@@ -1006,7 +1044,15 @@ ImageViewer::readArchiveData(const File &f)
                 data->append((const char *)buf, len);
             }
             archive_read_free(a);
-            return data;
+            if (data->isEmpty())
+            {
+                delete data;
+                return nullptr;
+            }
+            else
+            {
+                return data;
+            }
         }
         else
         {
@@ -1080,7 +1126,7 @@ ImageViewer::startPrefetch()
             int ti = (index + i) % c;
             if (ti < 0) ti += c;
             QListWidgetItem *li = playlist->item(ti);
-            list << dynamic_cast<PlayListItem*>(li)->file();
+            list << static_cast<PlayListItem*>(li)->file();
             prft_now << li;
         }
 
@@ -1103,7 +1149,7 @@ ImageViewer::File::File(const QString &archivePath, const QByteArray &rfilepath)
     : ft(ARCHIVE)
     , archive_path(archivePath)
     , file_path(rfilepath)
-    , raw_file_path(rfilepath)
+    , raw_file_entry(rfilepath)
 {
 }
 
@@ -1111,7 +1157,7 @@ ImageViewer::File::File(const QString &filePath)
     : ft(RAW)
     , archive_path()
     , file_path(filePath)
-    , raw_file_path()
+    , raw_file_entry()
 {
 }
 
@@ -1119,13 +1165,13 @@ ImageViewer::File::File()
     : ft(INVALID)
     , archive_path()
     , file_path()
-    , raw_file_path()
+    , raw_file_entry()
 {
 }
 
 ImageViewer::File::~File()
 {
-    raw_file_path.clear();
+    raw_file_entry.clear();
 }
 
 ImageViewer::File::FileType
@@ -1158,7 +1204,7 @@ ImageViewer::File::logicalFilePath() const
     assert(ft != INVALID);
     switch (ft)
     {
-        case ARCHIVE: return QString(rawFilePath());
+        case ARCHIVE: return file_path;
         case RAW:     return file_path;
         default:      return QString();
     }
@@ -1170,11 +1216,19 @@ ImageViewer::File::logicalFileName() const
     return QFileInfo(logicalFilePath()).fileName();
 }
 
+void
+ImageViewer::File::changeTextEnc(const QTextCodec *c)
+{
+    assert(ft == ARCHIVE && c != nullptr);
+
+    file_path = c->toUnicode(raw_file_entry);
+}
+
 const QByteArray&
 ImageViewer::File::rawFilePath() const
 {
     assert(ft == ARCHIVE);
-    return raw_file_path;
+    return raw_file_entry;
 }
 
 QString
@@ -1184,7 +1238,9 @@ ImageViewer::File::createKey() const
     if (ft == ARCHIVE)
     {
         QString ret;
-        ret.append(archive_path).append("/").append(file_path);
+        ret.append(archive_path)
+            .append("/")
+            .append(QString(file_path));
         return ret;
     }
     else if (ft == RAW)
@@ -1199,27 +1255,45 @@ ImageViewer::File::createKey() const
 
 ImageViewer::PlayListItem::PlayListItem(const QString &p, const QByteArray &f,
         QListWidget *parent)
-    : QListWidgetItem(QString(f), parent)
+    : QListWidgetItem(parent)
     , f(p, f)
 {
-    setData(Qt::ToolTipRole, QString(f));
+    refreshText();
 }
 
 ImageViewer::PlayListItem::PlayListItem(const QString &f, QListWidget *parent)
-    : QListWidgetItem(f, parent)
+    : QListWidgetItem(parent)
     , f(f)
 {
-    setData(Qt::ToolTipRole, f);
+    refreshText();
 }
 
 ImageViewer::PlayListItem::~PlayListItem()
 {
 }
 
-const ImageViewer::File&
-ImageViewer::PlayListItem::file() const
+ImageViewer::File&
+ImageViewer::PlayListItem::file()
 {
     return f;
+}
+
+void
+ImageViewer::PlayListItem::refreshText()
+{
+    QString str;
+    if (f.fileType() == ImageViewer::File::ARCHIVE)
+    {
+        str.append(f.physicalFilePath())
+            .append("/")
+            .append(f.logicalFileName());
+    }
+    else
+    {
+        str.append(f.physicalFilePath());
+    }
+    setData(Qt::ToolTipRole, str);
+    setText(f.logicalFileName());
 }
 
 ImageViewer::Prefetcher::Prefetcher(QCache<QString, QByteArray> *ch, QMutex *m)
@@ -1271,9 +1345,12 @@ ImageViewer::Prefetcher::run()
             {
                 data = ImageViewer::readImageData(f);
             }
-            mutex->lock();
-            cache->insert(key, data, 1);
-            mutex->unlock();
+            if (data != nullptr)
+            {
+                mutex->lock();
+                cache->insert(key, data, 1);
+                mutex->unlock();
+            }
         }
     }
 }

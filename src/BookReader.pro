@@ -13,7 +13,8 @@ ImageViewer.cpp \
 image.cpp \
 ScaleDialog.cpp \
 SettingDialog.cpp \
-HistgramDialog.cpp
+HistgramDialog.cpp \
+TEncodingDialog.cpp
 
 HEADERS += \
 appinfo.hpp \
@@ -23,13 +24,14 @@ ImageViewer.hpp \
 image.hpp \
 ScaleDialog.hpp \
 SettingDialog.hpp \
-HistgramDialog.hpp
+HistgramDialog.hpp \
+TEncodingDialog.hpp
 
 FORMS +=
 
 RESOURCES = rc/icon.qrc
 
-INCLUDEPATH += 
+INCLUDEPATH +=
 LIBS += -larchive
 
 QMAKE_CXXFLAGS += -std=c++11

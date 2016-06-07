@@ -92,6 +92,7 @@ private slots:
     void menu_open_triggered();
     void menu_remove_triggered();
     void menu_clear_triggered();
+    void menu_enc_triggered();
 
     void playlistItemDoubleClicked(QListWidgetItem *item);
     void slideshow_loop();
@@ -118,27 +119,23 @@ private:
                 RAW,
                 ARCHIVE,
             };
-
             explicit File(const QString &p, const QByteArray &rfilepath);
             explicit File(const QString &p);
             explicit File();
             virtual ~File();
-
             FileType fileType() const;
             QString physicalFilePath() const;
             QString physicalFileName() const;
             QString logicalFilePath() const;
             QString logicalFileName() const;
-
+            void changeTextEnc(const QTextCodec *c);
             const QByteArray& rawFilePath() const;
-
             QString createKey() const;
-
         private:
             FileType ft;
             QString archive_path;
             QString file_path;
-            QByteArray raw_file_path;
+            QByteArray raw_file_entry;
     };
 
     class PlayListItem : public QListWidgetItem
@@ -148,8 +145,8 @@ private:
                     QListWidget *parent = 0);
             explicit PlayListItem(const QString &f, QListWidget *parent = 0);
             virtual ~PlayListItem();
-
-            const File& file() const;
+            File& file();
+            void refreshText();
         private:
             File f;
     };
@@ -160,10 +157,8 @@ private:
             Prefetcher(QCache<QString, QByteArray> *ch, QMutex *m);
             void setPrefetchImage(const QList<File> &list);
             void sendTermSig();
-
         protected:
             virtual void run();
-
         private:
             QCache<QString, QByteArray> *cache;
             QMutex *mutex;
@@ -202,6 +197,8 @@ private:
     QAction *menu_sep1;
     QAction *menu_remove;
     QAction *menu_clear;
+    QAction *menu_sep2;
+    QAction *menu_enc;
     QBrush normalBC;
     QBrush selectedBC;
     int index;
