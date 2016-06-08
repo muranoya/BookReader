@@ -14,8 +14,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(imgview->playlistDock(), SIGNAL(visibilityChanged(bool)),
             this, SLOT(imgview_playlistVisibleChanged(bool)));
-    connect(imgview, SIGNAL(changeImage()),
-            this, SLOT(imgview_changeImage()));
+    connect(imgview, SIGNAL(changedImage()),
+            this, SLOT(imgview_changedImage()));
+    connect(imgview, SIGNAL(changedScaleMode()),
+            this, SLOT(imgview_changedScaleMode()));
 
     createMenus();
 
@@ -256,9 +258,35 @@ MainWindow::imgview_playlistVisibleChanged(bool visible)
 }
 
 void
-MainWindow::imgview_changeImage()
+MainWindow::imgview_changedImage()
 {
     updateWindowText();
+}
+
+void
+MainWindow::imgview_changedScaleMode()
+{
+    updateWindowText();
+
+    menu_view_fullsize->setChecked(false);
+    menu_view_fitwindow->setChecked(false);
+    menu_view_fitimage->setChecked(false);
+    menu_view_setscale->setChecked(false);
+    switch (imgview->getScaleMode())
+    {
+        case ImageViewer::FULLSIZE:
+            menu_view_fullsize->setChecked(true);
+            break;
+        case ImageViewer::FIT_WINDOW:
+            menu_view_fitwindow->setChecked(true);
+            break;
+        case ImageViewer::FIT_IMAGE:
+            menu_view_fitimage->setChecked(true);
+            break;
+        case ImageViewer::CUSTOM_SCALE:
+            menu_view_setscale->setChecked(true);
+            break;
+    }
 }
 
 void

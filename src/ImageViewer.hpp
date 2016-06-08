@@ -45,8 +45,8 @@ public:
     void setRightbindingMode(bool m);
     bool isRightbindingMode() const;
 
-    void setScale(ViewMode m, qreal s);
-    void setScale(ViewMode m);
+    bool setScale(ViewMode m, qreal s);
+    bool setScale(ViewMode m);
     qreal getScale() const;
     ViewMode getScaleMode() const;
 
@@ -73,7 +73,8 @@ public:
     const QString& readableExtFormat() const;
 
 signals:
-    void changeImage();
+    void changedImage();
+    void changedScaleMode();
 
 private slots:
     void menu_open_triggered();

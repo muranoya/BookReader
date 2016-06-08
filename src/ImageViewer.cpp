@@ -134,7 +134,7 @@ ImageViewer::clearPlaylist()
         delete playlist->takeItem(0);
     }
     releaseImages();
-    if (c) emit changeImage();
+    if (c) emit changedImage();
 }
 
 void
@@ -171,19 +171,24 @@ ImageViewer::isRightbindingMode() const
     return rightbinding;
 }
 
-void
+bool
 ImageViewer::setScale(ViewMode m, qreal s)
 {
     bool c = m != vmode || s != scale_value;
-    vmode = m;
-    scale_value = s;
-    if (c) refresh();
+    if (0.01 <= s && s <= 10)
+    {
+        vmode = m;
+        scale_value = s;
+        if (c) refresh();
+        return true;
+    }
+    return false;
 }
 
-void
+bool
 ImageViewer::setScale(ViewMode m)
 {
-    setScale(m, scale_value);
+    return setScale(m, scale_value);
 }
 
 qreal
@@ -509,18 +514,34 @@ ImageViewer::mouseMoveEvent(QMouseEvent *event)
 void
 ImageViewer::wheelEvent(QWheelEvent *event)
 {
-    if (getScaleMode() != FIT_WINDOW)
+    if (empty()) return;
+
+    if (event->modifiers() & Qt::ShiftModifier)
     {
-        int steps = event->delta() / 4;
-        if (event->modifiers() & Qt::ControlModifier)
+        bool sign= event->delta() < 0;
+        qreal v = 0.05;
+        if (sign) v *= -1.0;
+        v += getScale();
+        if (setScale(CUSTOM_SCALE, v))
         {
-            img_pos.rx() += steps;
+            emit changedScaleMode();
         }
-        else
+    }
+    else
+    {
+        if (getScaleMode() != FIT_WINDOW)
         {
-            img_pos.ry() += steps;
+            int steps = event->delta() / 4;
+            if (event->modifiers() & Qt::ControlModifier)
+            {
+                img_pos.rx() += steps;
+            }
+            else
+            {
+                img_pos.ry() += steps;
+            }
+            update();
         }
-        update();
     }
     event->accept();
 }
@@ -590,7 +611,7 @@ ImageViewer::showImages()
     img_pos = QPoint(x, y);
     update();
 
-    emit changeImage();
+    emit changedImage();
     imgs.clear();
 }
 
@@ -788,7 +809,7 @@ ImageViewer::playlistItemRemove(const QList<QListWidgetItem*> &items)
     if (empty())
     {
         releaseImages();
-        emit changeImage();
+        emit changedImage();
     }
     else
     {

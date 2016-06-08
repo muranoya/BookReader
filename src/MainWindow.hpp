@@ -43,7 +43,8 @@ private slots:
 
     /******************* image viewer event *******************/
     void imgview_playlistVisibleChanged(bool visible);
-    void imgview_changeImage();
+    void imgview_changedImage();
+    void imgview_changedScaleMode();
 
 protected:
     virtual void closeEvent(QCloseEvent *event);
