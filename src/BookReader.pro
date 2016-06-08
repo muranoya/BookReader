@@ -13,8 +13,7 @@ ImageViewer.cpp \
 image.cpp \
 ScaleDialog.cpp \
 SettingDialog.cpp \
-HistgramDialog.cpp \
-TEncodingDialog.cpp
+TextEncDialog.cpp
 
 HEADERS += \
 appinfo.hpp \
@@ -24,8 +23,7 @@ ImageViewer.hpp \
 image.hpp \
 ScaleDialog.hpp \
 SettingDialog.hpp \
-HistgramDialog.hpp \
-TEncodingDialog.hpp
+TextEncDialog.hpp
 
 FORMS +=
 

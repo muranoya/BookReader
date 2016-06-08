@@ -1,8 +1,8 @@
-#include "TEncodingDialog.hpp"
+#include "TextEncDialog.hpp"
 
-TEncodingDialog::TEncodingDialog(QWidget *parent)
+TextEncDialog::TextEncDialog(QWidget *parent)
     : QDialog(parent,
-            Qt::Sheet | 
+            Qt::Dialog | 
             Qt::WindowTitleHint |
             Qt::WindowCloseButtonHint)
     , layout(new QGridLayout())
@@ -42,13 +42,13 @@ TEncodingDialog::TEncodingDialog(QWidget *parent)
             this, SLOT(searchTextChanged(const QString&)));
     connect(codec_list, SIGNAL(itemSelectionChanged()),
             this, SLOT(listItemSelectionChanged()));
-    connect(buttonbox, SIGNAL(accepted()),
-            this, SLOT(acceptedDialogButton()));
-    connect(buttonbox, SIGNAL(rejected()),
-            this, SLOT(rejectedDialogButton()));
+    connect(buttonbox,  SIGNAL(accepted()),
+            this, SLOT(accept()));
+    connect(buttonbox,  SIGNAL(rejected()),
+            this, SLOT(reject()));
 }
 
-TEncodingDialog::~TEncodingDialog()
+TextEncDialog::~TextEncDialog()
 {
     codec_list->clear();
     delete buttonbox;
@@ -63,14 +63,17 @@ TEncodingDialog::~TEncodingDialog()
 }
 
 QTextCodec*
-TEncodingDialog::selectTextCodec(const QByteArray &src)
+TextEncDialog::selectTextCodec(const QByteArray &src)
 {
-    src_bytes = QByteArray(src);
-    src_text->setText(QString(src_bytes));
-    exec();
-    if (result() == QDialog::Accepted)
+    TextEncDialog dlg;
+
+    dlg.src_bytes = QByteArray(src);
+    dlg.src_text->setText(QString(dlg.src_bytes));
+    dlg.exec();
+
+    if (dlg.result() == QDialog::Accepted)
     {
-        return selectedCodec();
+        return dlg.selectedCodec();
     }
     else
     {
@@ -79,7 +82,7 @@ TEncodingDialog::selectTextCodec(const QByteArray &src)
 }
 
 void
-TEncodingDialog::searchTextChanged(const QString &text)
+TextEncDialog::searchTextChanged(const QString &text)
 {
     int len = codec_list->count();
     for (int i = 0; i < len; ++i)
@@ -97,7 +100,7 @@ TEncodingDialog::searchTextChanged(const QString &text)
 }
 
 void
-TEncodingDialog::listItemSelectionChanged()
+TextEncDialog::listItemSelectionChanged()
 {
     QTextCodec *c = selectedCodec();
     if (c != nullptr)
@@ -111,20 +114,8 @@ TEncodingDialog::listItemSelectionChanged()
     }
 }
 
-void
-TEncodingDialog::acceptedDialogButton()
-{
-    done(QDialog::Accepted);
-}
-
-void
-TEncodingDialog::rejectedDialogButton()
-{
-    done(QDialog::Rejected);
-}
-
 QTextCodec *
-TEncodingDialog::selectedCodec() const
+TextEncDialog::selectedCodec() const
 {
     QList<QListWidgetItem*> sitems = codec_list->selectedItems();
     if (sitems.isEmpty())

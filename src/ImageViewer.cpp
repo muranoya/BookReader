@@ -1,12 +1,13 @@
 #include "ImageViewer.hpp"
-#include "TEncodingDialog.hpp"
+#include "TextEncDialog.hpp"
 #include "image.hpp"
 
 #include <algorithm>
 #include <cassert>
-#include <QScrollBar>
+
 #include <QMimeData>
 #include <QDir>
+#include <QPainter>
 
 #include <archive.h>
 #include <archive_entry.h>
@@ -34,11 +35,8 @@ static const QString readable_format(
 *.xpm\
 )");
 
-ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
-    : QGraphicsView(parent)
-    , view_scene(new QGraphicsScene())
-    , view_item(new QGraphicsPixmapItem())
-    , img_orgs()
+ImageViewer::ImageViewer(QWidget *parent)
+    : QWidget(parent)
     , img_combined()
     , img_scaled()
     , scale_value(1.0)
@@ -50,8 +48,9 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
     , is_drag_image(false)
     , click_pos()
     , move_pos()
+    , img_pos()
     /* playlist */
-    , playlistdock(new QDockWidget(tr("プレイリスト"), parent, flags))
+    , playlistdock(new QDockWidget(tr("プレイリスト"), parent))
     , playlist(new QListWidget())
     , menu_open(nullptr)
     , menu_sep1(nullptr)
@@ -63,8 +62,6 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
     , selectedBC(Qt::lightGray)
     , index(-1)
     , spread_view(false)
-    , slideshow_timer()
-    , slideshow_interval(3000)
     , opendirlevel(30)
     /* prefetch */
     , cache(20)
@@ -74,16 +71,12 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
     , prft_now()
     , prft_icon(":/check.png")
 {
-    setScene(view_scene);
-    view_scene->addItem(view_item);
     playlistdock->setWidget(playlist);
 
     createPlaylistMenus();
 
     connect(playlist, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
             this, SLOT(playlistItemDoubleClicked(QListWidgetItem*)));
-    connect(&slideshow_timer, SIGNAL(timeout()),
-            this, SLOT(slideshow_loop()));
     connect(&drag_timer, SIGNAL(timeout()),
             this, SLOT(drag_check()));
     connect(&prfter, SIGNAL(finished()),
@@ -92,13 +85,13 @@ ImageViewer::ImageViewer(QWidget *parent, Qt::WindowFlags flags)
 
     playlist->setDefaultDropAction(Qt::MoveAction);
     playlist->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+    setFocusPolicy(Qt::StrongFocus);
+    setAcceptDrops(true);
 }
 
 ImageViewer::~ImageViewer()
 {
-    delete view_item;
-    delete view_scene;
-
     delete menu_open;
     delete menu_sep1;
     delete menu_remove;
@@ -138,70 +131,10 @@ ImageViewer::clearPlaylist()
 
     while (playlist->count() > 0)
     {
-        QListWidgetItem *item = playlist->item(0);
-        playlist->removeItemWidget(item);
-        delete item;
+        delete playlist->takeItem(0);
     }
     releaseImages();
     if (c) emit changeImage();
-}
-
-QVector<int>
-ImageViewer::histgram() const
-{
-    if (img_combined.isNull()) return QVector<int>();
-    QVector<int> vec(256*3);
-
-    int *array = vec.data();
-    for (int i = 0; i < 256*3; ++i) array[i] = 0;
-
-    const QRgb *bits = (QRgb*)img_combined.bits();
-    const int len = img_combined.height() * img_combined.width();
-    for (int i = 0; i < len; ++i)
-    {
-        const QRgb rgb = *(bits+i);
-        array[qRed(rgb)  +256*0]++;
-        array[qGreen(rgb)+256*1]++;
-        array[qBlue(rgb) +256*2]++;
-    }
-    return vec;
-}
-
-void
-ImageViewer::startSlideshow()
-{
-    if (!isPlayingSlideshow())
-    {
-        slideshow_timer.start(slideshow_interval);
-    }
-}
-
-void
-ImageViewer::stopSlideshow()
-{
-    if (isPlayingSlideshow())
-    {
-        slideshow_timer.stop();
-        emit stoppedSlideshow();
-    }
-}
-
-bool
-ImageViewer::isPlayingSlideshow() const
-{
-    return slideshow_timer.isActive();
-}
-
-void
-ImageViewer::setSlideshowInterval(int msec)
-{
-    slideshow_interval = msec;
-}
-
-int
-ImageViewer::getSlideshowInterval() const
-{
-    return slideshow_interval;
 }
 
 void
@@ -244,15 +177,6 @@ ImageViewer::setScale(ViewMode m, qreal s)
     bool c = m != vmode || s != scale_value;
     vmode = m;
     scale_value = s;
-
-    if (vmode == FULLSIZE || vmode == CUSTOM_SCALE)
-    {
-        setDragMode(QGraphicsView::ScrollHandDrag);
-    }
-    else
-    {
-        setDragMode(QGraphicsView::NoDrag);
-    }
     if (c) refresh();
 }
 
@@ -319,17 +243,7 @@ ImageViewer::getImageCacheSize() const
 }
 
 QSize
-ImageViewer::orgImageSize(int i) const
-{
-    if (0 <= i && i < countShowImages() && !img_orgs[i].isNull())
-    {
-        return img_orgs[i].size();
-    }
-    return QSize();
-}
-
-QSize
-ImageViewer::combinedImageSize() const
+ImageViewer::imageSize() const
 {
     return img_combined.isNull() ? QSize()
                                  : img_combined.size();
@@ -435,8 +349,7 @@ ImageViewer::menu_enc_triggered()
     PlayListItem *x = static_cast<PlayListItem*>(items.first());
     if (x->file().fileType() != ImageViewer::File::ARCHIVE) return;
 
-    TEncodingDialog dlg;
-    QTextCodec *c = dlg.selectTextCodec(x->file().rawFilePath());
+    QTextCodec *c = TextEncDialog::selectTextCodec(x->file().rawFilePath());
     if (c == nullptr) return;
 
     QString apath = x->file().physicalFilePath();
@@ -460,19 +373,6 @@ ImageViewer::playlistItemDoubleClicked(QListWidgetItem *item)
 }
 
 void
-ImageViewer::slideshow_loop()
-{
-    if (empty())
-    {
-        stopSlideshow();
-    }
-    else
-    {
-        nextImages();
-    }
-}
-
-void
 ImageViewer::prefetcherFinished()
 {
     for (QList<QListWidgetItem*>::iterator i = prft_old.begin();
@@ -493,15 +393,50 @@ ImageViewer::drag_check()
     int d =
         (click_pos.x() - move_pos.x()) * (click_pos.x() - move_pos.x()) +
         (click_pos.y() - move_pos.y()) * (click_pos.y() - move_pos.y());
-    if (!is_drag_image && d <= 25) nextImages();
+    //if (!is_drag_image && d <= 36) nextImages();
+    if (d <= 36) nextImages();
     is_drag_image = false;
     drag_timer.stop();
 }
 
 void
+ImageViewer::paintEvent(QPaintEvent *event)
+{
+    Q_UNUSED(event);
+
+    QPainter painter(this);
+    painter.fillRect(rect(), Qt::CrossPattern);
+
+    if (img_scaled.isNull()) return;
+
+    switch (getScaleMode())
+    {
+        case ImageViewer::FIT_WINDOW:
+        {
+            int x = std::max(width() - img_scaled.width(), 0);
+            int y = std::max(height() - img_scaled.height(), 0);
+            painter.drawImage(QPoint(x/2, y/2), img_scaled);
+            break;
+        }
+        case ImageViewer::FIT_IMAGE:
+        {
+            int x = std::max(width() - img_scaled.width(), 0);
+            img_pos += move_pos - click_pos2;
+            click_pos2 = move_pos;
+            painter.drawImage(QPoint(x/2, img_pos.y()), img_scaled);
+            break;
+        }
+        default:
+            img_pos += move_pos - click_pos2;
+            click_pos2 = move_pos;
+            painter.drawImage(img_pos, img_scaled);
+    }
+}
+
+void
 ImageViewer::keyPressEvent(QKeyEvent *event)
 {
-    QGraphicsView::keyPressEvent(event);
+    QWidget::keyPressEvent(event);
     if (event->key() == Qt::Key_Left)  previousImages();
     if (event->key() == Qt::Key_Right) nextImages();
 }
@@ -509,7 +444,7 @@ ImageViewer::keyPressEvent(QKeyEvent *event)
 void
 ImageViewer::resizeEvent(QResizeEvent *event)
 {
-    QGraphicsView::resizeEvent(event);
+    QWidget::resizeEvent(event);
     refresh();
 }
 
@@ -517,22 +452,6 @@ void
 ImageViewer::dragEnterEvent(QDragEnterEvent *event)
 {
     event->accept();
-}
-
-void
-ImageViewer::dragLeaveEvent(QDragLeaveEvent *event)
-{
-    // 何もしてないオーバーライドしているメソッドですが
-    // 消すとD&Dがうまくいきません
-    Q_UNUSED(event);
-}
-
-void
-ImageViewer::dragMoveEvent(QDragMoveEvent *event)
-{
-    // 何もしてないオーバーライドしているメソッドですが
-    // 消すとD&Dがうまくいきません
-    Q_UNUSED(event);
 }
 
 void
@@ -556,43 +475,62 @@ ImageViewer::dropEvent(QDropEvent *event)
 void
 ImageViewer::mousePressEvent(QMouseEvent *event)
 {
-    QGraphicsView::mousePressEvent(event);
     if (event->buttons() & Qt::RightButton)
     {
         previousImages();
     }
-    else
+    else if (event->buttons() & Qt::LeftButton)
     {
-        if (vmode == FULLSIZE || vmode == CUSTOM_SCALE)
+        if (getScaleMode() != FIT_WINDOW)
         {
-            move_pos = click_pos = event->pos();
-            drag_timer.start(100);
+            move_pos = click_pos = click_pos2 = event->pos();
+            drag_timer.start(90);
         }
-        else if (event->buttons() & Qt::LeftButton)
+        else
         {
             nextImages();
         }
     }
+    event->accept();
 }
 
 void
 ImageViewer::mouseMoveEvent(QMouseEvent *event)
 {
-    QGraphicsView::mouseMoveEvent(event);
-    if (vmode == FULLSIZE || vmode == CUSTOM_SCALE)
+    if (getScaleMode() != FIT_WINDOW)
     {
         is_drag_image = true;
         move_pos = event->pos();
+        update();
     }
+    event->accept();
+}
+
+void
+ImageViewer::wheelEvent(QWheelEvent *event)
+{
+    if (getScaleMode() != FIT_WINDOW)
+    {
+        int steps = event->delta() / 4;
+        if (event->modifiers() & Qt::ControlModifier)
+        {
+            img_pos.rx() += steps;
+        }
+        else
+        {
+            img_pos.ry() += steps;
+        }
+        update();
+    }
+    event->accept();
 }
 
 bool
 ImageViewer::isReadableImageFile(const QString &path) const
 {
     QString suf = QFileInfo(path).suffix().toLower();
-    for (int i = 0;
-            i < (int)(sizeof(readable_suffix)/sizeof(readable_suffix[0]));
-            ++i)
+    int len = (int)(sizeof(readable_suffix)/sizeof(readable_suffix[0]));
+    for (int i = 0; i < len; ++i)
     {
         if (suf.compare(readable_suffix[i]) == 0) return true;
     }
@@ -602,19 +540,18 @@ ImageViewer::isReadableImageFile(const QString &path) const
 void
 ImageViewer::releaseImages()
 {
-    img_orgs.clear();
     img_combined = QImage();
     img_scaled = QImage();
     img_count = 0;
     index = -1;
-    setGraphicsPixmapItem(QImage());
+    update();
 }
 
 void
 ImageViewer::showImages()
 {
-    img_orgs.clear();
     QList<File> list = currentFiles();
+    QVector<QImage> imgs;
     for (QList<File>::const_iterator i = list.constBegin();
             i != list.constEnd(); ++i)
     {
@@ -622,17 +559,39 @@ ImageViewer::showImages()
         QByteArray *data = readData(*i);
         temp.loadFromData(*data);
         delete data;
-        img_orgs << (temp.format() == QImage::Format_ARGB32 ? temp
+        imgs << ((temp.format() == QImage::Format_ARGB32)
+                ? temp
                 : temp.convertToFormat(QImage::Format_ARGB32));
     }
 
     startPrefetch();
 
-    imageCombine(img_orgs);
+    imageCombine(imgs);
     imageScale();
-    setGraphicsPixmapItem(img_scaled);
-    verticalScrollBar()->setSliderPosition(0);
+
+    int x = width() - img_scaled.width();
+    int y = height() - img_scaled.height();
+    if (x < 0)
+    {
+        x = 0;
+    }
+    else
+    {
+        x = x / 2;
+    }
+    if (y < 0)
+    {
+        y = 0;
+    }
+    else
+    {
+        y = y / 2;
+    }
+    img_pos = QPoint(x, y);
+    update();
+
     emit changeImage();
+    imgs.clear();
 }
 
 void
@@ -641,15 +600,7 @@ ImageViewer::refresh()
     if (!empty())
     {
         imageScale();
-        setGraphicsPixmapItem(img_scaled);
     }
-}
-
-void
-ImageViewer::setGraphicsPixmapItem(const QImage &img)
-{
-    view_item->setPixmap(QPixmap::fromImage(img));
-    view_scene->setSceneRect(0.0, 0.0, img.width(), img.height());
 }
 
 void
@@ -691,9 +642,10 @@ ImageViewer::imageScale()
     }
     else
     {
-        img_scaled = (QImage (*[])(const QImage&, const qreal)){nn, bl, bc}
-                        [imode](img_combined, scale_value);
+        QImage (*f[])(const QImage &, const qreal) = {nn, bl, bc};
+        img_scaled = f[imode](img_combined, scale_value);
     }
+    update();
 }
 
 void
@@ -734,7 +686,7 @@ ImageViewer::imageCombine(const QVector<QImage> &imgs)
         {
             for (int x = 0; x < tw; ++x)
             {
-                *(dst_bits+x+sw+y*cw) = qRgba(0, 255, 255, 255);
+                *(dst_bits+x+sw+y*cw) = qRgba(0, 0, 0, 0);
             }
         }
         for (int y = 0 ; y < th; ++y)
@@ -748,7 +700,7 @@ ImageViewer::imageCombine(const QVector<QImage> &imgs)
         {
             for (int x = 0; x < tw; ++x)
             {
-                *(dst_bits+x+sw+y*cw) = qRgba(0, 255, 255, 255);
+                *(dst_bits+x+sw+y*cw) = qRgba(0, 0, 0, 0);
             }
         }
         sw += tw;

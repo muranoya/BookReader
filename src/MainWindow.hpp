@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include "ImageViewer.hpp"
-#include "HistgramDialog.hpp"
 
 #include <QMenuBar>
 #include <QMenu>
@@ -24,7 +23,6 @@ private slots:
     void menu_file_open_triggered();
     void menu_file_fopen_triggered();
     void menu_file_settings_triggered();
-    void menu_file_exit_triggered();
 
     /******************* view *******************/
     void menu_view_fullsize_triggered();
@@ -33,34 +31,21 @@ private slots:
     void menu_view_setscale_triggered();
     void menu_view_spread_triggered();
     void menu_view_rightbinding_triggered();
-    void menu_view_slideshow_triggered();
-    void menu_view_fullscreen_triggered();
-
-    /******************* image processing *******************/
-    void menu_imgproc_nn_triggered();
-    void menu_imgproc_bi_triggered();
-    void menu_imgproc_bc_triggered();
+    void menu_view_nn_triggered();
+    void menu_view_bi_triggered();
+    void menu_view_bc_triggered();
 
     /******************* window *******************/
-    void menu_window_hide_triggered();
     void menu_window_playlist_triggered();
-    void menu_window_histgram_triggered();
-
-    /******************* help *******************/
-    void menu_help_aboutqt_triggered();
 
     /******************* util *******************/
     void updateWindowText();
 
     /******************* image viewer event *******************/
     void imgview_playlistVisibleChanged(bool visible);
-    void imgview_stoppedSlideshow();
     void imgview_changeImage();
 
-    void closeHistgramDialog();
-
 protected:
-    virtual void changeEvent(QEvent *event);
     virtual void closeEvent(QCloseEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
 
@@ -71,6 +56,7 @@ private:
     QAction *menu_file_open;
     QAction *menu_file_fopen;
     QAction *menu_file_settings;
+    QAction *menu_file_aboutqt;
     QAction *menu_file_exit;
     QMenu *menu_view;
     QAction *menu_view_fullsize;
@@ -79,21 +65,11 @@ private:
     QAction *menu_view_setscale;
     QAction *menu_view_spread;
     QAction *menu_view_rightbinding;
-    QAction *menu_view_slideshow;
-    QAction *menu_view_fullscreen;
-    QAction *menu_view_filter;
-    QMenu *menu_imgproc;
-    QAction *menu_imgproc_nn;
-    QAction *menu_imgproc_bi;
-    QAction *menu_imgproc_bc;
+    QAction *menu_view_nn;
+    QAction *menu_view_bi;
+    QAction *menu_view_bc;
     QMenu *menu_window;
-    QAction *menu_window_hide;
     QAction *menu_window_playlist;
-    QAction *menu_window_histgram;
-    QMenu *menu_help;
-    QAction *menu_help_aboutqt;
-
-    HistgramDialog *histdialog;
 
     /******************* util *******************/
     void createMenus();

@@ -11,18 +11,16 @@
 #include <QSpinBox>
 #include <QDialogButtonBox>
 
-class SettingsDialog : public QDialog
+class SettingDialog : private QDialog
 {
     Q_OBJECT
 public:
-    explicit SettingsDialog(QWidget *parent = 0);
-    ~SettingsDialog();
-
-private slots:
-    void button_save();
-    void button_cancel();
+    static bool openSettingDialog();
 
 private:
+    SettingDialog(QWidget *parent = 0);
+    ~SettingDialog();
+
     QVBoxLayout *layout;
     QDialogButtonBox *buttonbox;
 
@@ -30,11 +28,6 @@ private:
     QGridLayout *open_rec_layout;
     QLabel *open_rec_dir_level_text;
     QSpinBox *open_rec_dir_level;
-
-    QGroupBox *group_Slideshow;
-    QGridLayout *slideshow_layout;
-    QLabel *slideshow_interval_text;
-    QSpinBox *slideshow_interval_value;
 
     QGroupBox *group_Prefetch;
     QGridLayout *prefetch_layout;

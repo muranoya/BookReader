@@ -7,22 +7,19 @@
 #include <QDoubleSpinBox>
 #include <QDialogButtonBox>
 
-class SettingScaleDialog : public QDialog
+class ScaleDialog : private QDialog
 {
     Q_OBJECT
 public:
-    explicit SettingScaleDialog(QWidget *parent = 0);
-    ~SettingScaleDialog();
-
-    bool getScale(const QSize &size, const qreal ori);
-    qreal getValue() const;
+    static bool getScale(const QSize &size, const qreal org, qreal &rslt);
 
 private slots:
-    void accepted_DialogButton();
-    void rejected_DialogButton();
     void spinbox_valueChanged(const double d);
 
 private:
+    ScaleDialog(QWidget *parent = 0);
+    ~ScaleDialog();
+
     QGridLayout *layout;
     QDoubleSpinBox *spinbox;
     QLabel *desc_label;
@@ -32,7 +29,6 @@ private:
     QLabel *desc_width_label;
     QDialogButtonBox *buttonbox;
 
-    qreal scale;
     QSize img_size;
 };
 

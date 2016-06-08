@@ -1,8 +1,6 @@
 #ifndef IMAGEMANAGER_H
 #define IMAGEMANAGER_H
 
-#include <QGraphicsView>
-#include <QGraphicsPixmapItem>
 #include <QDockWidget>
 #include <QListWidget>
 #include <QAction>
@@ -17,7 +15,7 @@
 #include <QThread>
 #include <QMutex>
 
-class ImageViewer : public QGraphicsView
+class ImageViewer : public QWidget
 {
     Q_OBJECT
 public:
@@ -35,20 +33,11 @@ public:
         Bicubic,
     };
 
-    explicit ImageViewer(QWidget *parent = 0, Qt::WindowFlags flags = 0);
+    explicit ImageViewer(QWidget *parent = 0);
     ~ImageViewer();
 
     void openImages(const QStringList &path);
     void clearPlaylist();
-
-    QVector<int> histgram() const;
-
-    void startSlideshow();
-    void stopSlideshow();
-    bool isPlayingSlideshow() const;
-
-    void setSlideshowInterval(int msec);
-    int getSlideshowInterval() const;
 
     void setSpreadMode(bool m);
     bool isSpreadMode() const;
@@ -70,8 +59,7 @@ public:
     void setImageCacheSize(int cost);
     int getImageCacheSize() const;
 
-    QSize orgImageSize(int i) const;
-    QSize combinedImageSize() const;
+    QSize imageSize() const;
 
     int countShowImages() const;
     int count() const;
@@ -85,7 +73,6 @@ public:
     const QString& readableExtFormat() const;
 
 signals:
-    void stoppedSlideshow();
     void changeImage();
 
 private slots:
@@ -95,19 +82,18 @@ private slots:
     void menu_enc_triggered();
 
     void playlistItemDoubleClicked(QListWidgetItem *item);
-    void slideshow_loop();
     void prefetcherFinished();
     void drag_check();
 
 protected:
+    virtual void paintEvent(QPaintEvent *event);
     virtual void keyPressEvent(QKeyEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
     virtual void dragEnterEvent(QDragEnterEvent *event);
-    virtual void dragLeaveEvent(QDragLeaveEvent *event);
-    virtual void dragMoveEvent(QDragMoveEvent *event);
     virtual void dropEvent(QDropEvent *event);
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void wheelEvent(QWheelEvent *event);
 
 private:
     class File
@@ -167,26 +153,24 @@ private:
     };
 
     // viewer
-    QGraphicsScene *view_scene;
-    QGraphicsPixmapItem *view_item;
-    QVector<QImage> img_orgs; // 個々の画像
-    QImage img_combined;      // 全ての画像を1枚の画像に連結したもの
-    QImage img_scaled;        // 拡縮後の画像
-    qreal scale_value;        // 表示倍率
-    int img_count;            // 同時に表示している画像数
-    ViewMode vmode;           // 表示モード
-    InterpolationMode imode;  // 画素補完モード
-    bool rightbinding;        // 見開き表示時に右綴じで表示するか
+    QImage img_combined;     // 全ての画像を1枚の画像に連結したもの
+    QImage img_scaled;       // 拡縮後の画像
+    qreal scale_value;       // 表示倍率
+    int img_count;           // 同時に表示している画像数
+    ViewMode vmode;          // 表示モード
+    InterpolationMode imode; // 画素補完モード
+    bool rightbinding;       // 見開き表示時に右綴じで表示するか
     QTimer drag_timer;
     bool is_drag_image;
-    QPoint click_pos;
-    QPoint move_pos;
+    QPoint click_pos; // クリックした時の位置
+    QPoint click_pos2;
+    QPoint move_pos;  // 移動した時の位置
+    QPoint img_pos;   // 画像の位置
 
     bool isReadableImageFile(const QString &path) const;
     void releaseImages();
     void showImages();
     void refresh();
-    void setGraphicsPixmapItem(const QImage &img);
     void imageScale();
     void imageCombine(const QVector<QImage> &imgs);
 
@@ -203,8 +187,6 @@ private:
     QBrush selectedBC;
     int index;
     bool spread_view;
-    QTimer slideshow_timer;
-    int slideshow_interval;
     int opendirlevel;
 
     bool validIndex(int i) const;

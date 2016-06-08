@@ -1,8 +1,8 @@
 #include "ScaleDialog.hpp"
 
-SettingScaleDialog::SettingScaleDialog(QWidget *parent)
+ScaleDialog::ScaleDialog(QWidget *parent)
     : QDialog(parent,
-              Qt::Sheet |
+              Qt::Dialog |
               Qt::WindowTitleHint |
               Qt::WindowCloseButtonHint)
     , layout(new QGridLayout())
@@ -44,14 +44,14 @@ SettingScaleDialog::SettingScaleDialog(QWidget *parent)
     layout->addWidget(buttonbox, 3, 0, 1, 2, Qt::AlignRight);
 
     connect(buttonbox, SIGNAL(accepted()),
-            this, SLOT(accepted_DialogButton()));
+            this, SLOT(accept()));
     connect(buttonbox, SIGNAL(rejected()),
-            this, SLOT(rejected_DialogButton()));
-    connect(spinbox, SIGNAL(valueChanged(double)),
+            this, SLOT(reject()));
+    connect(spinbox,   SIGNAL(valueChanged(double)),
             this, SLOT(spinbox_valueChanged(double)));
 }
 
-SettingScaleDialog::~SettingScaleDialog()
+ScaleDialog::~ScaleDialog()
 {
     delete layout;
     delete spinbox;
@@ -67,46 +67,28 @@ SettingScaleDialog::~SettingScaleDialog()
 }
 
 bool
-SettingScaleDialog::getScale(const QSize &size, const qreal ori)
+ScaleDialog::getScale(const QSize &size, const qreal ori, qreal &rslt)
 {
-    img_size = QSize(size);
-    width_label->setText(QString::number(size.width()));
-    height_label->setText(QString::number(size.height()));
+    ScaleDialog dlg;
+    dlg.img_size = QSize(size);
+    dlg.width_label->setText(QString::number(size.width()));
+    dlg.height_label->setText(QString::number(size.height()));
 
-    spinbox->setValue(ori);
-    exec();
-    if (result() == QDialog::Accepted)
+    dlg.spinbox->setValue(ori);
+    dlg.exec();
+    if (dlg.result() == QDialog::Accepted)
     {
-        scale = static_cast<qreal>(spinbox->value());
+        rslt = static_cast<qreal>(dlg.spinbox->value());
         return true;
     }
     else
     {
-        scale = ori;
         return false;
     }
 }
 
-qreal
-SettingScaleDialog::getValue() const
-{
-    return scale;
-}
-
 void
-SettingScaleDialog::accepted_DialogButton()
-{
-    done(QDialog::Accepted);
-}
-
-void
-SettingScaleDialog::rejected_DialogButton()
-{
-    done(QDialog::Rejected);
-}
-
-void
-SettingScaleDialog::spinbox_valueChanged(const double d)
+ScaleDialog::spinbox_valueChanged(const double d)
 {
     width_label->setText(QString::number(int(d * img_size.width())));
     height_label->setText(QString::number(int(d * img_size.height())));

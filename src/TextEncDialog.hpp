@@ -1,5 +1,5 @@
-#ifndef TENCODINGDIALOG_H
-#define TENCODINGDIALOG_H
+#ifndef TEXTENCDIALOG_H
+#define TEXTENCDIALOG_H
 
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -11,22 +11,20 @@
 #include <QVector>
 #include <QTextCodec>
 
-class TEncodingDialog : public QDialog
+class TextEncDialog : private QDialog
 {
     Q_OBJECT
 public:
-    explicit TEncodingDialog(QWidget *parent = 0);
-    virtual ~TEncodingDialog();
-    
-    QTextCodec *selectTextCodec(const QByteArray &src);
+    static QTextCodec *selectTextCodec(const QByteArray &src);
 
 private slots:
     void searchTextChanged(const QString &text);
     void listItemSelectionChanged();
-    void acceptedDialogButton();
-    void rejectedDialogButton();
 
 private:
+    TextEncDialog(QWidget *parent = 0);
+    ~TextEncDialog();
+
     QGridLayout *layout;
     QLabel *search_label;
     QLineEdit *search_box;
