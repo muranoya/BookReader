@@ -7,24 +7,12 @@ BookReader
 * C++11に対応しているC++コンパイラ
 
 ## Build
-#### On Linux
-  1. src ディレクトリで qmake する
-  1. Makefile が生成されるので make する
-
-#### On Windows
-  1. src ディレクトリの BookReader.pro を開きINCLUDEPATHとLIBSにそれぞれ
-  libarchive の include と lib ディレクトリのパスを追加
-  1. src ディレクトリの BookReader.pro を Qt Creator で開きビルド
+  1. $ cd src
+  1. $ qmake
+  1. $ make
 
 ## TODO
-* 設定の保存と読み込み (済み 2014/3/14)
-* スライドショーの実装 (済み 2014/3/19)
-* 設定ウィンドウの実装 (済み 2014/8/19)
 * ルーペの実装
-* 画像の拡大時の補完を実装 (済み 2014/4/10)
- * NearestNeighbor (済み 2014/4/10)
- * Bilinear (済み 2014/4/10)
- * Bicubic (済み 2014/4/10)
 * BicubicのSIMD化
 * 重たい画像処理の並列処理化
 * フィルタの実装
@@ -38,8 +26,5 @@ BookReader
  * 暗号化されたファイルへの対応
  * エントリ名のエンコーディング対応
 * アプリケーショのアイコンを追加する
-* 見開き表示に対応する (済み 2016/2/28)
-* 画像ファイルのプリフェッチ (済み 2016/5/18)
 * 背景色指定
 * apngなどアニメーション対応
-
