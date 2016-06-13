@@ -83,6 +83,7 @@ private slots:
     void menu_enc_triggered();
 
     void playlistItemDoubleClicked(QListWidgetItem *item);
+    void playlistItemSelectionChanged();
     void prefetcherFinished();
     void drag_check();
 

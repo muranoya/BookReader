@@ -77,6 +77,8 @@ ImageViewer::ImageViewer(QWidget *parent)
 
     connect(playlist, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
             this, SLOT(playlistItemDoubleClicked(QListWidgetItem*)));
+    connect(playlist, SIGNAL(itemSelectionChanged()),
+            this, SLOT(playlistItemSelectionChanged()));
     connect(&drag_timer, SIGNAL(timeout()),
             this, SLOT(drag_check()));
     connect(&prfter, SIGNAL(finished()),
@@ -375,6 +377,32 @@ ImageViewer::playlistItemDoubleClicked(QListWidgetItem *item)
 {
     Q_UNUSED(item);
     menu_open_triggered();
+}
+
+void
+ImageViewer::playlistItemSelectionChanged()
+{
+    QList<QListWidgetItem*> items = playlist->selectedItems();
+
+    menu_open->setEnabled(false);
+    menu_remove->setEnabled(false);
+    menu_enc->setEnabled(false);
+
+    if (items.empty()) return;
+
+    menu_open->setEnabled(true);
+    menu_remove->setEnabled(true);
+
+    for (QList<QListWidgetItem*>::const_iterator i = items.constBegin();
+            i != items.constEnd(); ++i)
+    {
+        PlayListItem *pitem = static_cast<PlayListItem*>(*i);
+        if (pitem->file().fileType() == ImageViewer::File::ARCHIVE)
+        {
+            menu_enc->setEnabled(true);
+            return;
+        }
+    }
 }
 
 void
@@ -741,13 +769,17 @@ ImageViewer::createPlaylistMenus()
     playlistdock->setContextMenuPolicy(Qt::ActionsContextMenu);
 
     menu_open   = new QAction(tr("開く"), playlist);
+    menu_open->setEnabled(false);
     menu_sep1   = new QAction(playlist);
     menu_sep1->setSeparator(true);
     menu_remove = new QAction(tr("削除する"), playlist);
+    menu_remove->setEnabled(false);
     menu_clear  = new QAction(tr("全て削除する"), playlist);
+    menu_clear->setEnabled(false);
     menu_sep2   = new QAction(playlist);
     menu_sep2->setSeparator(true);
     menu_enc    = new QAction(tr("文字コードの設定"), playlist);
+    menu_enc->setEnabled(false);
 
     playlistdock->addAction(menu_open);
     playlistdock->addAction(menu_sep1);
