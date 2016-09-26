@@ -24,16 +24,26 @@ static const QString readable_suffix[] =
     "xpm",
 };
 static const QString readable_format(
-"Images (\
-*.jpg *.jpeg \
-*.png \
-*.pbm *.ppm *.pgm *.pnm \
-*.bmp \
-*.gif \
-*.tiff \
-*.xbm \
-*.xpm\
-)");
+"Images ("
+"*.jpg *.jpeg "
+"*.png "
+"*.pbm *.ppm *.pgm *.pnm "
+"*.bmp "
+"*.gif "
+"*.tiff "
+"*.xbm "
+"*.xpm"
+")\n"
+"Archives ("
+"*.zip "
+"*.tar "
+"*.7z "
+"*.tar "
+"*.cab "
+"*.gz "
+"*.bz2"
+")\n"
+"All Files (*.*)");
 
 ImageViewer::ImageViewer(QWidget *parent)
     : QWidget(parent)

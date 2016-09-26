@@ -2,7 +2,7 @@
 #include <cmath>
 
 QImage
-nn(const QImage &src, const qreal s)
+nn(const QImage &src, const double s)
 {
     const int w = src.width();
     const int h = src.height();
@@ -29,7 +29,7 @@ nn(const QImage &src, const qreal s)
 }
 
 QImage
-bl(const QImage &src, const qreal s)
+bl(const QImage &src, const double s)
 {
     const int w = src.width();
     const int h = src.height();
@@ -43,11 +43,13 @@ bl(const QImage &src, const qreal s)
     const QRgb *bits = (QRgb*)src.bits();
 
     // [x], (x-[x])を計算しておく
-    int icache[nw];
-    qreal dcache[nw];
+    int *icache = new int[nw];
+    //int icache[nw];
+    double *dcache = new double[nw];
+    //double dcache[nw];
     for (int x = 0; x < nw; ++x)
     {
-        const qreal x0 = x/s;          // x;
+        const double x0 = x/s;          // x;
         const int xg = std::floor(x0); // [x];
         icache[x] = std::min(xg, w1);  // xg
         dcache[x] = x0-xg;             // x-[x]
@@ -61,21 +63,21 @@ bl(const QImage &src, const qreal s)
     // (x-[x])   (y-[y])   f([x]+1, [y]+1)
     for (int y = 0; y < nh; ++y)
     {
-        const qreal y0 = y/s;          // y
+        const double y0 = y/s;          // y
         const int yg = std::floor(y0); // [y]
 
-        const qreal ty0 = y0-yg; // y-[y]
-        const qreal ty1 = 1-ty0; // [y]+1-y
+        const double ty0 = y0-yg; // y-[y]
+        const double ty1 = 1-ty0; // [y]+1-y
         const int yi0 = std::min(yg, h1)*w;
         const int yi1 = std::min(yg+1, h1)*w;
 
         for (int x = 0; x < nw; ++x)
         {
-            const qreal d = dcache[x];
-            const qreal t1 = (1.-d)*ty1; //([x]+1-x)([y]+1-y)
-            const qreal t2 = (1.-d)*ty0; //([x]+1-x)(y-[y])
-            const qreal t3 = d*ty1;      //(x-[x])([y]+1-y)
-            const qreal t4 = d*ty0;      //(x-[x])(y-[y])
+            const double d = dcache[x];
+            const double t1 = (1.-d)*ty1; //([x]+1-x)([y]+1-y)
+            const double t2 = (1.-d)*ty0; //([x]+1-x)(y-[y])
+            const double t3 = d*ty1;      //(x-[x])([y]+1-y)
+            const double t4 = d*ty0;      //(x-[x])(y-[y])
 
             const int i = icache[x];
             const QRgb p00 = *(bits+i  +yi0);
@@ -92,33 +94,38 @@ bl(const QImage &src, const qreal s)
         nbits += nw;
     }
 
+    delete icache;
+    delete dcache;
     return nimg;
 }
 
-static qreal
-bicubic_h(const qreal t)
+static double
+bicubic_h(const double t)
 {
-    const qreal u = std::fabs(t);
-    if (u <= 1)
+    const double u = std::fabs(t);
+    if (u <= 1.0)
     {
         // abs(t) <= 1の時
         // (a+2)*abs(t)^3 - (a+3)*abs(t)^2 + 1
-        return (u*u*u)-2*(u*u)+1;
+        return (u*u*u)-2.0*(u*u)+1.0;
     }
-    else if (1 < u && u <= 2)
+    else if (1.0 < u && u <= 2.0)
     {
         // 1 < t <= 2の時
         // a*abs(t)^3 - 5a*abs(t)^2 + 8a*abs(t) - 4a
-        return -(u*u*u)+5*(u*u)-8*u+4;
+        return -(u*u*u)+5.0*(u*u)-8.0*u+4.0;
     }
-    // 2 < abs(t)のとき
-    return 0;
+    else
+    {
+        // 2 < abs(t)のとき
+        return 0.0;
+    }
 }
 
 static int
-bicubic_matmul(const qreal d1[4], const int d2[4][4], const qreal d3[4])
+bicubic_matmul(const double d1[4], const int d2[4][4], const double d3[4])
 {
-    qreal temp[4];
+    double temp[4];
     for (int i = 0; i < 4; ++i)
     {
         temp[i] = d1[0]*d2[0][i]
@@ -133,7 +140,7 @@ bicubic_matmul(const qreal d1[4], const int d2[4][4], const qreal d3[4])
 }
 
 QImage
-bc(const QImage &src, const qreal s)
+bc(const QImage &src, const double s)
 {
     const int w = src.width();
     const int h = src.height();
@@ -146,16 +153,16 @@ bc(const QImage &src, const qreal s)
     QRgb *nbits = (QRgb*)nimg.bits();
     const QRgb *bits = (QRgb*)src.bits();
 
-    qreal d1[4];
+    double d1[4];
     int dr[4][4], dg[4][4], db[4][4], da[4][4];
-    qreal d3[4];
+    double d3[4];
 
     for (int y = 0; y < nh; ++y)
     {
-        const qreal y0 = y/s;
+        const double y0 = y/s;
         const int yg = y0;
 
-        const qreal y2 = y0-yg;
+        const double y2 = y0-yg;
         d1[0] = bicubic_h(1+y2);
         d1[1] = bicubic_h(y2);
         d1[2] = bicubic_h(1-y2);
@@ -163,10 +170,10 @@ bc(const QImage &src, const qreal s)
 
         for (int x = 0; x < nw; ++x)
         {
-            const qreal x0 = x/s;
+            const double x0 = x/s;
             const int xg = x0;
 
-            const qreal x2 = x0-xg;
+            const double x2 = x0-xg;
             d3[0] = bicubic_h(1+x2);
             d3[1] = bicubic_h(x2);
             d3[2] = bicubic_h(1-x2);

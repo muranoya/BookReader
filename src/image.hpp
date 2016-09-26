@@ -3,10 +3,10 @@
 #include <QImage>
 
 /* Nearest Neighbor */
-QImage nn(const QImage &src, const qreal s);
+QImage nn(const QImage &src, const double s);
 /* Bilinear */
-QImage bl(const QImage &src, const qreal s);
+QImage bl(const QImage &src, const double s);
 /* Bicubic */
-QImage bc(const QImage &src, const qreal s);
+QImage bc(const QImage &src, const double s);
 
 #endif // IMAGE_H

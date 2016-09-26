@@ -65,7 +65,13 @@ SettingDialog::openSettingDialog()
 {
     SettingDialog dlg;
     dlg.exec();
-    return (dlg.result() == QDialog::Accepted);
+    
+    bool ret = dlg.result() == QDialog::Accepted;
+    if (ret)
+    {
+        dlg.saveSettings();
+    }
+    return ret;
 }
 
 void
