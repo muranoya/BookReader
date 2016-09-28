@@ -1,7 +1,6 @@
 #include <QDir>
 #include "MainWindow.hpp"
 #include "ScaleDialog.hpp"
-#include "appinfo.hpp"
 #include "AppSettings.hpp"
 #include "SettingDialog.hpp"
 
@@ -57,13 +56,13 @@ void
 MainWindow::menu_file_open_triggered()
 {
     QStringList files = QFileDialog::getOpenFileNames(
-                this, tr("ファイルを開く"), AppSettings::main_dialog_file,
+                this, tr("ファイルを開く"), AppSettings::diag_path,
                 imgview->readableExtFormat());
 
     if (!files.isEmpty())
     {
         const QDir dir = QFileInfo(files.at(0)).absoluteDir();
-        AppSettings::main_dialog_file = dir.absolutePath();
+        AppSettings::diag_path = dir.absolutePath();
         imgview->clearPlaylist();
         imgview->openImages(files);
         updateWindowText();
@@ -74,11 +73,11 @@ void
 MainWindow::menu_file_fopen_triggered()
 {
     QString dirname = QFileDialog::getExistingDirectory(
-                this, tr("ディレクトリを開く"), AppSettings::main_dialog_dir);
+                this, tr("ディレクトリを開く"), AppSettings::diag_path);
 
     if (!dirname.isEmpty())
     {
-        AppSettings::main_dialog_dir = dirname;
+        AppSettings::diag_path = dirname;
         imgview->clearPlaylist();
         imgview->openImages(QStringList(dirname));
         updateWindowText();
@@ -90,8 +89,8 @@ MainWindow::menu_file_settings_triggered()
 {
     if (SettingDialog::openSettingDialog())
     {
-        imgview->setOpenDirLevel(AppSettings::viewer_open_dir_level);
-        imgview->setImageCacheSize(AppSettings::playlist_prefetch);
+        imgview->setOpenDirLevel(AppSettings::viewer_openlevel);
+        imgview->setImageCacheSize(AppSettings::pl_prefetch);
     }
 }
 
@@ -208,9 +207,7 @@ MainWindow::updateWindowText()
     QString title;
     if (imgview->empty())
     {
-        title = tr("%1 %2")
-            .arg(BookReader::SOFTWARE_NAME)
-            .arg(BookReader::SOFTWARE_VERSION);
+        title = tr("%1").arg(AppSettings::SOFTWARE_NAME);
     }
     else
     {
@@ -423,11 +420,11 @@ MainWindow::changeCheckedScaleMenu(QAction *act,
 void
 MainWindow::applySettings()
 {
-    resize(AppSettings::mainwindow_size);
-    move(AppSettings::mainwindow_pos);
+    resize(AppSettings::mw_size);
+    move(AppSettings::mw_pos);
 
     ImageViewer::ViewMode mode = 
-        ImageViewer::ViewMode(AppSettings::viewer_scaling_mode);
+        ImageViewer::ViewMode(AppSettings::viewer_scalingmode);
     switch (mode)
     {
         case ImageViewer::FULLSIZE:
@@ -441,7 +438,7 @@ MainWindow::applySettings()
             break;
         case ImageViewer::CUSTOM_SCALE:
             changeCheckedScaleMenu(menu_view_setscale, mode,
-                    AppSettings::viewer_scaling_times);
+                    AppSettings::viewer_scalingtimes);
             break;
     }
     
@@ -466,28 +463,28 @@ MainWindow::applySettings()
     imgview->setRightbindingMode(AppSettings::viewer_rightbinding);
     menu_view_rightbinding->setChecked(AppSettings::viewer_rightbinding);
     
-    imgview->setOpenDirLevel(AppSettings::viewer_open_dir_level);
+    imgview->setOpenDirLevel(AppSettings::viewer_openlevel);
 
-    imgview->playlistDock()->setVisible(AppSettings::playlist_visible);
+    imgview->playlistDock()->setVisible(AppSettings::pl_visible);
     menu_window_playlist->setChecked(imgview->playlistDock()->isVisible());
 
-    imgview->setImageCacheSize(AppSettings::playlist_prefetch);
+    imgview->setImageCacheSize(AppSettings::pl_prefetch);
 }
 
 void
 MainWindow::storeSettings()
 {
-    AppSettings::mainwindow_size = size();
-    AppSettings::mainwindow_pos = pos();
+    AppSettings::mw_size = size();
+    AppSettings::mw_pos = pos();
 
-    AppSettings::viewer_scaling_mode = int(imgview->getScaleMode());
-    AppSettings::viewer_scaling_times = imgview->getScale();
+    AppSettings::viewer_scalingmode = int(imgview->getScaleMode());
+    AppSettings::viewer_scalingtimes = imgview->getScale();
     AppSettings::viewer_ipixmode = int(imgview->getInterpolationMode());
     AppSettings::viewer_spread = menu_view_spread->isChecked();
     AppSettings::viewer_rightbinding = menu_view_rightbinding->isChecked();
-    AppSettings::viewer_open_dir_level = imgview->getOpenDirLevel();
+    AppSettings::viewer_openlevel = imgview->getOpenDirLevel();
 
-    AppSettings::playlist_visible = imgview->playlistDock()->isVisible();
-    AppSettings::playlist_prefetch = imgview->getImageCacheSize();
+    AppSettings::pl_visible = imgview->playlistDock()->isVisible();
+    AppSettings::pl_prefetch = imgview->getImageCacheSize();
 }
 

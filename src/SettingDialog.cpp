@@ -77,14 +77,14 @@ SettingDialog::openSettingDialog()
 void
 SettingDialog::loadSettings()
 {
-    open_rec_dir_level->setValue(AppSettings::viewer_open_dir_level);
-    prefetch_value->setValue(AppSettings::playlist_prefetch);
+    open_rec_dir_level->setValue(AppSettings::viewer_openlevel);
+    prefetch_value->setValue(AppSettings::pl_prefetch);
 }
 
 void
 SettingDialog::saveSettings()
 {
-    AppSettings::viewer_open_dir_level = open_rec_dir_level->value();
-    AppSettings::playlist_prefetch = prefetch_value->value();
+    AppSettings::viewer_openlevel = open_rec_dir_level->value();
+    AppSettings::pl_prefetch = prefetch_value->value();
 }
 

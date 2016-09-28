@@ -9,24 +9,26 @@ class AppSettings
 {
 public:
     // Group - MainWindow
-    static QSize mainwindow_size;
-    static QPoint mainwindow_pos;
+    static QSize mw_size;
+    static QPoint mw_pos;
 
     // Group - Main
-    static QString main_dialog_file;
-    static QString main_dialog_dir;
+    static QString diag_path;
 
     // Group - Viewer
-    static int viewer_scaling_mode;
-    static qreal viewer_scaling_times;
+    static int viewer_scalingmode;
+    static double viewer_scalingtimes;
     static int viewer_ipixmode;
     static bool viewer_spread;
     static bool viewer_rightbinding;
-    static int viewer_open_dir_level;
+    static int viewer_openlevel;
 
     // Group - Playlist
-    static bool playlist_visible;
-    static int playlist_prefetch;
+    static bool pl_visible;
+    static int pl_prefetch;
+
+    static const QString SOFTWARE_ORG;
+    static const QString SOFTWARE_NAME;
 
     static void SaveSettings();
     static void LoadSettings();

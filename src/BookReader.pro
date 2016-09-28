@@ -16,7 +16,6 @@ SettingDialog.cpp \
 TextEncDialog.cpp
 
 HEADERS += \
-appinfo.hpp \
 MainWindow.hpp \
 AppSettings.hpp \
 ImageViewer.hpp \
@@ -27,7 +26,11 @@ TextEncDialog.hpp
 
 FORMS +=
 
-RESOURCES = rc/icon.qrc
+# If you use a system-font, you have to remove 'rc/font.qrc' from the RESOURCES,
+# and edit main.cpp.
+# If you use the default-font, you have to install IPA P Gothic font under rc.
+# IPA P Gothic is available from http://ipafont.ipa.go.jp/old/ipafont/download.html.
+RESOURCES = rc/icon.qrc rc/font.qrc
 
 INCLUDEPATH +=
 LIBS += -larchive
