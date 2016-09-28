@@ -433,12 +433,7 @@ ImageViewer::prefetcherFinished()
 void
 ImageViewer::drag_check()
 {
-    int d =
-        (click_pos.x() - move_pos.x()) * (click_pos.x() - move_pos.x()) +
-        (click_pos.y() - move_pos.y()) * (click_pos.y() - move_pos.y());
-    //if (!is_drag_image && d <= 36) nextImages();
-    if (d <= 36) nextImages();
-    is_drag_image = false;
+    is_drag_image = true;
     drag_timer.stop();
 }
 
@@ -518,6 +513,7 @@ ImageViewer::dropEvent(QDropEvent *event)
 void
 ImageViewer::mousePressEvent(QMouseEvent *event)
 {
+    is_drag_image = false;
     if (event->buttons() & Qt::RightButton)
     {
         previousImages();
@@ -527,7 +523,7 @@ ImageViewer::mousePressEvent(QMouseEvent *event)
         if (getScaleMode() != FIT_WINDOW)
         {
             move_pos = click_pos = click_pos2 = event->pos();
-            drag_timer.start(90);
+            drag_timer.start(120);
         }
         else
         {
@@ -538,11 +534,20 @@ ImageViewer::mousePressEvent(QMouseEvent *event)
 }
 
 void
+ImageViewer::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton && !is_drag_image)
+    {
+        nextImages();
+    }
+    event->accept();
+}
+
+void
 ImageViewer::mouseMoveEvent(QMouseEvent *event)
 {
     if (getScaleMode() != FIT_WINDOW)
     {
-        is_drag_image = true;
         move_pos = event->pos();
         update();
     }
