@@ -346,11 +346,11 @@ MainWindow::createMenus()
     menu_view_spread->setCheckable(true);
     menu_view_rightbinding = new QAction(tr("右綴じ表示"), this);
     menu_view_rightbinding->setCheckable(true);
-    menu_view_nn           = new QAction(tr("Nearest Neighbor"), this);
+    menu_view_nn           = new QAction(tr("低品質(Nearest Neighbor)"), this);
     menu_view_nn->setCheckable(true);
-    menu_view_bi           = new QAction(tr("Bilinear"), this);
+    menu_view_bi           = new QAction(tr("バランス(Bilinear)"), this);
     menu_view_bi->setCheckable(true);
-    menu_view_bc           = new QAction(tr("Bicubic"), this);
+    menu_view_bc           = new QAction(tr("高品質(Bicubic)"), this);
     menu_view_bc->setCheckable(true);
 
     menu_view->addAction(menu_view_fullsize);
