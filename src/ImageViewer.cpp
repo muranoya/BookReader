@@ -85,13 +85,16 @@ ImageViewer::ImageViewer(QWidget *parent)
 
     createPlaylistMenus();
 
-    connect(playlist, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
+    connect(playlist,    SIGNAL(itemDoubleClicked(QListWidgetItem*)),
             this, SLOT(playlistItemDoubleClicked(QListWidgetItem*)));
-    connect(playlist, SIGNAL(itemSelectionChanged()),
+    
+    connect(playlist,    SIGNAL(itemSelectionChanged()),
             this, SLOT(playlistItemSelectionChanged()));
+    
     connect(&drag_timer, SIGNAL(timeout()),
             this, SLOT(drag_check()));
-    connect(&prfter, SIGNAL(finished()),
+
+    connect(&prfter,     SIGNAL(finished()),
             this, SLOT(prefetcherFinished()),
             Qt::QueuedConnection);
 
@@ -183,10 +186,22 @@ ImageViewer::isRightbindingMode() const
     return rightbinding;
 }
 
-bool
-ImageViewer::setScale(ViewMode m, qreal s)
+void
+ImageViewer::setFeedPageMode(FeedPageMode m)
 {
-    bool c = m != vmode || s != scale_value;
+    fpmode = m;
+}
+
+ImageViewer::FeedPageMode
+ImageViewer::getFeedPageMode() const
+{
+    return fpmode;
+}
+
+bool
+ImageViewer::setScale(ViewMode m, double s)
+{
+    bool c = (m != vmode || s != scale_value);
     if (0.01 <= s && s <= 10)
     {
         vmode = m;
@@ -203,7 +218,7 @@ ImageViewer::setScale(ViewMode m)
     return setScale(m, scale_value);
 }
 
-qreal
+double
 ImageViewer::getScale() const
 {
     return scale_value;
@@ -514,20 +529,46 @@ void
 ImageViewer::mousePressEvent(QMouseEvent *event)
 {
     is_drag_image = false;
-    if (event->buttons() & Qt::RightButton)
+    if (getFeedPageMode() == ImageViewer::MouseButton)
     {
-        previousImages();
-    }
-    else if (event->buttons() & Qt::LeftButton)
-    {
-        if (getScaleMode() != FIT_WINDOW)
+        if (event->buttons() & Qt::RightButton)
         {
-            move_pos = click_pos = click_pos2 = event->pos();
-            drag_timer.start(120);
+            previousImages();
         }
-        else
+        else if (event->buttons() & Qt::LeftButton)
         {
-            nextImages();
+            if (getScaleMode() != FIT_WINDOW)
+            {
+                move_pos = click_pos = click_pos2 = event->pos();
+                drag_timer.start(120);
+            }
+            else
+            {
+                nextImages();
+            }
+        }
+    }
+    else
+    {
+        if (event->buttons() & Qt::LeftButton)
+        {
+            if (getScaleMode() != FIT_WINDOW)
+            {
+                move_pos = click_pos = click_pos2 = event->pos();
+                drag_timer.start(120);
+            }
+            else
+            {
+                int th = width() / 2;
+                if (event->pos().x() < th)
+                {
+                    previousImages();
+                }
+                else
+                {
+                    nextImages();
+                }
+            }
         }
     }
     event->accept();
@@ -536,9 +577,33 @@ ImageViewer::mousePressEvent(QMouseEvent *event)
 void
 ImageViewer::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton && !is_drag_image)
+    if (getFeedPageMode() == ImageViewer::MouseButton)
     {
-        nextImages();
+        if (getScaleMode() != FIT_WINDOW)
+        {
+            if (event->button() == Qt::LeftButton && !is_drag_image)
+            {
+                nextImages();
+            }
+        }
+    }
+    else
+    {
+        if (getScaleMode() != FIT_WINDOW)
+        {
+            if (event->button() == Qt::LeftButton && !is_drag_image)
+            {
+                int th = width() / 2;
+                if (event->pos().x() < th)
+                {
+                    previousImages();
+                }
+                else
+                {
+                    nextImages();
+                }
+            }
+        }
     }
     event->accept();
 }
@@ -562,7 +627,7 @@ ImageViewer::wheelEvent(QWheelEvent *event)
     if (event->modifiers() & Qt::ShiftModifier)
     {
         bool sign= event->delta() < 0;
-        qreal v = 0.05;
+        double v = 0.05;
         if (sign) v *= -1.0;
         v += getScale();
         if (setScale(CUSTOM_SCALE, v))
@@ -635,22 +700,8 @@ ImageViewer::showImages()
 
     int x = width() - img_scaled.width();
     int y = height() - img_scaled.height();
-    if (x < 0)
-    {
-        x = 0;
-    }
-    else
-    {
-        x = x / 2;
-    }
-    if (y < 0)
-    {
-        y = 0;
-    }
-    else
-    {
-        y = y / 2;
-    }
+    x = (x < 0 ? 0 : x/2);
+    y = (y < 0 ? 0 : y/2);
     img_pos = QPoint(x, y);
     update();
 
@@ -670,7 +721,7 @@ ImageViewer::refresh()
 void
 ImageViewer::imageScale()
 {
-    qreal scale = 1.0;
+    double scale = 1.0;
 
     if (empty()) return;
 
@@ -678,15 +729,15 @@ ImageViewer::imageScale()
     else if (vmode == ImageViewer::FULLSIZE) scale = 1.0;
     else
     {
-        qreal ws = 1.0, hs = 1.0;
+        double ws = 1.0, hs = 1.0;
         if (width() < img_combined.width())
         {
-            ws = ((qreal)width()) / ((qreal)img_combined.width());
+            ws = static_cast<double>(width()) / static_cast<double>(img_combined.width());
         }
 
         if (height() < img_combined.height())
         {
-            hs = ((qreal)height()) / ((qreal)img_combined.height());
+            hs = static_cast<double>(height()) / static_cast<double>(img_combined.height());
         }
 
         if (vmode == ImageViewer::FIT_WINDOW)
@@ -706,7 +757,7 @@ ImageViewer::imageScale()
     }
     else
     {
-        QImage (*f[])(const QImage &, const qreal) = {nn, bl, bc};
+        QImage (*f[])(const QImage &, const double) = {nn, bl, bc};
         img_scaled = f[imode](img_combined, scale_value);
     }
     update();
@@ -790,7 +841,7 @@ ImageViewer::createPlaylistMenus()
     menu_remove = new QAction(tr("削除する"), playlist);
     menu_remove->setEnabled(false);
     menu_clear  = new QAction(tr("全て削除する"), playlist);
-    menu_clear->setEnabled(false);
+    menu_clear->setEnabled(true);
     menu_sep2   = new QAction(playlist);
     menu_sep2->setSeparator(true);
     menu_enc    = new QAction(tr("文字コードの設定"), playlist);
@@ -805,10 +856,13 @@ ImageViewer::createPlaylistMenus()
 
     connect(menu_open,      SIGNAL(triggered()),
             this, SLOT(menu_open_triggered()));
+
     connect(menu_remove,    SIGNAL(triggered()),
             this, SLOT(menu_remove_triggered()));
+   
     connect(menu_clear,     SIGNAL(triggered()),
             this, SLOT(menu_clear_triggered()));
+    
     connect(menu_enc,       SIGNAL(triggered()),
             this, SLOT(menu_enc_triggered()));
 }
@@ -937,7 +991,7 @@ ImageViewer::previousImages()
     setHighlight();
 }
 
-void
+bool
 ImageViewer::openArchiveFile(const QString &path)
 {
     struct archive *a;
@@ -953,7 +1007,7 @@ ImageViewer::openArchiveFile(const QString &path)
     {
         fprintf(stderr, "%s\n", archive_error_string(a));
         archive_read_free(a);
-        return;
+        return false;
     }
     while (archive_read_next_header(a, &ae) == ARCHIVE_OK)
     {
@@ -971,8 +1025,9 @@ ImageViewer::openArchiveFile(const QString &path)
     if (r != ARCHIVE_OK)
     {
         fprintf(stderr, "%s\n", archive_error_string(a));
-        return;
+        return false;
     }
+    return true;
 }
 
 void

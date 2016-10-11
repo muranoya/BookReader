@@ -25,15 +25,20 @@ private:
     QVBoxLayout *layout;
     QDialogButtonBox *buttonbox;
 
-    QGroupBox *group_OpenDir;
+    QGroupBox   *group_OpenDir;
     QGridLayout *open_rec_layout;
-    QLabel *open_rec_dir_level_text;
-    QSpinBox *open_rec_dir_level;
+    QLabel      *open_rec_dir_level_text;
+    QSpinBox    *open_rec_dir_level;
 
-    QGroupBox *group_Prefetch;
+    QGroupBox   *group_Prefetch;
     QGridLayout *prefetch_layout;
-    QLabel *prefetch_text;
-    QSpinBox *prefetch_value;
+    QLabel      *prefetch_text;
+    QSpinBox    *prefetch_value;
+
+    QGroupBox    *group_FeedPage;
+    QGridLayout  *feedpage_layout;
+    QRadioButton *feedpage_clckbtn;
+    QRadioButton *feedpage_clckpos;
 
     void loadSettings();
     void saveSettings();

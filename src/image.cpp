@@ -17,10 +17,11 @@ nn(const QImage &src, const double s)
 
     for (int y = 0; y < nh; ++y)
     {
-        const int y0 = std::min(int(std::floor(y/s+0.5)), y1)*w;
+        const int y0 = std::min(static_cast<int>(std::floor(y/s+0.5)), y1)*w;
         for (int x = 0; x < nw; ++x)
         {
-            *(nbits+x) = *(bits+y0+std::min(int(std::floor(x/s+0.5)), x1));
+            *(nbits+x) = *(bits+y0+
+                    std::min(static_cast<int>(std::floor(x/s+0.5)), x1));
         }
         nbits += nw;
     }

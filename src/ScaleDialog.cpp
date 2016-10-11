@@ -35,12 +35,12 @@ ScaleDialog::ScaleDialog(QWidget *parent)
     desc_height_label->setText(tr("変更後の縦幅:"));
     desc_height_label->setAlignment(Qt::AlignRight);
 
-    layout->addWidget(desc_label, 0, 0);
-    layout->addWidget(spinbox, 0, 1);
-    layout->addWidget(desc_width_label, 1, 0);
-    layout->addWidget(width_label, 1, 1);
+    layout->addWidget(desc_label,        0, 0);
+    layout->addWidget(spinbox,           0, 1);
+    layout->addWidget(desc_width_label,  1, 0);
+    layout->addWidget(width_label,       1, 1);
     layout->addWidget(desc_height_label, 2, 0);
-    layout->addWidget(height_label, 2, 1);
+    layout->addWidget(height_label,      2, 1);
     layout->addWidget(buttonbox, 3, 0, 1, 2, Qt::AlignRight);
 
     connect(buttonbox, SIGNAL(accepted()),
@@ -67,7 +67,7 @@ ScaleDialog::~ScaleDialog()
 }
 
 bool
-ScaleDialog::getScale(const QSize &size, const qreal ori, qreal &rslt)
+ScaleDialog::getScale(const QSize &size, const double ori, double &rslt)
 {
     ScaleDialog dlg;
     dlg.img_size = QSize(size);
@@ -78,19 +78,18 @@ ScaleDialog::getScale(const QSize &size, const qreal ori, qreal &rslt)
     dlg.exec();
     if (dlg.result() == QDialog::Accepted)
     {
-        rslt = static_cast<qreal>(dlg.spinbox->value());
+        rslt = static_cast<double>(dlg.spinbox->value());
         return true;
     }
-    else
-    {
-        return false;
-    }
+    return false;
 }
 
 void
 ScaleDialog::spinbox_valueChanged(const double d)
 {
-    width_label->setText(QString::number(int(d * img_size.width())));
-    height_label->setText(QString::number(int(d * img_size.height())));
+    width_label->setText(
+            QString::number(static_cast<int>(d * img_size.width())));
+    height_label->setText(
+            QString::number(static_cast<int>(d * img_size.height())));
 }
 

@@ -91,6 +91,8 @@ MainWindow::menu_file_settings_triggered()
     {
         imgview->setOpenDirLevel(AppSettings::viewer_openlevel);
         imgview->setImageCacheSize(AppSettings::pl_prefetch);
+        imgview->setFeedPageMode(
+                static_cast<ImageViewer::FeedPageMode>(AppSettings::viewer_feedpagemode));
     }
 }
 
@@ -116,7 +118,7 @@ MainWindow::menu_view_fitimage_triggered()
 void
 MainWindow::menu_view_setscale_triggered()
 {
-    qreal ret;
+    double ret;
     if (ScaleDialog::getScale(imgview->imageSize(), imgview->getScale(), ret))
     {
         changeCheckedScaleMenu(menu_view_setscale, ImageViewer::CUSTOM_SCALE, ret);
@@ -397,7 +399,7 @@ MainWindow::createMenus()
 
 void
 MainWindow::changeCheckedScaleMenu(QAction *act,
-        const ImageViewer::ViewMode m, const qreal s)
+        const ImageViewer::ViewMode m, const double s)
 {
     menu_view_fullsize->setChecked(false);
     menu_view_fitwindow->setChecked(false);
@@ -424,7 +426,7 @@ MainWindow::applySettings()
     move(AppSettings::mw_pos);
 
     ImageViewer::ViewMode mode = 
-        ImageViewer::ViewMode(AppSettings::viewer_scalingmode);
+        static_cast<ImageViewer::ViewMode>(AppSettings::viewer_scalingmode);
     switch (mode)
     {
         case ImageViewer::FULLSIZE:
@@ -443,7 +445,7 @@ MainWindow::applySettings()
     }
     
     imgview->setInterpolationMode(
-            ImageViewer::InterpolationMode(AppSettings::viewer_ipixmode));
+            static_cast<ImageViewer::InterpolationMode>(AppSettings::viewer_ipixmode));
     switch (imgview->getInterpolationMode())
     {
         case ImageViewer::NearestNeighbor:
@@ -463,6 +465,9 @@ MainWindow::applySettings()
     imgview->setRightbindingMode(AppSettings::viewer_rightbinding);
     menu_view_rightbinding->setChecked(AppSettings::viewer_rightbinding);
     
+    imgview->setFeedPageMode(
+            static_cast<ImageViewer::FeedPageMode>(AppSettings::viewer_feedpagemode));
+
     imgview->setOpenDirLevel(AppSettings::viewer_openlevel);
 
     imgview->playlistDock()->setVisible(AppSettings::pl_visible);
@@ -477,12 +482,14 @@ MainWindow::storeSettings()
     AppSettings::mw_size = size();
     AppSettings::mw_pos = pos();
 
-    AppSettings::viewer_scalingmode = int(imgview->getScaleMode());
+    AppSettings::viewer_scalingmode = static_cast<int>(imgview->getScaleMode());
     AppSettings::viewer_scalingtimes = imgview->getScale();
-    AppSettings::viewer_ipixmode = int(imgview->getInterpolationMode());
+    AppSettings::viewer_ipixmode = static_cast<int>(imgview->getInterpolationMode());
     AppSettings::viewer_spread = menu_view_spread->isChecked();
     AppSettings::viewer_rightbinding = menu_view_rightbinding->isChecked();
     AppSettings::viewer_openlevel = imgview->getOpenDirLevel();
+    AppSettings::viewer_feedpagemode =
+        static_cast<ImageViewer::FeedPageMode>(imgview->getFeedPageMode());
 
     AppSettings::pl_visible = imgview->playlistDock()->isVisible();
     AppSettings::pl_prefetch = imgview->getImageCacheSize();

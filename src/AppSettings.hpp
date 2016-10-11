@@ -9,23 +9,24 @@ class AppSettings
 {
 public:
     // Group - MainWindow
-    static QSize mw_size;
+    static QSize  mw_size;
     static QPoint mw_pos;
 
     // Group - Main
     static QString diag_path;
 
     // Group - Viewer
-    static int viewer_scalingmode;
+    static int    viewer_scalingmode;
     static double viewer_scalingtimes;
-    static int viewer_ipixmode;
-    static bool viewer_spread;
-    static bool viewer_rightbinding;
-    static int viewer_openlevel;
+    static int    viewer_ipixmode;
+    static bool   viewer_spread;
+    static bool   viewer_rightbinding;
+    static int    viewer_openlevel;
+    static int    viewer_feedpagemode;
 
     // Group - Playlist
     static bool pl_visible;
-    static int pl_prefetch;
+    static int  pl_prefetch;
 
     static const QString SOFTWARE_ORG;
     static const QString SOFTWARE_NAME;

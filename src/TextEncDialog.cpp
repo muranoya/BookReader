@@ -22,13 +22,13 @@ TextEncDialog::TextEncDialog(QWidget *parent)
     setWindowTitle(tr("コーデックの選択"));
 
     layout->addWidget(search_label, 0, 0, 1, 1);
-    layout->addWidget(search_box, 0, 1, 1, 1);
-    layout->addWidget(src_label, 1, 0, 1, 1);
-    layout->addWidget(src_text, 1, 1, 1, 1);
-    layout->addWidget(dst_label, 2, 0, 1, 1);
-    layout->addWidget(dst_text, 2, 1, 1, 1);
-    layout->addWidget(codec_list, 3, 0, 1, 2);
-    layout->addWidget(buttonbox, 4, 0, 1, 2, Qt::AlignRight);
+    layout->addWidget(search_box,   0, 1, 1, 1);
+    layout->addWidget(src_label,    1, 0, 1, 1);
+    layout->addWidget(src_text,     1, 1, 1, 1);
+    layout->addWidget(dst_label,    2, 0, 1, 1);
+    layout->addWidget(dst_text,     2, 1, 1, 1);
+    layout->addWidget(codec_list,   3, 0, 1, 2);
+    layout->addWidget(buttonbox,    4, 0, 1, 2, Qt::AlignRight);
 
     QList<int> avail_codecs = QTextCodec::availableMibs();
     for (QList<int>::const_iterator i = avail_codecs.constBegin();

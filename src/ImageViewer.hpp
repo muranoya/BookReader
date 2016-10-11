@@ -32,6 +32,11 @@ public:
         Bilinear,
         Bicubic,
     };
+    enum FeedPageMode
+    {
+        MouseClickPosition,
+        MouseButton,
+    };
 
     explicit ImageViewer(QWidget *parent = 0);
     ~ImageViewer();
@@ -45,9 +50,12 @@ public:
     void setRightbindingMode(bool m);
     bool isRightbindingMode() const;
 
-    bool setScale(ViewMode m, qreal s);
+    void setFeedPageMode(FeedPageMode m);
+    FeedPageMode getFeedPageMode() const;
+
+    bool setScale(ViewMode m, double s);
     bool setScale(ViewMode m);
-    qreal getScale() const;
+    double getScale() const;
     ViewMode getScaleMode() const;
 
     void setInterpolationMode(InterpolationMode mode);
@@ -108,7 +116,8 @@ private:
                 RAW,
                 ARCHIVE,
             };
-            explicit File(const QString &p, const QByteArray &rfilepath);
+            explicit File(const QString &p,
+                    const QByteArray &rfilepath);
             explicit File(const QString &p);
             explicit File();
             virtual ~File();
@@ -130,11 +139,13 @@ private:
     class PlayListItem : public QListWidgetItem
     {
         public:
-            explicit PlayListItem(const QString &p, const QByteArray &f,
+            explicit PlayListItem(const QString &p,
+                    const QByteArray &f,
                     QListWidget *parent = 0);
-            explicit PlayListItem(const QString &f, QListWidget *parent = 0);
+            explicit PlayListItem(const QString &f,
+                    QListWidget *parent = 0);
             virtual ~PlayListItem();
-            File& file();
+            File &file();
             void refreshText();
         private:
             File f;
@@ -143,7 +154,8 @@ private:
     class Prefetcher : public QThread
     {
         public:
-            Prefetcher(QCache<QString, QByteArray> *ch, QMutex *m);
+            Prefetcher(QCache<QString, QByteArray> *ch,
+                    QMutex *m);
             void setPrefetchImage(const QList<File> &list);
             void sendTermSig();
         protected:
@@ -158,17 +170,18 @@ private:
     // viewer
     QImage img_combined;     // 全ての画像を1枚の画像に連結したもの
     QImage img_scaled;       // 拡縮後の画像
-    qreal scale_value;       // 表示倍率
+    double scale_value;       // 表示倍率
     int img_count;           // 同時に表示している画像数
     ViewMode vmode;          // 表示モード
     InterpolationMode imode; // 画素補完モード
     bool rightbinding;       // 見開き表示時に右綴じで表示するか
     QTimer drag_timer;
     bool is_drag_image;
-    QPoint click_pos; // クリックした時の位置
+    QPoint click_pos;    // クリックした時の位置
     QPoint click_pos2;
-    QPoint move_pos;  // 移動した時の位置
-    QPoint img_pos;   // 画像の位置
+    QPoint move_pos;     // 移動した時の位置
+    QPoint img_pos;      // 画像の位置
+    FeedPageMode fpmode; // ページ遷移のモード
 
     bool isReadableImageFile(const QString &path) const;
     void releaseImages();
@@ -201,7 +214,7 @@ private:
     QList<File> currentFiles() const;
     void nextImages();
     void previousImages();
-    void openArchiveFile(const QString &path);
+    bool openArchiveFile(const QString &path);
     void openFilesAndDirs(const QStringList &paths, int level);
     static QByteArray *readImageData(const File &f);
     static QByteArray *readArchiveData(const File &f);

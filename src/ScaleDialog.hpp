@@ -11,7 +11,8 @@ class ScaleDialog : private QDialog
 {
     Q_OBJECT
 public:
-    static bool getScale(const QSize &size, const qreal org, qreal &rslt);
+    static bool getScale(const QSize &size,
+            const double org, double &rslt);
 
 private slots:
     void spinbox_valueChanged(const double d);

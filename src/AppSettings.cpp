@@ -1,5 +1,6 @@
 #include <QSettings>
 #include "AppSettings.hpp"
+#include "ImageViewer.hpp"
 
 QSize AppSettings::mw_size;
 QPoint AppSettings::mw_pos;
@@ -12,6 +13,7 @@ int AppSettings::viewer_ipixmode;
 bool AppSettings::viewer_spread;
 bool AppSettings::viewer_rightbinding;
 int AppSettings::viewer_openlevel;
+int AppSettings::viewer_feedpagemode;
 
 const QString AppSettings::SOFTWARE_ORG("muranoya.net");
 const QString AppSettings::SOFTWARE_NAME("BookReader");
@@ -25,7 +27,7 @@ AppSettings::SaveSettings()
     QSettings settings(SOFTWARE_ORG, SOFTWARE_NAME);
 
     settings.beginGroup("MainWindow");
-    settings.setValue("size", mw_size);
+    settings.setValue("size",     mw_size);
     settings.setValue("location", mw_pos);
     settings.endGroup();
 
@@ -34,16 +36,17 @@ AppSettings::SaveSettings()
     settings.endGroup();
 
     settings.beginGroup("Viewer");
-    settings.setValue("scaling_mode", viewer_scalingmode);
+    settings.setValue("scaling_mode",  viewer_scalingmode);
     settings.setValue("scaling_times", viewer_scalingtimes);
-    settings.setValue("ipix_mode", viewer_ipixmode);
-    settings.setValue("image_spread", viewer_spread);
-    settings.setValue("rightbinding", viewer_rightbinding);
-    settings.setValue("open_level", viewer_openlevel);
+    settings.setValue("ipix_mode",     viewer_ipixmode);
+    settings.setValue("image_spread",  viewer_spread);
+    settings.setValue("rightbinding",  viewer_rightbinding);
+    settings.setValue("open_level",    viewer_openlevel);
+    settings.setValue("feedpage_mode", viewer_feedpagemode);
     settings.endGroup();
 
     settings.beginGroup("Playlist");
-    settings.setValue("visible", pl_visible);
+    settings.setValue("visible",  pl_visible);
     settings.setValue("prefetch", pl_prefetch);
     settings.endGroup();
 }
@@ -54,8 +57,8 @@ AppSettings::LoadSettings()
     QSettings settings(SOFTWARE_ORG, SOFTWARE_NAME);
 
     settings.beginGroup("MainWindow");
-    mw_size = settings.value("size", QSize(600, 400)).toSize();
-    mw_pos = settings.value("location", QPoint(100, 100)).toPoint();
+    mw_size = settings.value("size",     QSize(600, 400)).toSize();
+    mw_pos  = settings.value("location", QPoint(100, 100)).toPoint();
     settings.endGroup();
 
     settings.beginGroup("Main");
@@ -63,16 +66,18 @@ AppSettings::LoadSettings()
     settings.endGroup();
 
     settings.beginGroup("Viewer");
-    viewer_scalingmode = settings.value("scaling_mode", 1).toInt();
+    viewer_scalingmode  = settings.value("scaling_mode",  ImageViewer::FIT_WINDOW).toInt();
     viewer_scalingtimes = settings.value("scaling_times", 1.0).toReal();
-    viewer_ipixmode = settings.value("ipix_mode", 1).toInt();
-    viewer_spread = settings.value("image_spread", false).toBool();
-    viewer_rightbinding = settings.value("rightbinding", false).toBool();
-    viewer_openlevel = settings.value("open_level", 999).toInt();
+    viewer_ipixmode     = settings.value("ipix_mode",     ImageViewer::Bilinear).toInt();
+    viewer_spread       = settings.value("image_spread",  false).toBool();
+    viewer_rightbinding = settings.value("rightbinding",  false).toBool();
+    viewer_openlevel    = settings.value("open_level",    999).toInt();
+    viewer_feedpagemode = settings.value("feedpage_mode",
+            ImageViewer::MouseButton).toInt();
     settings.endGroup();
 
     settings.beginGroup("Playlist");
-    pl_visible = settings.value("visible", true).toBool();
+    pl_visible  = settings.value("visible",  true).toBool();
     pl_prefetch = settings.value("prefetch", 20).toInt();
     settings.endGroup();
 }
