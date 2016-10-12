@@ -15,11 +15,11 @@ bool AppSettings::viewer_rightbinding;
 int AppSettings::viewer_openlevel;
 int AppSettings::viewer_feedpagemode;
 
-const QString AppSettings::SOFTWARE_ORG("muranoya.net");
-const QString AppSettings::SOFTWARE_NAME("BookReader");
-
 bool AppSettings::pl_visible;
 int AppSettings::pl_prefetch;
+
+const QString AppSettings::SOFTWARE_ORG("muranoya.net");
+const QString AppSettings::SOFTWARE_NAME("BookReader");
 
 void
 AppSettings::SaveSettings()

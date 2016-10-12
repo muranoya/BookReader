@@ -1112,7 +1112,7 @@ ImageViewer::readArchiveData(const File &f)
             QByteArray *data = new QByteArray();
             const void *buf;
             size_t len;
-            off_t offset;
+            la_int64_t offset;
 
             while (archive_read_data_block(a, &buf, &len, &offset) == ARCHIVE_OK)
             {

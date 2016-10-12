@@ -26,15 +26,26 @@ TextEncDialog.hpp
 
 FORMS +=
 
-# If you use a system-font, you have to remove 'rc/font.qrc' from the RESOURCES,
-# and edit main.cpp.
-# If you use the default-font, you have to install IPA P Gothic font under rc.
-# IPA P Gothic is available from http://ipafont.ipa.go.jp/old/ipafont/download.html.
-RESOURCES = rc/icon.qrc rc/font.qrc
+RESOURCES = rc/icon.qrc
+
+# If you use a custom-font, you have to install a font under rc and
+# edit the rc/font.qrc and the main.cpp.
+USE_CUSTOM_FONT=1
+
+USE_CUSTOM_FONT {
+DEFINES += USE_CUSTOM_FONT
+RESOURCES += rc/font.qrc
+}
 
 INCLUDEPATH +=
 LIBS += -larchive
 
+win32 {
+QMAKE_CXXFLAGS += -std:c++latest
+QMAKE_CFLAGS   += 
+}
+else:unix {
 QMAKE_CXXFLAGS += -std=c++11
 QMAKE_CFLAGS   += 
+}
 
