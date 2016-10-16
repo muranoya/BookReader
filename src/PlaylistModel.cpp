@@ -146,18 +146,6 @@ PlaylistModel::currentIndex(int i) const
     return -1;
 }
 
-QStringList
-PlaylistModel::currentFileNames() const
-{
-    QStringList list;
-    const int len = std::min(count(), countShowImages());
-    for (int i = 0; i < len; ++i)
-    {
-        list << currentFileName(i);
-    }
-    return list;
-}
-
 QString
 PlaylistModel::currentFileName(int i) const
 {
@@ -297,7 +285,7 @@ PlaylistModel::prevImage()
 
     int old_index = img_index;
 
-    dataChangeNotice(prevIndex(img_index, countShowImages()));
+    dataChangeNotice(nextIndex(img_index, -countShowImages()));
 
     if (old_index != img_index)
     {
@@ -311,6 +299,20 @@ PlaylistModel::itemViewDoubleClicked(const QModelIndex &img_index)
 {
     Q_UNUSED(img_index);
     showSelectedItem();
+}
+
+int
+PlaylistModel::nextIndex(int idx, int c) const
+{
+    int i = (idx + c) % count();
+    if (i < 0) i += count();
+    return i;
+}
+
+bool
+PlaylistModel::isValidIndex(int i) const
+{
+    return (0 <= i && i < count());
 }
 
 bool
@@ -352,42 +354,18 @@ PlaylistModel::dataChangeNotice(int newidx)
         }
     }
 
-    requestPrefetch();
-}
-
-void
-PlaylistModel::requestPrefetch()
-{
-    QVector<ImageFile> list;
-    int num = std::min(files.count(), prft->getCacheSize());
-    for (int i = 1, n = 0; n < num; ++i)
     {
-        list.append(*files.at(nextIndex(img_index, i))); n++;
-        if (n+1 >= num) break;
-        list.append(*files.at(prevIndex(img_index, i))); n++;
+        QVector<ImageFile> list;
+        int num = std::min(files.count(), prft->getCacheSize());
+        for (int i = 1, n = 0; n < num; ++i)
+        {
+            list.append(*files.at(nextIndex(img_index, i)));  n++;
+            if (n+1 >= num) break;
+            list.append(*files.at(nextIndex(img_index, -i))); n++;
+        }
+        prft->putRequest(list);
+        list.clear();
     }
-    prft->putRequest(list);
-    list.clear();
-}
-
-int
-PlaylistModel::nextIndex(int idx, int c) const
-{
-    return (idx + c) % count();
-}
-
-int
-PlaylistModel::prevIndex(int idx, int c) const
-{
-    int i = (idx - c) % count();
-    if (i < 0) i += count();
-    return i;
-}
-
-bool
-PlaylistModel::isValidIndex(int i) const
-{
-    return (0 <= i && i < count());
 }
 
 void
@@ -446,6 +424,32 @@ PlaylistModel::openFilesAndDirs0(QVector<ImageFile*> &openfiles,
             openFilesAndDirs0(openfiles, newlist, level-1);
         }
     }
+}
+
+QImage
+PlaylistModel::loadData(const ImageFile &f)
+{
+    QImage img;
+    QByteArray *data = prft->get(f.createKey());
+    if (data)
+    {
+        fprintf(stderr, "cache hit\n");
+        img.loadFromData(*data);
+    }
+    else
+    {
+        fprintf(stderr, "cache miss\n");
+        data = f.readData();
+        if (!data) return QImage();
+        img.loadFromData(*data);
+        delete data;
+    }
+
+    if (img.format() != QImage::Format_ARGB32)
+    {
+        return img.convertToFormat(QImage::Format_ARGB32);
+    }
+    return img;
 }
 
 QImage
@@ -509,31 +513,5 @@ PlaylistModel::combineImage()
         sw += tw;
     }
     return cimg;
-}
-
-QImage
-PlaylistModel::loadData(const ImageFile &f)
-{
-    QImage img;
-    QByteArray *data = prft->get(f.createKey());
-    if (data)
-    {
-        fprintf(stderr, "cache hit\n");
-        img.loadFromData(*data);
-    }
-    else
-    {
-        fprintf(stderr, "cache miss\n");
-        data = f.readData();
-        if (!data) return QImage();
-        img.loadFromData(*data);
-        delete data;
-    }
-
-    if (img.format() != QImage::Format_ARGB32)
-    {
-        return img.convertToFormat(QImage::Format_ARGB32);
-    }
-    return img;
 }
 

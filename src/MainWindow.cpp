@@ -269,7 +269,7 @@ MainWindow::createMenus()
     connect(pl_show, SIGNAL(triggered()),
             plmodel, SLOT(showSelectedItem()));
     connect(pl_remove, SIGNAL(triggered()),
-            plmodel, SLOT(removeSelectedPlaylistItem()));
+            plmodel, SLOT(removeSelectedItem()));
     connect(pl_clear, SIGNAL(triggered()),
             plmodel, SLOT(clearPlaylist()));
 

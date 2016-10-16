@@ -39,7 +39,6 @@ public:
     bool empty() const;
 
     int currentIndex(int i) const;
-    QStringList currentFileNames() const;
     QString currentFileName(int i) const;
 
     void setModelToItemView(QAbstractItemView *view);
@@ -51,7 +50,7 @@ signals:
 public slots:
     void openImages(const QStringList &path);
     void showSelectedItem();
-    void removeSelectedPlaylistItem();
+    void removeSelectedItem();
     void clearPlaylist();
     void nextImage();
     void prevImage();
@@ -68,17 +67,17 @@ private:
     int img_index;
     Prefetcher *prft;
 
-    bool isCurrentIndex(int i) const;
-    void dataChangeNotice(int newidx);
-    void requestPrefetch();
     int nextIndex(int idx, int c) const;
-    int prevIndex(int idx, int c) const;
     bool isValidIndex(int i) const;
+    bool isCurrentIndex(int i) const;
+
+    void dataChangeNotice(int newidx);
     void openFilesAndDirs(const QStringList &paths, int level);
     void openFilesAndDirs0(QVector<ImageFile*> &openfiles,
             const QStringList &paths, int level);
-    QImage combineImage();
+
     QImage loadData(const ImageFile &f);
+    QImage combineImage();
 };
 
 #endif // PLAYLISTMODEL_HPP
