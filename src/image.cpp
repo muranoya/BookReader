@@ -1,6 +1,8 @@
 #include "image.hpp"
 #include <cmath>
 
+#include "for_windows_env.hpp"
+
 QImage
 nn(const QImage &src, const double s)
 {

@@ -1,6 +1,6 @@
 #include "SettingDialog.hpp"
-#include "AppSettings.hpp"
-#include "ImageViewer.hpp"
+#include "App.hpp"
+#include "Viewer.hpp"
 
 SettingDialog::SettingDialog(QWidget *parent)
     : QDialog(parent,
@@ -23,11 +23,11 @@ SettingDialog::SettingDialog(QWidget *parent)
     , feedpage_clckbtn(new QRadioButton(tr("左/右クリックで進む/戻る")))
     , feedpage_clckpos(new QRadioButton(tr("クリック位置で進む/戻る")))
 {
-    setWindowTitle(tr("設定"));
+    setWindowTitle(tr("Configuration"));
     setLayout(layout);
 
     group_OpenDir->setLayout(open_rec_layout);
-    open_rec_dir_level->setRange(0, 999);
+    open_rec_dir_level->setRange(0, 100);
     open_rec_layout->addWidget(open_rec_dir_level_text, 0, 0, 1, 1);
     open_rec_layout->addWidget(open_rec_dir_level,      0, 1, 1, 1);
 
@@ -90,26 +90,26 @@ SettingDialog::openSettingDialog()
 void
 SettingDialog::loadSettings()
 {
-    open_rec_dir_level->setValue(AppSettings::viewer_openlevel);
-    prefetch_value->setValue(AppSettings::pl_prefetch);
-    feedpage_clckbtn->setChecked(
-            AppSettings::viewer_feedpagemode == ImageViewer::MouseButton);
-    feedpage_clckpos->setChecked(
-            AppSettings::viewer_feedpagemode == ImageViewer::MouseClickPosition);
+    open_rec_dir_level->setValue(App::view_openlevel);
+    prefetch_value->setValue(App::pl_prefetch);
+    feedpage_clckbtn->setChecked(App::view_feedpage
+        == Viewer::MouseButton);
+    feedpage_clckpos->setChecked(App::view_feedpage
+            == Viewer::MouseClickPosition);
 }
 
 void
 SettingDialog::saveSettings()
 {
-    AppSettings::viewer_openlevel = open_rec_dir_level->value();
-    AppSettings::pl_prefetch = prefetch_value->value();
+    App::view_openlevel = open_rec_dir_level->value();
+    App::pl_prefetch = prefetch_value->value();
     if (feedpage_clckbtn->isChecked())
     {
-        AppSettings::viewer_feedpagemode = ImageViewer::MouseButton;
+        App::view_feedpage = Viewer::MouseButton;
     }
     else
     {
-        AppSettings::viewer_feedpagemode = ImageViewer::MouseClickPosition;
+        App::view_feedpage = Viewer::MouseClickPosition;
     }
 }
 

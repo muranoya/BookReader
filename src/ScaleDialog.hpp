@@ -1,5 +1,5 @@
-#ifndef SETTINGSCALEDIALOG_H
-#define SETTINGSCALEDIALOG_H
+#ifndef SCALEDIALOG_HPP
+#define SCALEDIALOG_HPP
 
 #include <QDialog>
 #include <QGridLayout>
@@ -12,13 +12,13 @@ class ScaleDialog : private QDialog
     Q_OBJECT
 public:
     static bool getScale(const QSize &size,
-            const double org, double &rslt);
+            double org, double &rslt);
 
 private slots:
-    void spinbox_valueChanged(const double d);
+    void spinbox_valueChanged(double d);
 
 private:
-    ScaleDialog(QWidget *parent = 0);
+    explicit ScaleDialog(QWidget *parent = 0);
     ~ScaleDialog();
 
     QGridLayout *layout;
@@ -33,4 +33,4 @@ private:
     QSize img_size;
 };
 
-#endif // SETTINGSCALEDIALOG_H
+#endif // SCALEDIALOG_HPP

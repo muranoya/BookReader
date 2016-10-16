@@ -1,4 +1,4 @@
-BookReader
+SpRead
 ==========
 
 ## Requirement

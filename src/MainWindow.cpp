@@ -1,54 +1,46 @@
 #include <QDir>
 #include "MainWindow.hpp"
 #include "ScaleDialog.hpp"
-#include "AppSettings.hpp"
+#include "App.hpp"
 #include "SettingDialog.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , imgview(new ImageViewer(this))
+    , viewer(new Viewer(this))
+    , plmodel(new PlaylistModel())
+    , plview(new QListView())
+    , dockwidget(new QDockWidget(tr("Playlist"), this))
+    , lastdir()
 {
-    addDockWidget(Qt::LeftDockWidgetArea, imgview->playlistDock());
-    setCentralWidget(imgview);
+    addDockWidget(Qt::LeftDockWidgetArea, dockwidget);
+    setCentralWidget(viewer);
+    dockwidget->setWidget(plview);
+    plmodel->setModelToItemView(plview);
+    plview->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-    connect(imgview->playlistDock(), SIGNAL(visibilityChanged(bool)),
-            this, SLOT(imgview_playlistVisibleChanged(bool)));
-    connect(imgview, SIGNAL(changedImage()),
-            this, SLOT(imgview_changedImage()));
-    connect(imgview, SIGNAL(changedScaleMode()),
-            this, SLOT(imgview_changedScaleMode()));
+    connect(viewer, SIGNAL(nextImageRequest()),
+            plmodel, SLOT(nextImage()));
+    connect(viewer, SIGNAL(prevImageRequest()),
+            plmodel, SLOT(prevImage()));
+    connect(viewer, SIGNAL(openImageFiles(const QStringList &)),
+            plmodel, SLOT(openImages(const QStringList &)));
+    connect(viewer, SIGNAL(changeViewMode()),
+            this,    SLOT(updateWindowText()));
+
+    connect(plmodel, SIGNAL(changeImage(const QImage &)),
+            viewer, SLOT(showImage(const QImage &)));
+    connect(plmodel, SIGNAL(changePlaylistStatus()),
+            this,    SLOT(updateWindowText()));
 
     createMenus();
 
-    AppSettings::LoadSettings();
+    App::LoadSettings();
     applySettings();
     updateWindowText();
 }
 
 MainWindow::~MainWindow()
 {
-    delete imgview;
-
-    delete menu_file;
-    delete menu_file_open;
-    delete menu_file_fopen;
-    delete menu_file_settings;
-    delete menu_file_aboutqt;
-    delete menu_file_exit;
-
-    delete menu_view;
-    delete menu_view_fullsize;
-    delete menu_view_fitwindow;
-    delete menu_view_fitimage;
-    delete menu_view_setscale;
-    delete menu_view_spread;
-    delete menu_view_rightbinding;
-    delete menu_view_nn;
-    delete menu_view_bi;
-    delete menu_view_bc;
-
-    delete menu_window;
-    delete menu_window_playlist;
 }
 
 /******************* file *******************/
@@ -56,16 +48,15 @@ void
 MainWindow::menu_file_open_triggered()
 {
     QStringList files = QFileDialog::getOpenFileNames(
-                this, tr("ファイルを開く"), AppSettings::diag_path,
-                imgview->readableExtFormat());
+                this, tr("Select Files"), lastdir,
+                ImageFile::readableFormatExt());
 
     if (!files.isEmpty())
     {
         const QDir dir = QFileInfo(files.at(0)).absoluteDir();
-        AppSettings::diag_path = dir.absolutePath();
-        imgview->clearPlaylist();
-        imgview->openImages(files);
-        updateWindowText();
+        lastdir = dir.absolutePath();
+        plmodel->clearPlaylist();
+        plmodel->openImages(files);
     }
 }
 
@@ -73,14 +64,13 @@ void
 MainWindow::menu_file_fopen_triggered()
 {
     QString dirname = QFileDialog::getExistingDirectory(
-                this, tr("ディレクトリを開く"), AppSettings::diag_path);
+                this, tr("Select Directory"), lastdir);
 
     if (!dirname.isEmpty())
     {
-        AppSettings::diag_path = dirname;
-        imgview->clearPlaylist();
-        imgview->openImages(QStringList(dirname));
-        updateWindowText();
+        lastdir = dirname;
+        plmodel->clearPlaylist();
+        plmodel->openImages(QStringList(dirname));
     }
 }
 
@@ -89,10 +79,10 @@ MainWindow::menu_file_settings_triggered()
 {
     if (SettingDialog::openSettingDialog())
     {
-        imgview->setOpenDirLevel(AppSettings::viewer_openlevel);
-        imgview->setImageCacheSize(AppSettings::pl_prefetch);
-        imgview->setFeedPageMode(
-                static_cast<ImageViewer::FeedPageMode>(AppSettings::viewer_feedpagemode));
+        plmodel->setOpenDirLevel(App::view_openlevel);
+        plmodel->setCacheSize(App::pl_prefetch);
+        viewer->setFeedPageMode(
+                static_cast<Viewer::FeedPageMode>(App::view_feedpage));
     }
 }
 
@@ -100,28 +90,30 @@ MainWindow::menu_file_settings_triggered()
 void
 MainWindow::menu_view_fullsize_triggered()
 {
-    changeCheckedScaleMenu(menu_view_fullsize, ImageViewer::FULLSIZE);
+    changeCheckedScaleMenu(menu_view_fullsize, Viewer::ActualSize);
 }
 
 void
 MainWindow::menu_view_fitwindow_triggered()
 {
-    changeCheckedScaleMenu(menu_view_fitwindow, ImageViewer::FIT_WINDOW);
+    changeCheckedScaleMenu(menu_view_fitwindow, Viewer::FittingWindow);
 }
 
 void
-MainWindow::menu_view_fitimage_triggered()
+MainWindow::menu_view_fitwidth_triggered()
 {
-    changeCheckedScaleMenu(menu_view_fitimage, ImageViewer::FIT_IMAGE);
+    changeCheckedScaleMenu(menu_view_fitwidth, Viewer::FittingWidth);
 }
 
 void
 MainWindow::menu_view_setscale_triggered()
 {
     double ret;
-    if (ScaleDialog::getScale(imgview->imageSize(), imgview->getScale(), ret))
+    if (ScaleDialog::getScale(viewer->getImageSize(),
+                viewer->getCustomScaleFactor(), ret))
     {
-        changeCheckedScaleMenu(menu_view_setscale, ImageViewer::CUSTOM_SCALE, ret);
+        changeCheckedScaleMenu(menu_view_setscale,
+                Viewer::CustomScale, ret);
     }
     else
     {
@@ -132,13 +124,13 @@ MainWindow::menu_view_setscale_triggered()
 void
 MainWindow::menu_view_spread_triggered()
 {
-    imgview->setSpreadMode(menu_view_spread->isChecked());
+    plmodel->setSpreadView(menu_view_spread->isChecked());
 }
 
 void
 MainWindow::menu_view_rightbinding_triggered()
 {
-    imgview->setRightbindingMode(menu_view_rightbinding->isChecked());
+    plmodel->setRightbindingView(menu_view_rightbinding->isChecked());
 }
 
 void
@@ -148,15 +140,14 @@ MainWindow::menu_view_nn_triggered()
     {
         menu_view_bi->setChecked(false);
         menu_view_bc->setChecked(false);
-        imgview->setInterpolationMode(ImageViewer::NearestNeighbor);
     }
     else
     {
         menu_view_nn->setChecked(true);
         menu_view_bi->setChecked(false);
         menu_view_bc->setChecked(false);
-        imgview->setInterpolationMode(ImageViewer::NearestNeighbor);
     }
+    viewer->setScalingMode(Viewer::NearestNeighbor);
 }
 
 void
@@ -166,15 +157,14 @@ MainWindow::menu_view_bi_triggered()
     {
         menu_view_nn->setChecked(false);
         menu_view_bc->setChecked(false);
-        imgview->setInterpolationMode(ImageViewer::Bilinear);
     }
     else
     {
         menu_view_nn->setChecked(false);
         menu_view_bi->setChecked(true);
         menu_view_bc->setChecked(false);
-        imgview->setInterpolationMode(ImageViewer::Bilinear);
     }
+    viewer->setScalingMode(Viewer::Bilinear);
 }
 
 void
@@ -184,22 +174,14 @@ MainWindow::menu_view_bc_triggered()
     {
         menu_view_nn->setChecked(false);
         menu_view_bi->setChecked(false);
-        imgview->setInterpolationMode(ImageViewer::Bicubic);
     }
     else
     {
         menu_view_nn->setChecked(false);
         menu_view_bi->setChecked(false);
         menu_view_bc->setChecked(true);
-        imgview->setInterpolationMode(ImageViewer::Bicubic);
     }
-}
-
-/******************* window *******************/
-void
-MainWindow::menu_window_playlist_triggered()
-{
-    imgview->playlistDock()->setVisible(menu_window_playlist->isChecked());
+    viewer->setScalingMode(Viewer::Bicubic);
 }
 
 /******************* util *******************/
@@ -207,85 +189,46 @@ void
 MainWindow::updateWindowText()
 {
     QString title;
-    if (imgview->empty())
+    if (plmodel->empty())
     {
-        title = tr("%1").arg(AppSettings::SOFTWARE_NAME);
+        title = tr("%1").arg(App::SOFTWARE_NAME);
     }
     else
     {
-        if (imgview->countShowImages() == 1)
+        if (plmodel->countShowImages() == 1)
         {
             title = tr("[%1/%2]")
-                .arg(imgview->currentIndex(0)+1)
-                .arg(imgview->count());
+                .arg(plmodel->currentIndex(0)+1)
+                .arg(plmodel->count());
         }
         else
         {
             title = tr("[%1-%2/%3]")
-                .arg(imgview->currentIndex(0)+1)
-                .arg(imgview->currentIndex(1)+1)
-                .arg(imgview->count());
+                .arg(plmodel->currentIndex(0)+1)
+                .arg(plmodel->currentIndex(1)+1)
+                .arg(plmodel->count());
         }
 
-        if (imgview->countShowImages() == 2)
+        if (plmodel->countShowImages() == 2)
         {
-            title = (imgview->isRightbindingMode() ? tr("%1 %3 | %2")
-                                                   : tr("%1 %2 | %3"))
+            title = (plmodel->getRightbindingView() ? tr("%1 %3 | %2")
+                                                    : tr("%1 %2 | %3"))
                 .arg(title)
-                .arg(imgview->currentFileName(0))
-                .arg(imgview->currentFileName(1));
+                .arg(plmodel->currentFileName(0))
+                .arg(plmodel->currentFileName(1));
         }
         else
         {
             title = tr("%1 %2")
                 .arg(title)
-                .arg(imgview->currentFileName(0));
+                .arg(plmodel->currentFileName(0));
         }
 
-        title = tr("%1 倍率:%3%")
+        title = tr("%1 %3%")
             .arg(title)
-            .arg(QString::number(imgview->getScale() * 100.0, 'g', 4));
+            .arg(QString::number(viewer->getCustomScaleFactor() * 100.0, 'g', 4));
     }
     setWindowTitle(title);
-}
-
-/******************* image viewer event *******************/
-void
-MainWindow::imgview_playlistVisibleChanged(bool visible)
-{
-    menu_window_playlist->setChecked(visible);
-}
-
-void
-MainWindow::imgview_changedImage()
-{
-    updateWindowText();
-}
-
-void
-MainWindow::imgview_changedScaleMode()
-{
-    updateWindowText();
-
-    menu_view_fullsize->setChecked(false);
-    menu_view_fitwindow->setChecked(false);
-    menu_view_fitimage->setChecked(false);
-    menu_view_setscale->setChecked(false);
-    switch (imgview->getScaleMode())
-    {
-        case ImageViewer::FULLSIZE:
-            menu_view_fullsize->setChecked(true);
-            break;
-        case ImageViewer::FIT_WINDOW:
-            menu_view_fitwindow->setChecked(true);
-            break;
-        case ImageViewer::FIT_IMAGE:
-            menu_view_fitimage->setChecked(true);
-            break;
-        case ImageViewer::CUSTOM_SCALE:
-            menu_view_setscale->setChecked(true);
-            break;
-    }
 }
 
 void
@@ -293,7 +236,7 @@ MainWindow::closeEvent(QCloseEvent *event)
 {
     Q_UNUSED(event);
     storeSettings();
-    AppSettings::SaveSettings();
+    App::SaveSettings();
 }
 
 void
@@ -307,12 +250,30 @@ MainWindow::resizeEvent(QResizeEvent *event)
 void
 MainWindow::createMenus()
 {
-    menu_file = new QMenu(tr("ファイル"), this);
-    menu_file_open     = new QAction(tr("ファイルを開く"), this);
-    menu_file_fopen    = new QAction(tr("フォルダを開く"), this);
-    menu_file_settings = new QAction(tr("設定"), this);
-    menu_file_aboutqt  = new QAction(tr("Qtについて"), this);
-    menu_file_exit     = new QAction(tr("終了"), this);
+    pl_show =   new QAction(tr("Show"), plview);
+    pl_sep1 =   new QAction(plview);
+    pl_sep1->setSeparator(true);
+    pl_remove = new QAction(tr("Remove"), plview);
+    pl_clear =  new QAction(tr("Clear"), plview);
+    
+    plview->setContextMenuPolicy(Qt::ActionsContextMenu);
+    plview->addAction(pl_show);
+    plview->addAction(pl_sep1);
+    plview->addAction(pl_remove);
+    plview->addAction(pl_clear);
+    connect(pl_show, SIGNAL(triggered()),
+            plmodel, SLOT(showSelectedItem()));
+    connect(pl_remove, SIGNAL(triggered()),
+            plmodel, SLOT(removeSelectedPlaylistItem()));
+    connect(pl_clear, SIGNAL(triggered()),
+            plmodel, SLOT(clearPlaylist()));
+
+    menu_file = new QMenu(tr("File"), this);
+    menu_file_open     = new QAction(tr("Open"), this);
+    menu_file_fopen    = new QAction(tr("Open Directory"), this);
+    menu_file_settings = new QAction(tr("Configuration"), this);
+    menu_file_aboutqt  = new QAction(tr("About Qt"), this);
+    menu_file_exit     = new QAction(tr("Exit"), this);
 
     menu_file->addAction(menu_file_open);
     menu_file->addAction(menu_file_fopen);
@@ -334,30 +295,29 @@ MainWindow::createMenus()
             QCoreApplication::instance(), SLOT(quit()));
     menuBar()->addMenu(menu_file);
 
-
-    menu_view = new QMenu(tr("表示"), this);
-    menu_view_fullsize     = new QAction(tr("原寸大で表示する"), this);
+    menu_view = new QMenu(tr("Display"), this);
+    menu_view_fullsize     = new QAction(tr("Actual Size"), this);
     menu_view_fullsize->setCheckable(true);
-    menu_view_fitwindow    = new QAction(tr("ウィンドウに合わせて表示する"), this);
+    menu_view_fitwindow    = new QAction(tr("Fit Window"), this);
     menu_view_fitwindow->setCheckable(true);
-    menu_view_fitimage     = new QAction(tr("横幅に合わせて表示する"), this);
-    menu_view_fitimage->setCheckable(true);
-    menu_view_setscale     = new QAction(tr("倍率を指定して表示する"), this);
+    menu_view_fitwidth     = new QAction(tr("Fit Width"), this);
+    menu_view_fitwidth->setCheckable(true);
+    menu_view_setscale     = new QAction(tr("Specify Magnification"), this);
     menu_view_setscale->setCheckable(true);
-    menu_view_spread       = new QAction(tr("見開き表示"), this);
+    menu_view_spread       = new QAction(tr("Spread"), this);
     menu_view_spread->setCheckable(true);
-    menu_view_rightbinding = new QAction(tr("右綴じ表示"), this);
+    menu_view_rightbinding = new QAction(tr("Right Binding"), this);
     menu_view_rightbinding->setCheckable(true);
-    menu_view_nn           = new QAction(tr("低品質(Nearest Neighbor)"), this);
+    menu_view_nn           = new QAction(tr("Low (Nearest Neighbor)"), this);
     menu_view_nn->setCheckable(true);
-    menu_view_bi           = new QAction(tr("バランス(Bilinear)"), this);
+    menu_view_bi           = new QAction(tr("Balance (Bilinear)"), this);
     menu_view_bi->setCheckable(true);
-    menu_view_bc           = new QAction(tr("高品質(Bicubic)"), this);
+    menu_view_bc           = new QAction(tr("High (Bicubic)"), this);
     menu_view_bc->setCheckable(true);
 
     menu_view->addAction(menu_view_fullsize);
     menu_view->addAction(menu_view_fitwindow);
-    menu_view->addAction(menu_view_fitimage);
+    menu_view->addAction(menu_view_fitwidth);
     menu_view->addAction(menu_view_setscale);
     menu_view->addSeparator();
     menu_view->addAction(menu_view_spread);
@@ -370,8 +330,8 @@ MainWindow::createMenus()
             this, SLOT(menu_view_fullsize_triggered()));
     connect(menu_view_fitwindow,    SIGNAL(triggered()),
             this, SLOT(menu_view_fitwindow_triggered()));
-    connect(menu_view_fitimage,     SIGNAL(triggered()),
-            this, SLOT(menu_view_fitimage_triggered()));
+    connect(menu_view_fitwidth,     SIGNAL(triggered()),
+            this, SLOT(menu_view_fitwidth_triggered()));
     connect(menu_view_setscale,     SIGNAL(triggered()),
             this, SLOT(menu_view_setscale_triggered()));
     connect(menu_view_spread,       SIGNAL(triggered()),
@@ -387,111 +347,105 @@ MainWindow::createMenus()
     menuBar()->addMenu(menu_view);
 
 
-    menu_window = new QMenu(tr("ウィンドウ"), this);
-    menu_window_playlist = new QAction(tr("プレイリスト"), this);
-    menu_window_playlist->setCheckable(true);
+    menu_window = new QMenu(tr("Window"), this);
+    menu_window->addAction(dockwidget->toggleViewAction());
 
-    menu_window->addAction(menu_window_playlist);
-    connect(menu_window_playlist, SIGNAL(triggered()),
-            this, SLOT(menu_window_playlist_triggered()));
     menuBar()->addMenu(menu_window);
 }
 
 void
 MainWindow::changeCheckedScaleMenu(QAction *act,
-        const ImageViewer::ViewMode m, const double s)
+        Viewer::ViewMode m, double s)
 {
     menu_view_fullsize->setChecked(false);
     menu_view_fitwindow->setChecked(false);
-    menu_view_fitimage->setChecked(false);
+    menu_view_fitwidth->setChecked(false);
     menu_view_setscale->setChecked(false);
 
     act->setChecked(true);
 
-    if (m == ImageViewer::CUSTOM_SCALE)
+    if (m == Viewer::CustomScale)
     {
-        imgview->setScale(m, s);
+        viewer->setViewMode(m, s);
     }
     else
     {
-        imgview->setScale(m);
+        viewer->setViewMode(m);
     }
-    updateWindowText();
 }
 
 void
 MainWindow::applySettings()
 {
-    resize(AppSettings::mw_size);
-    move(AppSettings::mw_pos);
+    resize(App::mw_size);
+    move(App::mw_pos);
 
-    ImageViewer::ViewMode mode = 
-        static_cast<ImageViewer::ViewMode>(AppSettings::viewer_scalingmode);
-    switch (mode)
+    Viewer::ViewMode vmode = 
+        static_cast<Viewer::ViewMode>(App::view_scalem);
+    switch (vmode)
     {
-        case ImageViewer::FULLSIZE:
-            changeCheckedScaleMenu(menu_view_fullsize, mode);
+        case Viewer::ActualSize:
+            changeCheckedScaleMenu(menu_view_fullsize, vmode);
             break;
-        case ImageViewer::FIT_WINDOW:
-            changeCheckedScaleMenu(menu_view_fitwindow, mode);
+        case Viewer::FittingWindow:
+            changeCheckedScaleMenu(menu_view_fitwindow, vmode);
             break;
-        case ImageViewer::FIT_IMAGE:
-            changeCheckedScaleMenu(menu_view_fitimage, mode);
+        case Viewer::FittingWidth:
+            changeCheckedScaleMenu(menu_view_fitwidth, vmode);
             break;
-        case ImageViewer::CUSTOM_SCALE:
-            changeCheckedScaleMenu(menu_view_setscale, mode,
-                    AppSettings::viewer_scalingtimes);
+        case Viewer::CustomScale:
+            changeCheckedScaleMenu(menu_view_setscale, vmode,
+                    App::view_scale);
             break;
     }
     
-    imgview->setInterpolationMode(
-            static_cast<ImageViewer::InterpolationMode>(AppSettings::viewer_ipixmode));
-    switch (imgview->getInterpolationMode())
+    viewer->setScalingMode(
+            static_cast<Viewer::ScalingMode>(App::view_ipix));
+    switch (viewer->getScalingMode())
     {
-        case ImageViewer::NearestNeighbor:
+        case Viewer::NearestNeighbor:
             menu_view_nn->setChecked(true);
             break;
-        case ImageViewer::Bilinear:
+        case Viewer::Bilinear:
             menu_view_bi->setChecked(true);
             break;
-        case ImageViewer::Bicubic:
+        case Viewer::Bicubic:
             menu_view_bc->setChecked(true);
             break;
     }
 
-    imgview->setSpreadMode(AppSettings::viewer_spread);
-    menu_view_spread->setChecked(AppSettings::viewer_spread);
+    plmodel->setSpreadView(App::view_spread);
+    menu_view_spread->setChecked(App::view_spread);
 
-    imgview->setRightbindingMode(AppSettings::viewer_rightbinding);
-    menu_view_rightbinding->setChecked(AppSettings::viewer_rightbinding);
+    plmodel->setRightbindingView(App::view_rbind);
+    menu_view_rightbinding->setChecked(App::view_rbind);
     
-    imgview->setFeedPageMode(
-            static_cast<ImageViewer::FeedPageMode>(AppSettings::viewer_feedpagemode));
+    viewer->setFeedPageMode(
+            static_cast<Viewer::FeedPageMode>(App::view_feedpage));
 
-    imgview->setOpenDirLevel(AppSettings::viewer_openlevel);
+    plmodel->setOpenDirLevel(App::view_openlevel);
 
-    imgview->playlistDock()->setVisible(AppSettings::pl_visible);
-    menu_window_playlist->setChecked(imgview->playlistDock()->isVisible());
+    dockwidget->setVisible(App::pl_visible);
 
-    imgview->setImageCacheSize(AppSettings::pl_prefetch);
+    plmodel->setCacheSize(App::pl_prefetch);
 }
 
 void
 MainWindow::storeSettings()
 {
-    AppSettings::mw_size = size();
-    AppSettings::mw_pos = pos();
+    App::mw_size = size();
+    App::mw_pos = pos();
 
-    AppSettings::viewer_scalingmode = static_cast<int>(imgview->getScaleMode());
-    AppSettings::viewer_scalingtimes = imgview->getScale();
-    AppSettings::viewer_ipixmode = static_cast<int>(imgview->getInterpolationMode());
-    AppSettings::viewer_spread = menu_view_spread->isChecked();
-    AppSettings::viewer_rightbinding = menu_view_rightbinding->isChecked();
-    AppSettings::viewer_openlevel = imgview->getOpenDirLevel();
-    AppSettings::viewer_feedpagemode =
-        static_cast<ImageViewer::FeedPageMode>(imgview->getFeedPageMode());
+    App::view_scalem    = static_cast<int>(viewer->getViewMode());
+    App::view_scale     = viewer->getCustomScaleFactor();
+    App::view_ipix      = static_cast<int>(viewer->getScalingMode());
+    App::view_spread    = menu_view_spread->isChecked();
+    App::view_rbind     = menu_view_rightbinding->isChecked();
+    App::view_openlevel = plmodel->getOpenDirLevel();
+    App::view_feedpage  =
+        static_cast<Viewer::FeedPageMode>(viewer->getFeedPageMode());
 
-    AppSettings::pl_visible = imgview->playlistDock()->isVisible();
-    AppSettings::pl_prefetch = imgview->getImageCacheSize();
+    App::pl_visible  = dockwidget->isVisible();
+    App::pl_prefetch = plmodel->getCacheSize();
 }
 

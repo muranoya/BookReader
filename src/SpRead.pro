@@ -2,27 +2,32 @@ QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = BookReader
+TARGET = SpRead
 TEMPLATE = app
 
 SOURCES += \
 main.cpp\
 MainWindow.cpp \
-AppSettings.cpp \
-ImageViewer.cpp \
+App.cpp \
+Viewer.cpp \
+ImageFile.cpp \
+PlaylistModel.cpp \
 image.cpp \
 ScaleDialog.cpp \
 SettingDialog.cpp \
-TextEncDialog.cpp
+Prefetcher.cpp
 
 HEADERS += \
+for_windows_env.hpp \
 MainWindow.hpp \
-AppSettings.hpp \
-ImageViewer.hpp \
+App.hpp \
+Viewer.hpp \
+ImageFile.hpp \
+PlaylistModel.hpp \
 image.hpp \
 ScaleDialog.hpp \
 SettingDialog.hpp \
-TextEncDialog.hpp
+Prefetcher.hpp
 
 FORMS +=
 
@@ -30,10 +35,10 @@ RESOURCES = rc/icon.qrc
 
 # If you use a custom-font, you have to install a font under rc and
 # edit the rc/font.qrc and the main.cpp.
-USE_CUSTOM_FONT=1
+USE_CUSTOM_FONT = 1
 
-USE_CUSTOM_FONT {
-DEFINES += USE_CUSTOM_FONT
+equals(USE_CUSTOM_FONT,1) {
+DEFINES = USE_CUSTOM_FONT
 RESOURCES += rc/font.qrc
 }
 

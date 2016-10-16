@@ -18,9 +18,9 @@ ScaleDialog::ScaleDialog(QWidget *parent)
                         Qt::Horizontal))
 {
     setLayout(layout);
-    setWindowTitle(tr("倍率の設定"));
+    setWindowTitle(tr("Specify Magnification"));
 
-    desc_label->setText(tr("倍率:"));
+    desc_label->setText(tr("Factor:"));
     desc_label->setAlignment(Qt::AlignCenter);
 
     spinbox->setMinimum(0.0001);
@@ -29,10 +29,11 @@ ScaleDialog::ScaleDialog(QWidget *parent)
     spinbox->setDecimals(3);
 
     width_label->setAlignment(Qt::AlignRight);
-    desc_width_label->setText(tr("変更後の横幅:"));
+    desc_width_label->setText(tr("Width:"));
     desc_width_label->setAlignment(Qt::AlignRight);
+
     height_label->setAlignment(Qt::AlignRight);
-    desc_height_label->setText(tr("変更後の縦幅:"));
+    desc_height_label->setText(tr("Height:"));
     desc_height_label->setAlignment(Qt::AlignRight);
 
     layout->addWidget(desc_label,        0, 0);
@@ -67,7 +68,7 @@ ScaleDialog::~ScaleDialog()
 }
 
 bool
-ScaleDialog::getScale(const QSize &size, const double ori, double &rslt)
+ScaleDialog::getScale(const QSize &size, double ori, double &rslt)
 {
     ScaleDialog dlg;
     dlg.img_size = QSize(size);
@@ -85,11 +86,11 @@ ScaleDialog::getScale(const QSize &size, const double ori, double &rslt)
 }
 
 void
-ScaleDialog::spinbox_valueChanged(const double d)
+ScaleDialog::spinbox_valueChanged(double d)
 {
-    width_label->setText(
-            QString::number(static_cast<int>(d * img_size.width())));
-    height_label->setText(
-            QString::number(static_cast<int>(d * img_size.height())));
+    int w = static_cast<int>(d * img_size.width());
+    width_label->setText(QString::number(w));
+    int h = static_cast<int>(d * img_size.height());
+    height_label->setText(QString::number(h));
 }
 

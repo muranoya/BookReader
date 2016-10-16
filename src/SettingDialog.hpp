@@ -1,5 +1,5 @@
-#ifndef SETTINGSDIALOG_H
-#define SETTINGSDIALOG_H
+#ifndef SETTINGSDIALOG_HPP
+#define SETTINGSDIALOG_HPP
 
 #include <QDialog>
 #include <QVBoxLayout>
@@ -19,7 +19,7 @@ public:
     static bool openSettingDialog();
 
 private:
-    SettingDialog(QWidget *parent = 0);
+    explicit SettingDialog(QWidget *parent = 0);
     ~SettingDialog();
 
     QVBoxLayout *layout;
@@ -44,4 +44,4 @@ private:
     void saveSettings();
 };
 
-#endif // SETTINGSDIALOG_H
+#endif // SETTINGSDIALOG_HPP

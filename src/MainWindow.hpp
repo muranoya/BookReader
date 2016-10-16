@@ -1,7 +1,5 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
-
-#include "ImageViewer.hpp"
+#ifndef MAINWINDOW_HPP
+#define MAINWINDOW_HPP
 
 #include <QMenuBar>
 #include <QMenu>
@@ -10,6 +8,10 @@
 #include <QMouseEvent>
 #include <QFileDialog>
 #include <QApplication>
+#include <QListView>
+#include <QDockWidget>
+#include "Viewer.hpp"
+#include "PlaylistModel.hpp"
 
 class MainWindow : public QMainWindow
 {
@@ -27,7 +29,7 @@ private slots:
     /******************* view *******************/
     void menu_view_fullsize_triggered();
     void menu_view_fitwindow_triggered();
-    void menu_view_fitimage_triggered();
+    void menu_view_fitwidth_triggered();
     void menu_view_setscale_triggered();
     void menu_view_spread_triggered();
     void menu_view_rightbinding_triggered();
@@ -35,23 +37,23 @@ private slots:
     void menu_view_bi_triggered();
     void menu_view_bc_triggered();
 
-    /******************* window *******************/
-    void menu_window_playlist_triggered();
-
     /******************* util *******************/
     void updateWindowText();
 
-    /******************* image viewer event *******************/
-    void imgview_playlistVisibleChanged(bool visible);
-    void imgview_changedImage();
-    void imgview_changedScaleMode();
-
 protected:
-    virtual void closeEvent(QCloseEvent *event);
-    virtual void resizeEvent(QResizeEvent *event);
+    void closeEvent(QCloseEvent *event);
+    void resizeEvent(QResizeEvent *event);
 
 private:
-    ImageViewer *imgview;
+    Viewer *viewer;
+    PlaylistModel *plmodel;
+    QListView *plview;
+    QDockWidget *dockwidget;
+
+    QAction *pl_show;
+    QAction *pl_sep1;
+    QAction *pl_remove;
+    QAction *pl_clear;
 
     QMenu *menu_file;
     QAction *menu_file_open;
@@ -62,7 +64,7 @@ private:
     QMenu *menu_view;
     QAction *menu_view_fullsize;
     QAction *menu_view_fitwindow;
-    QAction *menu_view_fitimage;
+    QAction *menu_view_fitwidth;
     QAction *menu_view_setscale;
     QAction *menu_view_spread;
     QAction *menu_view_rightbinding;
@@ -70,14 +72,15 @@ private:
     QAction *menu_view_bi;
     QAction *menu_view_bc;
     QMenu *menu_window;
-    QAction *menu_window_playlist;
+
+    QString lastdir;
 
     /******************* util *******************/
     void createMenus();
     void changeCheckedScaleMenu(QAction *act,
-            const ImageViewer::ViewMode m, const double s = 0.0);
+            Viewer::ViewMode m, double s = 0.0);
     void applySettings();
     void storeSettings();
 };
 
-#endif // MAINWINDOW_H
+#endif // MAINWINDOW_HPP
