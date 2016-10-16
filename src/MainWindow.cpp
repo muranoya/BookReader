@@ -1,4 +1,5 @@
 #include <QDir>
+#include <QCoreApplication>
 #include "MainWindow.hpp"
 #include "ScaleDialog.hpp"
 #include "App.hpp"
@@ -37,6 +38,10 @@ MainWindow::MainWindow(QWidget *parent)
     App::LoadSettings();
     applySettings();
     updateWindowText();
+
+    QStringList args = QCoreApplication::arguments();
+    args.removeFirst();
+    plmodel->openImages(args);
 }
 
 MainWindow::~MainWindow()
