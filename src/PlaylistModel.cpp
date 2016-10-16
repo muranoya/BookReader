@@ -174,12 +174,15 @@ PlaylistModel::openImages(const QStringList &path)
     bool req_refresh = (countShowImages() == 0 ||
         (getRightbindingView() && countShowImages() != 2));
 
-    openFilesAndDirs(path, getOpenDirLevel());
+    int c = openFilesAndDirs(path, getOpenDirLevel());
 
-    if (req_refresh && countShowImages() > 0)
+    if (req_refresh && !empty())
     {
         dataChangeNotice(0);
         emit changeImage(combineImage());
+    }
+    if (c > 0)
+    {
         emit changePlaylistStatus();
     }
 }
@@ -196,7 +199,7 @@ PlaylistModel::showSelectedItem()
 }
 
 void
-PlaylistModel::removeSelectedPlaylistItem()
+PlaylistModel::removeSelectedItem()
 {
     QModelIndexList list = slct->selectedRows();
     if (list.empty()) return;
@@ -368,19 +371,22 @@ PlaylistModel::dataChangeNotice(int newidx)
     }
 }
 
-void
+int
 PlaylistModel::openFilesAndDirs(const QStringList &paths, int level)
 {
     QVector<ImageFile*> openfiles;
     openFilesAndDirs0(openfiles, paths, level);
     if (!openfiles.empty())
     {
+        int c = openfiles.count();
         beginInsertRows(QModelIndex(), rowCount(),
-                rowCount()+openfiles.count()-1);
+                rowCount() + c - 1);
         files.append(openfiles);
         endInsertRows();
         openfiles.clear();
+        return c;
     }
+    return 0;
 }
 
 void

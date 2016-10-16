@@ -72,7 +72,7 @@ private:
     bool isCurrentIndex(int i) const;
 
     void dataChangeNotice(int newidx);
-    void openFilesAndDirs(const QStringList &paths, int level);
+    int openFilesAndDirs(const QStringList &paths, int level);
     void openFilesAndDirs0(QVector<ImageFile*> &openfiles,
             const QStringList &paths, int level);
 
