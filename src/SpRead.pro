@@ -33,8 +33,6 @@ Prefetcher.hpp
 
 FORMS +=
 
-RESOURCES = rc/icon.qrc
-
 # If you use a custom-font, you have to install a font under rc and
 # edit the rc/font.qrc and the main.cpp.
 USE_CUSTOM_FONT = 1
