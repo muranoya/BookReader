@@ -383,6 +383,9 @@ Viewer::rescaling()
     int cimg_h = 0;
     int old_imgnum = img_num;
 
+    scaled_imgs[0] = QImage();
+    scaled_imgs[1] = QImage();
+
     if (getSpreadView() &&
             !based_imgs[0].isNull() &&
             !based_imgs[1].isNull())

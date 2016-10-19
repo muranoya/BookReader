@@ -32,6 +32,7 @@ void
 Prefetcher::putRequest(const QVector<ImageFile> &tasks)
 {
     mutex_req.lock();
+    reqfiles.clear();
     reqfiles = tasks;
     cond_req.wakeOne();
     mutex_req.unlock();
@@ -79,6 +80,7 @@ Prefetcher::run()
             {
                 task_no = 0;
                 task_filled = 0;
+                files.clear();
                 files = reqfiles;
                 reqfiles.clear();
                 cond_get.wakeAll();

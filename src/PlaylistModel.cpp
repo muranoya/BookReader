@@ -363,8 +363,8 @@ PlaylistModel::openFilesAndDirs0(QVector<ImageFile*> &openfiles,
 {
     if (paths.empty()) return;
 
-    for (QStringList::const_iterator iter = paths.constBegin();
-            iter != paths.constEnd(); ++iter)
+    for (auto iter = paths.cbegin();
+            iter != paths.cend(); ++iter)
     {
         const QFileInfo info(*iter);
         if (info.isFile())
@@ -379,6 +379,7 @@ PlaylistModel::openFilesAndDirs0(QVector<ImageFile*> &openfiles,
                 QVector<ImageFile*> imgfiles =
                     ImageFile::openArchive(*iter);
                 openfiles.append(imgfiles);
+                imgfiles.clear();
             }
         }
         else if (level > 0)
@@ -386,9 +387,8 @@ PlaylistModel::openFilesAndDirs0(QVector<ImageFile*> &openfiles,
             QStringList newlist;
             const QFileInfoList entrylist = QDir(*iter).entryInfoList();
             const int clen = info.canonicalPath().length();
-            for (QFileInfoList::const_iterator iter2 =
-                    entrylist.constBegin();
-                    iter2 != entrylist.constEnd(); ++iter2)
+            for (auto iter2 = entrylist.cbegin();
+                    iter2 != entrylist.cend(); ++iter2)
             {
                 if (clen < iter2->canonicalPath().length())
                 {

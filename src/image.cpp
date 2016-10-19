@@ -97,8 +97,8 @@ bl(const QImage &src, const double s)
         nbits += nw;
     }
 
-    delete icache;
-    delete dcache;
+    delete[] icache;
+    delete[] dcache;
     return nimg;
 }
 

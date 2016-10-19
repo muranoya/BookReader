@@ -64,6 +64,7 @@ ImageFile::ImageFile(ImageFile &&other)
 
 ImageFile::~ImageFile()
 {
+    raw_file_entry.clear();
 }
 
 ImageFile &
