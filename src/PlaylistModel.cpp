@@ -8,11 +8,10 @@ PlaylistModel::PlaylistModel(QObject *parent)
     : QAbstractListModel(parent)
     , slct(new QItemSelectionModel(this))
     , files()
-    , spreadview(false)
-    , rbindview(false)
     , opendirlevel(1)
     , img_index(-1)
-    , prft(new Prefetcher())
+    , img_num(0)
+    , prft()
 {
 }
 
@@ -20,6 +19,7 @@ PlaylistModel::~PlaylistModel()
 {
     qDeleteAll(files);
     files.clear();
+    delete slct;
 }
 
 QVariant
@@ -56,41 +56,78 @@ PlaylistModel::rowCount(const QModelIndex &parent) const
 }
 
 void
-PlaylistModel::setSpreadView(bool spread)
+PlaylistModel::showSelectedItem()
 {
-    bool c = (spreadview != spread);
-    spreadview = spread;
-    if (c)
-    {
-        emit changeImage(combineImage());
-        emit changePlaylistStatus();
-        dataChangeNotice(img_index);
-    }
-}
+    QModelIndexList list = slct->selectedRows();
+    if (list.empty()) return;
 
-bool
-PlaylistModel::getSpreadView() const
-{
-    return spreadview;
+    dataChangeNotice(list[0].row(), img_num);
+    showImages();
+    emit changePlaylistStatus();
 }
 
 void
-PlaylistModel::setRightbindingView(bool rb)
+PlaylistModel::removeSelectedItem()
 {
-    bool c = (rbindview != rb);
-    rbindview = rb;
-    if (c)
+    QModelIndexList list = slct->selectedRows();
+    if (list.empty()) return;
+
+    int c = 0;
+    for (auto iter = list.cbegin();
+            iter != list.cend(); ++iter)
     {
-        emit changeImage(combineImage());
-        emit changePlaylistStatus();
-        dataChangeNotice(img_index);
+        int row = (*iter).row();
+        if (row < img_index) c++;
+        delete files[row];
+        files[row] = nullptr;
     }
+
+    bool contain = (files[currentIndex(0)] == nullptr ||
+        (countShowImages() > 1 && files[currentIndex(1)] == nullptr));
+
+    for (int i = 0; i < files.count(); )
+    {
+        if (files[i] == nullptr)
+        {
+            beginRemoveRows(QModelIndex(), i, i);
+            files.remove(i);
+            endRemoveRows();
+        }
+        else
+        {
+            i++;
+        }
+    }
+
+    if (empty())
+    {
+        dataChangeNotice(-1, 0);
+        showImages();
+    }
+    else
+    {
+        dataChangeNotice(img_index - c, countShowImages());
+        if (contain) showImages();
+    }
+    emit changePlaylistStatus();
 }
 
-bool
-PlaylistModel::getRightbindingView() const
+void
+PlaylistModel::clearPlaylist()
 {
-    return rbindview;
+    if (empty()) return;
+
+    beginRemoveRows(QModelIndex(), 0, rowCount()-1);
+    {
+        qDeleteAll(files);
+        files.clear();
+    }
+    endRemoveRows();
+
+    img_index = -1;
+    img_num = 0;
+    showImages();
+    emit changePlaylistStatus();
 }
 
 void
@@ -108,20 +145,19 @@ PlaylistModel::getOpenDirLevel() const
 void
 PlaylistModel::setCacheSize(int n)
 {
-    prft->setCacheSize(n);
+    prft.setCacheSize(n);
 }
 
 int
 PlaylistModel::getCacheSize() const
 {
-    return prft->getCacheSize();
+    return prft.getCacheSize();
 }
 
 int
 PlaylistModel::countShowImages() const
 {
-    int c = (getSpreadView() ? 2 : 1);
-    return std::min(count(), c);
+    return img_num;
 }
 
 int
@@ -139,7 +175,7 @@ PlaylistModel::empty() const
 int
 PlaylistModel::currentIndex(int i) const
 {
-    if (0 <= i && i < countShowImages())
+    if (0 <= i && i < 2)
     {
         return (img_index + i) % count();
     }
@@ -171,98 +207,14 @@ PlaylistModel::setModelToItemView(QAbstractItemView *view)
 void
 PlaylistModel::openImages(const QStringList &path)
 {
-    bool req_refresh = (countShowImages() == 0 ||
-        (getRightbindingView() && countShowImages() != 2));
-
+    bool req_refresh = (count() < 2);
     int c = openFilesAndDirs(path, getOpenDirLevel());
-
     if (req_refresh && !empty())
     {
-        dataChangeNotice(0);
-        emit changeImage(combineImage());
+        dataChangeNotice(0, 0);
+        showImages();
     }
-    if (c > 0)
-    {
-        emit changePlaylistStatus();
-    }
-}
-
-void
-PlaylistModel::showSelectedItem()
-{
-    QModelIndexList list = slct->selectedRows();
-    if (list.empty()) return;
-
-    dataChangeNotice(list[0].row());
-    emit changeImage(combineImage());
-    emit changePlaylistStatus();
-}
-
-void
-PlaylistModel::removeSelectedItem()
-{
-    QModelIndexList list = slct->selectedRows();
-    if (list.empty()) return;
-
-    int c = 0;
-    for (QModelIndexList::const_iterator iter = list.constBegin();
-            iter != list.constEnd(); ++iter)
-    {
-        int row = (*iter).row();
-        if (row < img_index) c++;
-        delete files[row];
-        files[row] = nullptr;
-    }
-
-    bool contain = (files[currentIndex(0)] == nullptr) ||
-        (countShowImages() > 1 && (files[currentIndex(1)] == nullptr));
-
-    for (int i = 0; i < files.count();)
-    {
-        if (files[i] == nullptr)
-        {
-            beginRemoveRows(QModelIndex(), i, i);
-            files.remove(i);
-            endRemoveRows();
-        }
-        else
-        {
-            i++;
-        }
-    }
-
-    if (empty())
-    {
-        dataChangeNotice(-1);
-        emit changeImage(QImage());
-        emit changePlaylistStatus();
-    }
-    else
-    {
-        dataChangeNotice(img_index-c);
-        if (contain)
-        {
-            emit changeImage(combineImage());
-            emit changePlaylistStatus();
-        }
-    }
-}
-
-void
-PlaylistModel::clearPlaylist()
-{
-    if (empty()) return;
-
-    beginRemoveRows(QModelIndex(), 0, rowCount()-1);
-    {
-        qDeleteAll(files);
-        files.clear();
-    }
-    endRemoveRows();
-
-    img_index = -1;
-    emit changeImage(QImage());
-    emit changePlaylistStatus();
+    if (c > 0) emit changePlaylistStatus();
 }
 
 void
@@ -272,11 +224,13 @@ PlaylistModel::nextImage()
 
     int old_index = img_index;
 
-    dataChangeNotice(nextIndex(img_index, countShowImages()));
+    dataChangeNotice(
+            nextIndex(img_index, countShowImages()),
+            countShowImages());
     
     if (old_index != img_index)
     {
-        emit changeImage(combineImage());
+        showImages();
         emit changePlaylistStatus();
     }
 }
@@ -288,13 +242,23 @@ PlaylistModel::prevImage()
 
     int old_index = img_index;
 
-    dataChangeNotice(nextIndex(img_index, -countShowImages()));
+    dataChangeNotice(
+            nextIndex(img_index, -countShowImages()),
+            countShowImages());
 
     if (old_index != img_index)
     {
-        emit changeImage(combineImage());
+        showImages();
         emit changePlaylistStatus();
     }
+}
+
+void
+PlaylistModel::changeNumOfImages(int n)
+{
+    bool c = (img_num != n);
+    dataChangeNotice(img_index, n);
+    if (c) emit changePlaylistStatus();
 }
 
 void
@@ -329,9 +293,11 @@ PlaylistModel::isCurrentIndex(int idx) const
 }
 
 void
-PlaylistModel::dataChangeNotice(int newidx)
+PlaylistModel::dataChangeNotice(int newidx, int newnum)
 {
+    bool c = (newidx != img_index);
     int len = countShowImages();
+
     for (int i = 0; i < len; ++i)
     {
         int idx = currentIndex(i);
@@ -343,6 +309,7 @@ PlaylistModel::dataChangeNotice(int newidx)
     }
 
     img_index = newidx;
+    img_num = newnum;
 
     if (newidx >= 0)
     {
@@ -357,16 +324,17 @@ PlaylistModel::dataChangeNotice(int newidx)
         }
     }
 
+    if (c)
     {
         QVector<ImageFile> list;
-        int num = std::min(files.count(), prft->getCacheSize());
+        int num = std::min(files.count(), prft.getCacheSize());
         for (int i = 1, n = 0; n < num; ++i)
         {
             list.append(*files.at(nextIndex(img_index, i)));  n++;
             if (n+1 >= num) break;
             list.append(*files.at(nextIndex(img_index, -i))); n++;
         }
-        prft->putRequest(list);
+        prft.putRequest(list);
         list.clear();
     }
 }
@@ -432,11 +400,33 @@ PlaylistModel::openFilesAndDirs0(QVector<ImageFile*> &openfiles,
     }
 }
 
+void
+PlaylistModel::showImages()
+{
+    int n = std::min(count(), 2);
+    if (n == 2)
+    {
+        emit changeImages(
+                loadData(*files[currentIndex(0)]),
+                loadData(*files[currentIndex(1)]));
+    }
+    else if (n == 1)
+    {
+        emit changeImages(
+                loadData(*files[currentIndex(0)]),
+                QImage());
+    }
+    else
+    {
+        emit changeImages(QImage(), QImage());
+    }
+}
+
 QImage
 PlaylistModel::loadData(const ImageFile &f)
 {
     QImage img;
-    QByteArray *data = prft->get(f.createKey());
+    QByteArray *data = prft.get(f.createKey());
     if (data)
     {
         fprintf(stderr, "cache hit\n");
@@ -456,68 +446,5 @@ PlaylistModel::loadData(const ImageFile &f)
         return img.convertToFormat(QImage::Format_ARGB32);
     }
     return img;
-}
-
-QImage
-PlaylistModel::combineImage()
-{
-    QImage imgs[2];
-    switch (countShowImages())
-    {
-        case 1:
-            return loadData(*files[currentIndex(0)]);
-        case 2:
-            if (getRightbindingView())
-            {
-                imgs[0] = loadData(*files[currentIndex(1)]);
-                imgs[1] = loadData(*files[currentIndex(0)]);
-            }
-            else
-            {
-                imgs[0] = loadData(*files[currentIndex(0)]);
-                imgs[1] = loadData(*files[currentIndex(1)]);
-            }
-            break;
-        default:
-            return QImage();
-    }
-
-    int sw = 0;
-    int cw = imgs[0].width() + imgs[1].width();
-    int ch = std::max(imgs[0].height(), imgs[1].height());
-    QImage cimg(cw, ch, QImage::Format_ARGB32);
-    QRgb *dst = (QRgb*)cimg.bits();
-    for (int i = 0; i < 2; ++i)
-    {
-        const QImage *temp = imgs+i;
-        const int tw = temp->width();
-        const int th = temp->height();
-        const int h2 = (ch - th) / 2;
-        const QRgb *src = (QRgb*)temp->constBits();
-
-        for (int y = 0; y < h2; ++y)
-        {
-            for (int x = 0; x < tw; ++x)
-            {
-                *(dst+x+sw+y*cw) = qRgba(0, 0, 0, 0);
-            }
-        }
-        for (int y = 0 ; y < th; ++y)
-        {
-            for (int x = 0; x < tw; ++x)
-            {
-                *(dst+x+sw+(y+h2)*cw) = *(src+x+y*tw);
-            }
-        }
-        for (int y = th+h2 ; y < ch; ++y)
-        {
-            for (int x = 0; x < tw; ++x)
-            {
-                *(dst+x+sw+y*cw) = qRgba(0, 0, 0, 0);
-            }
-        }
-        sw += tw;
-    }
-    return cimg;
 }
 

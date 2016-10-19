@@ -17,6 +17,7 @@ public:
     static double view_scale;
     static int    view_ipix;
     static bool   view_spread;
+    static bool   view_autospread;
     static bool   view_rbind;
     static int    view_openlevel;
     static int    view_feedpage;

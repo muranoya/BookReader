@@ -12,6 +12,7 @@ App.cpp \
 Viewer.cpp \
 ImageFile.cpp \
 PlaylistModel.cpp \
+ImageViewer.cpp \
 image.cpp \
 ScaleDialog.cpp \
 SettingDialog.cpp \
@@ -24,6 +25,7 @@ App.hpp \
 Viewer.hpp \
 ImageFile.hpp \
 PlaylistModel.hpp \
+ImageViewer.hpp \
 image.hpp \
 ScaleDialog.hpp \
 SettingDialog.hpp \
@@ -45,8 +47,12 @@ RESOURCES += rc/font.qrc
 INCLUDEPATH +=
 LIBS += -larchive
 
-win32 {
-QMAKE_CXXFLAGS += -std:c++latest
+win32-msvc* {
+QMAKE_CXXFLAGS += -std:c++11
+QMAKE_CFLAGS   += 
+}
+else:win32 {
+QMAKE_CXXFLAGS += -std=c++11
 QMAKE_CFLAGS   += 
 }
 else:unix {

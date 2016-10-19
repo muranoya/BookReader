@@ -10,8 +10,7 @@
 #include <QApplication>
 #include <QListView>
 #include <QDockWidget>
-#include "Viewer.hpp"
-#include "PlaylistModel.hpp"
+#include "ImageViewer.hpp"
 
 class MainWindow : public QMainWindow
 {
@@ -32,6 +31,7 @@ private slots:
     void menu_view_fitwidth_triggered();
     void menu_view_setscale_triggered();
     void menu_view_spread_triggered();
+    void menu_view_autospread_triggered();
     void menu_view_rightbinding_triggered();
     void menu_view_nn_triggered();
     void menu_view_bi_triggered();
@@ -45,8 +45,7 @@ protected:
     void resizeEvent(QResizeEvent *event);
 
 private:
-    Viewer *viewer;
-    PlaylistModel *plmodel;
+    ImageViewer *viewer;
     QListView *plview;
     QDockWidget *dockwidget;
 
@@ -67,6 +66,7 @@ private:
     QAction *menu_view_fitwidth;
     QAction *menu_view_setscale;
     QAction *menu_view_spread;
+    QAction *menu_view_autospread;
     QAction *menu_view_rightbinding;
     QAction *menu_view_nn;
     QAction *menu_view_bi;

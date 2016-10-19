@@ -8,11 +8,15 @@
 
 Viewer::Viewer(QWidget *parent)
     : QWidget(parent)
-    , based_img()
-    , scaled_img()
+    , based_imgs()
+    , scaled_imgs()
+    , img_num(0)
     , scale_mode(Bilinear)
     , scale_factor(1.0)
     , view_mode(FittingWindow)
+    , spread_view(false)
+    , rbind_view(false)
+    , autospread(false)
     , fp_mode(MouseButton)
     , drag_timer()
     , is_drag_img(false)
@@ -22,7 +26,8 @@ Viewer::Viewer(QWidget *parent)
     , img_pos()
     , drag_detect_time(150)
 {
-    connect(&drag_timer, SIGNAL(timeout()), this, SLOT(drag_check()));
+    connect(&drag_timer, SIGNAL(timeout()),
+            this, SLOT(drag_check()));
 
     setFocusPolicy(Qt::StrongFocus);
     setAcceptDrops(true);
@@ -52,11 +57,7 @@ Viewer::setViewMode(Viewer::ViewMode mode, double factor)
     {
         view_mode = mode;
         scale_factor = factor;
-        if (c)
-        {
-            rescaling();
-            emit changeViewMode();
-        }
+        if (c) rescaling();
     }
 }
 
@@ -79,6 +80,48 @@ Viewer::getViewMode() const
 }
 
 void
+Viewer::setSpreadView(bool spread)
+{
+    bool c = (spread_view != spread);
+    spread_view = spread;
+    if (c) rescaling();
+}
+
+bool
+Viewer::getSpreadView() const
+{
+    return spread_view;
+}
+
+void
+Viewer::setRightbindingView(bool rbind)
+{
+    bool c = (rbind_view != rbind);
+    rbind_view = rbind;
+    if (c) rescaling();
+}
+
+bool
+Viewer::getRightbindingView() const
+{
+    return rbind_view;
+}
+
+void
+Viewer::setAutoAdjustSpread(bool aas)
+{
+    bool c = (autospread != aas);
+    autospread = aas;
+    if (c) rescaling();
+}
+
+bool
+Viewer::getAutoAdjustSpread() const
+{
+    return autospread;
+}
+
+void
 Viewer::setFeedPageMode(Viewer::FeedPageMode mode)
 {
     fp_mode = mode;
@@ -93,29 +136,23 @@ Viewer::getFeedPageMode() const
 QSize
 Viewer::getImageSize() const
 {
-    return based_img.size();
+    int w = 0;
+    int h = 0;
+    for (int i = 0; i < img_num; ++i)
+    {
+        w += based_imgs[i].width();
+        h = std::max(h, based_imgs[i].height());
+    }
+    return QSize(w, h);
 }
 
 void
-Viewer::showImage(const QImage &img)
+Viewer::showImages(const QImage &imgl, const QImage &imgr)
 {
-    based_img = img;
-
-    if (img.isNull())
-    {
-        scaled_img = QImage();
-    }
-    else
-    {
-        scaleImage();
-    }
-
-    int x = width() - scaled_img.width();
-    int y = height() - scaled_img.height();
-    x = (x < 0 ? 0 : x/2);
-    y = (y < 0 ? 0 : y/2);
-    img_pos = QPoint(x, y);
-    update();
+    based_imgs[0] = imgl;
+    based_imgs[1] = imgr;
+    img_pos = QPoint(0, 0);
+    rescaling();
 }
 
 void
@@ -126,29 +163,84 @@ Viewer::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     painter.fillRect(rect(), Qt::CrossPattern);
 
-    if (scaled_img.isNull()) return;
+    if (img_num == 0) return;
+
+    QImage *imgs[2] = {scaled_imgs+0, scaled_imgs+1};
+    if (img_num == 2 && getRightbindingView())
+    {
+        QImage *img_p = imgs[0];
+        imgs[0] = imgs[1];
+        imgs[1] = img_p;
+    }
+
+    int cimg_w = imgs[0]->width();
+    int cimg_h = imgs[0]->height();
+    if (img_num == 2)
+    {
+        cimg_w += imgs[1]->width();
+        cimg_h = std::max(cimg_h, imgs[1]->height());
+    }
 
     switch (getViewMode())
     {
+        case ActualSize:
+        {
+            img_pos += move_pos - click2_pos;
+            click2_pos = move_pos;
+            QPoint pos(img_pos.x(),
+                    img_pos.y() + (cimg_h - imgs[0]->height())/2);
+            painter.drawImage(pos, *imgs[0]);
+            if (img_num == 2)
+            {
+                pos = QPoint(pos.x() + imgs[0]->width(),
+                        img_pos.y() + (cimg_h - imgs[1]->height())/2);
+                painter.drawImage(pos, *imgs[1]);
+            }
+        }
+        break;
         case FittingWindow:
         {
-            int x = std::max(width()  - scaled_img.width(),  0);
-            int y = std::max(height() - scaled_img.height(), 0);
-            painter.drawImage(QPoint(x/2, y/2), scaled_img);
-            break;
+            QPoint pos((width() - cimg_w)/2,
+                    (height() - imgs[0]->height())/2);
+            painter.drawImage(pos, *imgs[0]);
+            if (img_num == 2)
+            {
+                pos = QPoint(pos.x() + imgs[0]->width(),
+                        (height() - imgs[1]->height())/2);
+                painter.drawImage(pos, *imgs[1]);
+            }
         }
+        break;
         case FittingWidth:
         {
-            int x = std::max(width() - scaled_img.width(), 0);
             img_pos += move_pos - click2_pos;
             click2_pos = move_pos;
-            painter.drawImage(QPoint(x/2, img_pos.y()), scaled_img);
-            break;
+            QPoint pos((width() - cimg_w)/2,
+                    img_pos.y() + (height() - imgs[0]->height())/2);
+            painter.drawImage(pos, *imgs[0]);
+            if (img_num == 2)
+            {
+                pos = QPoint(pos.x() + imgs[0]->width(),
+                        img_pos.y() + (height() - imgs[1]->height())/2);
+                painter.drawImage(pos, *imgs[1]);
+            }
         }
-        default:
+        break;
+        case CustomScale:
+        {
             img_pos += move_pos - click2_pos;
             click2_pos = move_pos;
-            painter.drawImage(img_pos, scaled_img);
+            QPoint pos(img_pos.x(),
+                    img_pos.y() + (cimg_h - imgs[0]->height())/2);
+            painter.drawImage(pos, *imgs[0]);
+            if (img_num == 2)
+            {
+                pos = QPoint(pos.x() + imgs[0]->width(),
+                        img_pos.y() + (cimg_h - imgs[1]->height())/2);
+                painter.drawImage(pos, *imgs[1]);
+            }
+        }
+        break;
     }
 }
 
@@ -180,8 +272,8 @@ Viewer::dropEvent(QDropEvent *event)
     const QList<QUrl> urls = mime->urls();
 
     QStringList list;
-    for (QList<QUrl>::const_iterator iter = urls.constBegin();
-            iter != urls.constEnd(); ++iter)
+    for (auto iter = urls.cbegin();
+            iter != urls.cend(); ++iter)
     {
         const QString path = iter->toLocalFile();
         if (QFileInfo(path).exists()) list << path;
@@ -286,15 +378,48 @@ Viewer::drag_check()
 void
 Viewer::rescaling()
 {
-    if (!based_img.isNull()) scaleImage();
-}
-
-void
-Viewer::scaleImage()
-{
     double scale = 1.0;
+    int cimg_w = 0;
+    int cimg_h = 0;
+    int old_imgnum = img_num;
 
-    if (based_img.isNull()) return;
+    if (getSpreadView() &&
+            !based_imgs[0].isNull() &&
+            !based_imgs[1].isNull())
+    {
+        img_num = 2;
+        cimg_w = based_imgs[0].width() + based_imgs[1].width();
+        cimg_h = std::max(
+                based_imgs[0].height(),
+                based_imgs[1].height());
+        if (getAutoAdjustSpread())
+        {
+            double v_wh = width() / static_cast<double>(height());
+            int img1_w = based_imgs[0].width();
+            int img1_h = based_imgs[0].height();
+            double img1_wh = img1_w / static_cast<double>(img1_h);
+            double img2_wh = cimg_w /
+                static_cast<double>(cimg_h);
+            if (std::fabs(v_wh - img1_wh) < std::fabs(v_wh - img2_wh))
+            {
+                img_num = 1;
+                cimg_w = img1_w;
+                cimg_h = img1_h;
+            }
+        }
+    }
+    else if (!based_imgs[0].isNull())
+    {
+        img_num = 1;
+        cimg_w = based_imgs[0].width();
+        cimg_h = based_imgs[0].height();
+    }
+    else
+    {
+        img_num = 0;
+        update();
+        return;
+    }
 
     if (getViewMode() == CustomScale)
     {
@@ -308,14 +433,14 @@ Viewer::scaleImage()
     {
         double ws = 1.0;
         double hs = 1.0;
-        if (width() < based_img.width())
+        if (width() < cimg_w)
         {
-            ws = width() / static_cast<double>(based_img.width());
+            ws = width() / static_cast<double>(cimg_w);
         }
 
-        if (height() < based_img.height())
+        if (height() < cimg_h)
         {
-            hs = height() / static_cast<double>(based_img.height());
+            hs = height() / static_cast<double>(cimg_h);
         }
 
         if (getViewMode() == FittingWindow)
@@ -331,13 +456,18 @@ Viewer::scaleImage()
 
     if (qFuzzyCompare(scale_factor, 1.0))
     {
-        scaled_img = based_img;
+        scaled_imgs[0] = based_imgs[0];
+        scaled_imgs[1] = based_imgs[1];
     }
     else
     {
         QImage (*f[])(const QImage &, const double) = {nn, bl, bc};
-        scaled_img = f[scale_mode](based_img, scale_factor);
+        for (int i = 0; i < img_num; ++i)
+        {
+            scaled_imgs[i] = f[scale_mode](based_imgs[i], scale_factor);
+        }
     }
+    if (old_imgnum != img_num) emit changeNumOfImages(img_num);
     update();
 }
 

@@ -7,8 +7,7 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , viewer(new Viewer(this))
-    , plmodel(new PlaylistModel())
+    , viewer(new ImageViewer())
     , plview(new QListView())
     , dockwidget(new QDockWidget(tr("Playlist"), this))
     , lastdir()
@@ -16,22 +15,11 @@ MainWindow::MainWindow(QWidget *parent)
     addDockWidget(Qt::LeftDockWidgetArea, dockwidget);
     setCentralWidget(viewer);
     dockwidget->setWidget(plview);
-    plmodel->setModelToItemView(plview);
+    viewer->setModelToItemView(plview);
     plview->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-    connect(viewer, SIGNAL(nextImageRequest()),
-            plmodel, SLOT(nextImage()));
-    connect(viewer, SIGNAL(prevImageRequest()),
-            plmodel, SLOT(prevImage()));
-    connect(viewer, SIGNAL(openImageFiles(const QStringList &)),
-            plmodel, SLOT(openImages(const QStringList &)));
-    connect(viewer, SIGNAL(changeViewMode()),
-            this,    SLOT(updateWindowText()));
-
-    connect(plmodel, SIGNAL(changeImage(const QImage &)),
-            viewer, SLOT(showImage(const QImage &)));
-    connect(plmodel, SIGNAL(changePlaylistStatus()),
-            this,    SLOT(updateWindowText()));
+    connect(viewer, SIGNAL(changeImageViewerStatus()),
+            this, SLOT(updateWindowText()));
 
     createMenus();
 
@@ -41,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     QStringList args = QCoreApplication::arguments();
     args.removeFirst();
-    plmodel->openImages(args);
+    viewer->openImages(args);
 }
 
 MainWindow::~MainWindow()
@@ -60,8 +48,8 @@ MainWindow::menu_file_open_triggered()
     {
         const QDir dir = QFileInfo(files.at(0)).absoluteDir();
         lastdir = dir.absolutePath();
-        plmodel->clearPlaylist();
-        plmodel->openImages(files);
+        viewer->clearPlaylist();
+        viewer->openImages(files);
     }
 }
 
@@ -74,8 +62,8 @@ MainWindow::menu_file_fopen_triggered()
     if (!dirname.isEmpty())
     {
         lastdir = dirname;
-        plmodel->clearPlaylist();
-        plmodel->openImages(QStringList(dirname));
+        viewer->clearPlaylist();
+        viewer->openImages(QStringList(dirname));
     }
 }
 
@@ -84,8 +72,8 @@ MainWindow::menu_file_settings_triggered()
 {
     if (SettingDialog::openSettingDialog())
     {
-        plmodel->setOpenDirLevel(App::view_openlevel);
-        plmodel->setCacheSize(App::pl_prefetch);
+        viewer->setOpenDirLevel(App::view_openlevel);
+        viewer->setCacheSize(App::pl_prefetch);
         viewer->setFeedPageMode(
                 static_cast<Viewer::FeedPageMode>(App::view_feedpage));
     }
@@ -129,13 +117,19 @@ MainWindow::menu_view_setscale_triggered()
 void
 MainWindow::menu_view_spread_triggered()
 {
-    plmodel->setSpreadView(menu_view_spread->isChecked());
+    viewer->setSpreadView(menu_view_spread->isChecked());
+}
+
+void
+MainWindow::menu_view_autospread_triggered()
+{
+    viewer->setAutoAdjustSpread(menu_view_autospread->isChecked());
 }
 
 void
 MainWindow::menu_view_rightbinding_triggered()
 {
-    plmodel->setRightbindingView(menu_view_rightbinding->isChecked());
+    viewer->setRightbindingView(menu_view_rightbinding->isChecked());
 }
 
 void
@@ -194,39 +188,39 @@ void
 MainWindow::updateWindowText()
 {
     QString title;
-    if (plmodel->empty())
+    if (viewer->empty())
     {
         title = tr("%1").arg(App::SOFTWARE_NAME);
     }
     else
     {
-        if (plmodel->countShowImages() == 1)
+        if (viewer->countShowImages() == 1)
         {
             title = tr("[%1/%2]")
-                .arg(plmodel->currentIndex(0)+1)
-                .arg(plmodel->count());
+                .arg(viewer->currentIndex(0)+1)
+                .arg(viewer->count());
         }
         else
         {
             title = tr("[%1-%2/%3]")
-                .arg(plmodel->currentIndex(0)+1)
-                .arg(plmodel->currentIndex(1)+1)
-                .arg(plmodel->count());
+                .arg(viewer->currentIndex(0)+1)
+                .arg(viewer->currentIndex(1)+1)
+                .arg(viewer->count());
         }
 
-        if (plmodel->countShowImages() == 2)
+        if (viewer->countShowImages() == 2)
         {
-            title = (plmodel->getRightbindingView() ? tr("%1 %3 | %2")
+            title = (viewer->getRightbindingView() ? tr("%1 %3 | %2")
                                                     : tr("%1 %2 | %3"))
                 .arg(title)
-                .arg(plmodel->currentFileName(0))
-                .arg(plmodel->currentFileName(1));
+                .arg(viewer->currentFileName(0))
+                .arg(viewer->currentFileName(1));
         }
         else
         {
             title = tr("%1 %2")
                 .arg(title)
-                .arg(plmodel->currentFileName(0));
+                .arg(viewer->currentFileName(0));
         }
 
         title = tr("%1 %3%")
@@ -267,11 +261,11 @@ MainWindow::createMenus()
     plview->addAction(pl_remove);
     plview->addAction(pl_clear);
     connect(pl_show, SIGNAL(triggered()),
-            plmodel, SLOT(showSelectedItem()));
+            viewer, SLOT(showSelectedItem()));
     connect(pl_remove, SIGNAL(triggered()),
-            plmodel, SLOT(removeSelectedItem()));
+            viewer, SLOT(removeSelectedItem()));
     connect(pl_clear, SIGNAL(triggered()),
-            plmodel, SLOT(clearPlaylist()));
+            viewer, SLOT(clearPlaylist()));
 
     menu_file = new QMenu(tr("File"), this);
     menu_file_open     = new QAction(tr("Open"), this);
@@ -311,6 +305,8 @@ MainWindow::createMenus()
     menu_view_setscale->setCheckable(true);
     menu_view_spread       = new QAction(tr("Spread"), this);
     menu_view_spread->setCheckable(true);
+    menu_view_autospread   = new QAction(tr("Auto Spread"), this);
+    menu_view_autospread->setCheckable(true);
     menu_view_rightbinding = new QAction(tr("Right Binding"), this);
     menu_view_rightbinding->setCheckable(true);
     menu_view_nn           = new QAction(tr("Low (Nearest Neighbor)"), this);
@@ -326,6 +322,7 @@ MainWindow::createMenus()
     menu_view->addAction(menu_view_setscale);
     menu_view->addSeparator();
     menu_view->addAction(menu_view_spread);
+    menu_view->addAction(menu_view_autospread);
     menu_view->addAction(menu_view_rightbinding);
     menu_view->addSeparator();
     menu_view->addAction(menu_view_nn);
@@ -341,6 +338,8 @@ MainWindow::createMenus()
             this, SLOT(menu_view_setscale_triggered()));
     connect(menu_view_spread,       SIGNAL(triggered()),
             this, SLOT(menu_view_spread_triggered()));
+    connect(menu_view_autospread,   SIGNAL(triggered()),
+            this, SLOT(menu_view_autospread_triggered()));
     connect(menu_view_rightbinding, SIGNAL(triggered()),
             this, SLOT(menu_view_rightbinding_triggered()));
     connect(menu_view_nn,           SIGNAL(triggered()),
@@ -419,20 +418,23 @@ MainWindow::applySettings()
             break;
     }
 
-    plmodel->setSpreadView(App::view_spread);
+    viewer->setSpreadView(App::view_spread);
     menu_view_spread->setChecked(App::view_spread);
 
-    plmodel->setRightbindingView(App::view_rbind);
+    viewer->setAutoAdjustSpread(App::view_autospread);
+    menu_view_autospread->setChecked(App::view_autospread);
+
+    viewer->setRightbindingView(App::view_rbind);
     menu_view_rightbinding->setChecked(App::view_rbind);
     
     viewer->setFeedPageMode(
             static_cast<Viewer::FeedPageMode>(App::view_feedpage));
 
-    plmodel->setOpenDirLevel(App::view_openlevel);
+    viewer->setOpenDirLevel(App::view_openlevel);
 
     dockwidget->setVisible(App::pl_visible);
 
-    plmodel->setCacheSize(App::pl_prefetch);
+    viewer->setCacheSize(App::pl_prefetch);
 }
 
 void
@@ -441,16 +443,17 @@ MainWindow::storeSettings()
     App::mw_size = size();
     App::mw_pos = pos();
 
-    App::view_scalem    = static_cast<int>(viewer->getViewMode());
-    App::view_scale     = viewer->getCustomScaleFactor();
-    App::view_ipix      = static_cast<int>(viewer->getScalingMode());
-    App::view_spread    = menu_view_spread->isChecked();
-    App::view_rbind     = menu_view_rightbinding->isChecked();
-    App::view_openlevel = plmodel->getOpenDirLevel();
-    App::view_feedpage  =
+    App::view_scalem     = static_cast<int>(viewer->getViewMode());
+    App::view_scale      = viewer->getCustomScaleFactor();
+    App::view_ipix       = static_cast<int>(viewer->getScalingMode());
+    App::view_spread     = menu_view_spread->isChecked();
+    App::view_autospread = menu_view_autospread->isChecked();
+    App::view_rbind      = menu_view_rightbinding->isChecked();
+    App::view_openlevel  = viewer->getOpenDirLevel();
+    App::view_feedpage   =
         static_cast<Viewer::FeedPageMode>(viewer->getFeedPageMode());
 
     App::pl_visible  = dockwidget->isVisible();
-    App::pl_prefetch = plmodel->getCacheSize();
+    App::pl_prefetch = viewer->getCacheSize();
 }
 

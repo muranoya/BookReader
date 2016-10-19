@@ -22,11 +22,9 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
-    void setSpreadView(bool spread);
-    bool getSpreadView() const;
-
-    void setRightbindingView(bool rb);
-    bool getRightbindingView() const;
+    void showSelectedItem();
+    void removeSelectedItem();
+    void clearPlaylist();
 
     void setOpenDirLevel(int n);
     int getOpenDirLevel() const;
@@ -43,17 +41,15 @@ public:
 
     void setModelToItemView(QAbstractItemView *view);
 
-signals:
-    void changeImage(const QImage &img);
-    void changePlaylistStatus();
-
 public slots:
     void openImages(const QStringList &path);
-    void showSelectedItem();
-    void removeSelectedItem();
-    void clearPlaylist();
     void nextImage();
     void prevImage();
+    void changeNumOfImages(int n);
+
+signals:
+    void changeImages(const QImage &img_l, const QImage &img_r);
+    void changePlaylistStatus();
 
 private slots:
     void itemViewDoubleClicked(const QModelIndex &index);
@@ -61,23 +57,22 @@ private slots:
 private:
     QItemSelectionModel *slct;
     QVector<ImageFile*> files;
-    bool spreadview;
-    bool rbindview;
     int opendirlevel;
     int img_index;
-    Prefetcher *prft;
+    int img_num;
+    Prefetcher prft;
 
     int nextIndex(int idx, int c) const;
     bool isValidIndex(int i) const;
     bool isCurrentIndex(int i) const;
 
-    void dataChangeNotice(int newidx);
+    void dataChangeNotice(int newidx, int newnum);
     int openFilesAndDirs(const QStringList &paths, int level);
     void openFilesAndDirs0(QVector<ImageFile*> &openfiles,
             const QStringList &paths, int level);
 
+    void showImages();
     QImage loadData(const ImageFile &f);
-    QImage combineImage();
 };
 
 #endif // PLAYLISTMODEL_HPP

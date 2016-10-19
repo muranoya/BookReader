@@ -9,6 +9,7 @@ int    App::view_scalem;
 double App::view_scale;
 int    App::view_ipix;
 bool   App::view_spread;
+bool   App::view_autospread;
 bool   App::view_rbind;
 int    App::view_openlevel;
 int    App::view_feedpage;
@@ -30,13 +31,14 @@ App::SaveSettings()
     s.endGroup();
 
     s.beginGroup("Viewer");
-    s.setValue("scalem",    view_scalem);
-    s.setValue("scale",     view_scale);
-    s.setValue("ipix",      view_ipix);
-    s.setValue("spread",    view_spread);
-    s.setValue("rbind",     view_rbind);
-    s.setValue("openlevel", view_openlevel);
-    s.setValue("feedpage",  view_feedpage);
+    s.setValue("scalem",     view_scalem);
+    s.setValue("scale",      view_scale);
+    s.setValue("ipix",       view_ipix);
+    s.setValue("spread",     view_spread);
+    s.setValue("autospread", view_autospread);
+    s.setValue("rbind",      view_rbind);
+    s.setValue("openlevel",  view_openlevel);
+    s.setValue("feedpage",   view_feedpage);
     s.endGroup();
 
     s.beginGroup("Playlist");
@@ -56,13 +58,14 @@ App::LoadSettings()
     s.endGroup();
 
     s.beginGroup("Viewer");
-    view_scalem    = s.value("scalem",    Viewer::FittingWindow).toInt();
-    view_scale     = s.value("scale",     1.0).toReal();
-    view_ipix      = s.value("ipix",      Viewer::Bilinear).toInt();
-    view_spread    = s.value("spread",    false).toBool();
-    view_rbind     = s.value("rbind",     false).toBool();
-    view_openlevel = s.value("openlevel", 99).toInt();
-    view_feedpage  = s.value("feedpage",  Viewer::MouseButton).toInt();
+    view_scalem     = s.value("scalem",     Viewer::FittingWindow).toInt();
+    view_scale      = s.value("scale",      1.0).toReal();
+    view_ipix       = s.value("ipix",       Viewer::Bilinear).toInt();
+    view_spread     = s.value("spread",     false).toBool();
+    view_autospread = s.value("autospread", false).toBool();
+    view_rbind      = s.value("rbind",      false).toBool();
+    view_openlevel  = s.value("openlevel",  99).toInt();
+    view_feedpage   = s.value("feedpage",   Viewer::MouseButton).toInt();
     s.endGroup();
 
     s.beginGroup("Playlist");

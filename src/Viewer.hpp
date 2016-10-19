@@ -47,23 +47,28 @@ public:
     double getCustomScaleFactor() const;
     ViewMode getViewMode() const;
 
+    void setSpreadView(bool spread);
+    bool getSpreadView() const;
+
+    void setRightbindingView(bool rbind);
+    bool getRightbindingView() const;
+
+    void setAutoAdjustSpread(bool aas);
+    bool getAutoAdjustSpread() const;
+
     void setFeedPageMode(FeedPageMode mode);
     FeedPageMode getFeedPageMode() const;
 
     QSize getImageSize() const;
 
 signals:
-    // 次の画像への遷移要求
     void nextImageRequest();
-    // 前の画像への遷移要求
     void prevImageRequest();
-    // 指定したファイルパスを開く要求
+    void changeNumOfImages(int n);
     void openImageFiles(const QStringList &paths);
-    // 画像表示状態が変わったとき
-    void changeViewMode();
 
-public slots:
-    void showImage(const QImage &img);
+protected slots:
+    void showImages(const QImage &img_l, const QImage &img_r);
 
 protected:
     void paintEvent(QPaintEvent *event);
@@ -79,11 +84,15 @@ private slots:
     void drag_check();
 
 private:
-    QImage based_img;       // 表示している画像
-    QImage scaled_img;      // スケール後の画像
+    QImage based_imgs[2];   // 表示している画像
+    QImage scaled_imgs[2];  // スケール後の画像
+    int img_num;
     ScalingMode scale_mode; // 画素補完方法
     double scale_factor;    // 表示倍率
     ViewMode view_mode;     // 表示方法
+    bool spread_view;
+    bool rbind_view;
+    bool autospread;
     FeedPageMode fp_mode;   // ページ遷移モード
     QTimer drag_timer;      // ドラッグかクリックかの判定用タイマー
     bool is_drag_img;       // ドラッグ判定のときtrue
@@ -92,10 +101,10 @@ private:
     QPoint move_pos;        // 移動中の位置
     QPoint img_pos;         // 画像の表示位置
 
-    const int drag_detect_time; // ドラッグと判定するまでの時間(ms)
+    // ドラッグと判定するまでの時間(ms)
+    const int drag_detect_time;
 
     void rescaling();
-    void scaleImage();
 };
 
 #endif // VIEWER_HPP
